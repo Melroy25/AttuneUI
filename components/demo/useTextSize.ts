@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Change } from "@/lib/demo/activity";
-import { enlarge, nextBurst, parseScales, textKey, undoLast, type Burst, type Scales } from "@/lib/demo/textSize";
+import { deliberate, enlarge, nextBurst, parseScales, textKey, undoLast, type Burst, type Scales } from "@/lib/demo/textSize";
 import { CONTROLS } from "./useComfort";
 
 const MARKED = "[data-text-id]";
@@ -50,13 +50,14 @@ export function useTextSize(user: string | null, locked: boolean, log: (change: 
       if (e.detail === 0 || target.closest(CONTROLS)) return;
       const id = target.closest<HTMLElement>(MARKED)?.dataset.textId;
       if (!id) return;
-      burst = nextBurst(burst, id, performance.now(), e.clientX, e.clientY);
-      if (burst.count !== 2 || latest.current.locked) return;
+      burst = nextBurst(burst, id, performance.now());
+      if (!deliberate(burst) || latest.current.locked) return;
+      burst = null; // each further step needs four new clicks
       const next = enlarge(current.current, id);
       if (!next) return;
       commit(next);
       setChangedAt(Date.now());
-      latest.current.log({ trigger: `Clicked the text "${id}" repeatedly`, change: `Font size of "${id}" raised to ${next[id]}%` });
+      latest.current.log({ trigger: `Clicked the text "${id}" 4 times in 2.5 s`, change: `Font size of "${id}" raised to ${next[id]}%` });
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);

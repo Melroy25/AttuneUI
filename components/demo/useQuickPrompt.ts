@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { Change } from "@/lib/demo/activity";
 import { promptFor, type Prompt } from "@/lib/demo/quick";
-import { BURST } from "@/lib/demo/textSize";
 import { CONTROLS } from "./useComfort";
 
 /** A click that does nothing on a marked area offers the shortcut that fits that area. */
+const DOUBLE_MS = 600; // a second click this soon is not a single dead click
+
 export function useQuickPrompt(
   rootRef: RefObject<HTMLElement | null>, latestInCart: string | null, log: (change: Change) => void,
 ) {
@@ -24,8 +25,8 @@ export function useQuickPrompt(
       if (target.closest(CONTROLS)) return;
       const context = target.closest("[data-dead-context]")?.getAttribute("data-dead-context") ?? "";
       const t = performance.now();
-      // A second click on the same spot makes it a double click, which belongs to the text size.
-      if (waiting && waiting.context === context && t - waiting.t <= BURST.ms) {
+      // A quick second click means the user is clicking text, not asking for the shortcut.
+      if (waiting && waiting.context === context && t - waiting.t <= DOUBLE_MS) {
         clearTimeout(waiting.timer);
         waiting = null;
         return;
@@ -33,7 +34,7 @@ export function useQuickPrompt(
       const found = promptFor(context, noCartQuestion.current ? null : now.current.latestInCart);
       if (!found) return;
       if (waiting) clearTimeout(waiting.timer);
-      waiting = { context, t, timer: setTimeout(() => { waiting = null; show(found); }, BURST.ms) };
+      waiting = { context, t, timer: setTimeout(() => { waiting = null; show(found); }, DOUBLE_MS) };
     };
     const show = (found: NonNullable<ReturnType<typeof promptFor>>) => {
       setPrompt(found.prompt);

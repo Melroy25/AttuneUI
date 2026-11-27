@@ -24,6 +24,8 @@ export interface PortalContext {
   shortcuts?: ShortcutsApi;
   /** Store only: note a screen change for the admin. */
   logChange?: (change: Change) => void;
+  /** Store only: Wishlist was used often in the previous visit. */
+  wishFirst?: boolean;
   /** Store only: open the article that goes with a product. */
   onGuide?: (product: Product) => void;
   /** Store only: familiarity cues and reading signals. */

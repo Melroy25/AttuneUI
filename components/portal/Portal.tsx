@@ -40,6 +40,7 @@ export interface StoreChrome {
   reading?: PortalContext["readingPrompt"];
   behaviour: NonNullable<PortalContext["behaviour"]>;
   onGuide: PortalContext["onGuide"];
+  wishFirst: boolean;
 }
 
 export function Portal({ surface, preferences, task, onAction, onSignal, onView, store }: {
@@ -59,7 +60,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
   const ctx: PortalContext = {
     s: STRINGS[preferences.locale], surface, preferences, large, onSignal, onGoal: store?.onGoal, habits: store?.habits, shortcuts: store?.shortcuts,
     logChange: store?.log, readingPrompt: store?.reading,
-    behaviour: store?.behaviour, cues: store?.behaviour.state.cues, onGuide: store?.onGuide,
+    behaviour: store?.behaviour, cues: store?.behaviour.state.cues, onGuide: store?.onGuide, wishFirst: store?.wishFirst,
     control: large ? "min-h-12 min-w-12 text-base" : "min-h-6",
   };
   const { s } = ctx;

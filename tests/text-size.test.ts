@@ -4,17 +4,19 @@ import { ARTICLES } from "../lib/demo/articles";
 import { CATALOG } from "../lib/demo/catalog";
 import { parseState } from "../lib/demo/cloud";
 import { guideFor } from "../lib/demo/guides";
-import { enlarge, nextBurst, parseScales, undoLast, type Burst, type Scales } from "../lib/demo/textSize";
+import { deliberate, enlarge, nextBurst, parseScales, undoLast, type Burst, type Scales } from "../lib/demo/textSize";
 
-const clicks = (times: number[], x = 0, ids = ["a"]) => times.reduce<Burst[]>(
-  (all, t, i) => [...all, nextBurst(all.at(-1) ?? null, ids[i % ids.length], t, x * i, 0)], []).map((b) => b.count);
+const clicks = (times: number[], ids = ["a"]) => times
+  .reduce<Burst[]>((all, t, i) => [...all, nextBurst(all.at(-1) ?? null, ids[i % ids.length], t)], [])
+  .map(deliberate);
 
 describe("text size", () => {
-  it("counts a burst only on one text, close in time and place", () => {
-    expect(clicks([0, 200, 400, 600])).toEqual([1, 2, 3, 4]); // grows once, on the 2
-    expect(clicks([0, 900])).toEqual([1, 1]);
-    expect(clicks([0, 100], 80)).toEqual([1, 1]);
-    expect(clicks([0, 100], 0, ["a", "b"])).toEqual([1, 1]);
+  it("ignores double clicks and needs 4 clicks on one text within 2.5 s", () => {
+    expect(clicks([0, 150])).toEqual([false, false]); // an accidental double click
+    expect(clicks([0, 150, 300])).toEqual([false, false, false]);
+    expect(clicks([0, 600, 1200, 1800])).toEqual([false, false, false, true]);
+    expect(clicks([0, 1000, 2000, 2600])).toEqual([false, false, false, false]); // too slow
+    expect(clicks([0, 100, 200, 300], ["a", "b"])).toEqual([false, false, false, false]); // two texts
   });
 
   it("grows one text in steps and leaves the others alone", () => {

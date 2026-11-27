@@ -1,21 +1,23 @@
-// /demo only: a double click (or more) on one piece of text makes that piece one step bigger.
+// /demo only: clicking one piece of text again and again (4 times in 2.5 s) makes it one step bigger.
+// A double click or double tap is too easy to do by accident, so it does nothing.
 
 /** Percent of the text's own normal size. */
 export const SIZES = [100, 112.5, 125, 137.5] as const;
-export const BURST = { ms: 600, radius: 24 };
+export const BURST = { ms: 2500, clicks: 4 };
 export const MAX_TEXTS = 100;
-export interface Burst { id: string; t: number; x: number; y: number; count: number }
+export interface Burst { id: string; start: number; count: number }
 /** Enlarged texts by data-text-id. The newest change is the last key: that is what Undo takes. */
 export type Scales = Record<string, number>;
 
 export const textKey = (user: string | null) => `attune-text:${user ?? "guest"}`;
 
-/** Clicks on one text, close in time and place, add up. A burst grows it once, on the second click. */
-export function nextBurst(last: Burst | null, id: string, t: number, x: number, y: number): Burst {
-  const same = last !== null && last.id === id && t - last.t <= BURST.ms &&
-    Math.hypot(x - last.x, y - last.y) <= BURST.radius;
-  return { id, t, x, y, count: same ? last.count + 1 : 1 };
+/** Clicks on one text within the window add up; another text, or a pause, starts again. */
+export function nextBurst(last: Burst | null, id: string, t: number): Burst {
+  const same = last !== null && last.id === id && t - last.start <= BURST.ms;
+  return same ? { ...last, count: last.count + 1 } : { id, start: t, count: 1 };
 }
+
+export const deliberate = (b: Burst) => b.count >= BURST.clicks;
 
 const without = (scales: Scales, id: string): Scales =>
   Object.fromEntries(Object.entries(scales).filter(([k]) => k !== id));

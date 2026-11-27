@@ -29,6 +29,7 @@ import { useLiveReport } from "./useLiveReport";
 import { useQuickPrompt } from "./useQuickPrompt";
 import { useShortcuts } from "./useShortcuts";
 import { useTextSize } from "./useTextSize";
+import { useWishSession } from "./useWishSession";
 
 export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; renderedAt: string; user: string | null }) {
   const { activity, add } = useActivity(user);
@@ -38,7 +39,9 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const d = useDemo(serverUi, user, (change) => { shortcuts.supersede(); add(change); }, page === "articles");
   const [hud, setHud] = useState(false);
   const shop = useShop(user);
-  const habits = useHabits(user, (kind, next) => shortcuts.consider(
+  const wishlist = useWishSession(user, add);
+  // Wishlist never moves mid-visit: its presses are counted for the next one instead.
+  const habits = useHabits(user, (kind, next) => kind === "wishlist" ? wishlist.used() : shortcuts.consider(
     kind, next, struggles(d.session.totals, summarizeFriction(d.events, d.modality))));
   useLiveReport(d, page, activity, user);
   useFrictionLog(user, d.session.totals, d.events, d.modality);
@@ -83,7 +86,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
-          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt, behaviour, onGuide: openGuide }} />
+          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt, behaviour, onGuide: openGuide, wishFirst: wishlist.promoted }} />
       </div>
       <StoreFooter locale={d.ui.preferences.locale} onSupport={habits.support} onSupportHover={habits.supportHover}
         onPage={setPage} />
