@@ -13,7 +13,7 @@ export function StoreOrderList({ ctx, orders, selected, onOpen, onBadge }: {
   onBadge: (id: string) => void;
 }) {
   const { s, surface, control } = ctx;
-  const hint = useCardHint();
+  const hint = useCardHint(ctx.logChange);
   if (orders.length === 0) return <p data-part="detail" className="p-3 text-sm">{s.noOrders}</p>;
   // Looks clickable. Only actually is when the surface promotes it.
   const badge = "rounded-full border-b-2 px-2 py-0.5 text-xs font-semibold shadow-sm";

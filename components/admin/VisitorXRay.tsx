@@ -3,6 +3,7 @@ import { ARM_IDS } from "@/lib/attune-ui/types";
 import { COUNTED, type UserView } from "@/lib/demo/aggregate";
 import { SURFACE_NAMES } from "@/lib/demo/explain";
 import { STRUGGLE_LABELS, plainLog } from "@/lib/demo/labels";
+import { ActivityList } from "./ActivityList";
 import { Bars, Box } from "./ui";
 
 const chip = "rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium";
@@ -66,9 +67,14 @@ export function VisitorXRay({ u }: { u: UserView }) {
           </dl>
         </details>
       </Box>
-      <Box title="Activity" info="What happened on this user's screen, newest first.">
-        {s.log.length === 0 && <p className="text-sm text-slate-600">Nothing yet.</p>}
-        <ol className="space-y-1 text-sm">{s.log.map((line, i) => <li key={i}>• {plainLog(line)}</li>)}</ol>
+      <Box title="Activity" info="Each screen change and what caused it, newest first. System notes list decisions and learning.">
+        <ActivityList entries={s.activity ?? []} />
+        {s.log.length > 0 && (
+          <details className="text-sm">
+            <summary className="min-h-8 cursor-pointer text-slate-600">System notes</summary>
+            <ol className="space-y-1">{s.log.map((line, i) => <li key={i}>• {plainLog(line)}</li>)}</ol>
+          </details>
+        )}
       </Box>
     </div>
   );

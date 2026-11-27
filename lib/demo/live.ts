@@ -1,6 +1,7 @@
 // What a /demo visitor's browser reports to the admin page. Never study data, never typed text.
 import { DIM } from "../attune-ui/telemetry/context";
 import { ARM_IDS, type ArmId, type FrictionSummary } from "../attune-ui/types";
+import { parseActivity, type Activity } from "./activity";
 
 export const MAX_SNAPSHOT_BYTES = 8_000;
 const SIGNALS = ["rage", "dead", "miss", "dwell", "thrash", "backtrack", "tortuosity"] as const;
@@ -31,6 +32,7 @@ export interface LiveSnapshot {
   why: string[];
   changes: string[];
   log: string[];
+  activity?: Activity[]; // absent from older store tabs
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -60,8 +62,9 @@ export function parseSnapshot(v: unknown): LiveSnapshot | null {
   if (!isRecord(v) || !text(v.id, 36) || !UUID.test(v.id)) return null;
   const chosen = decision(v.decision);
   const { friction: f, totals, history } = v;
+  const activity = v.activity === undefined ? undefined : parseActivity(v.activity, 8);
   if (
-    chosen === undefined || !arm(v.arm) || !text(v.page, 20) || !text(v.mode, 10) || !text(v.locale, 5) ||
+    chosen === undefined || activity === null || !arm(v.arm) || !text(v.page, 20) || !text(v.mode, 10) || !text(v.locale, 5) ||
     !text(v.modality, 10) || !num(v.block) || !num(v.viewportWidth, 10_000) ||
     typeof v.auto !== "boolean" || typeof v.pinned !== "boolean" ||
     !isFriction(f) || !isFriction(totals) ||
@@ -76,5 +79,6 @@ export function parseSnapshot(v: unknown): LiveSnapshot | null {
     friction: friction(f), totals: friction(totals),
     history: history.map((h) => ({ block: h.block as number, arm: h.arm as ArmId })),
     context: v.context as number[], decision: chosen, why: v.why, changes: v.changes, log: v.log,
+    ...(activity && { activity }),
   };
 }

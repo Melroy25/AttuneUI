@@ -69,6 +69,9 @@ export function summariseAll(users: UserView[]) {
     showing,
     chosen,
     pages: [...pages],
+    changes: users
+      .flatMap((u) => (u.latest.snapshot.activity ?? []).slice(0, 3).map((e) => ({ ...e, name: u.name })))
+      .sort((a, b) => b.at - a.at),
     activity: users.flatMap((u) => u.latest.snapshot.log.slice(0, 3).map((line) => ({ name: u.name, line }))),
   };
 }

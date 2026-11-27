@@ -10,7 +10,7 @@ const stockOf = (p: Product) => (p.stock === 0 ? "outOfStock" : p.stock <= 5 ? "
 export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: Shop; onView: (view: string) => void }) {
   const t = PAGE_TEXT[ctx.preferences.locale];
   const [quantity, setQuantity] = useState(1);
-  const hint = useCardHint();
+  const hint = useCardHint(ctx.logChange);
   // A preset only filters while the layout that shows its buttons is on screen.
   const found = searchCatalog(shop.query, shop.category, ctx.surface.smartPresets ? shop.preset : "");
   const product = CATALOG.find((p) => p.id === shop.selected);

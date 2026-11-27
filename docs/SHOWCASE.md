@@ -28,8 +28,8 @@
 | Quick actions | Shortcut bar, **+ Add** on products, clickable refund labels |
 | Step hints | A tip on each page |
 
-Fixed rules: two taps on a product or order card make its arrow glow; reading the refund policy
-5 s enlarges and restructures it; two photo searches move photo search first; Kannada.
+Fixed rules: two taps on a product or order card make its arrow glow; after 5 s on the refund policy a
+bubble offers larger text (✓ or ✕); two photo searches move photo search first; Kannada.
 Gear menu: Undo (also turns automatic changes off), Pin, automatic changes on/off, Reset (also
 forgets what was learned).
 

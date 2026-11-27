@@ -2,6 +2,7 @@ import { ARM_IDS } from "@/lib/attune-ui/types";
 import { COUNTED, summariseAll, type UserView } from "@/lib/demo/aggregate";
 import { SURFACE_NAMES } from "@/lib/demo/explain";
 import { STRUGGLE_LABELS, plainLog } from "@/lib/demo/labels";
+import { ActivityList } from "./ActivityList";
 import { Bars, Box, InfoTip } from "./ui";
 
 const cell = "border-b border-slate-100 px-2 py-2 text-left tabular-nums";
@@ -66,11 +67,16 @@ export function GlobalOverview({ users, onPick }: { users: UserView[]; onPick: (
           </table>
         </div>
       </Box>
-      <Box title="Activity" info="The latest things that happened, up to three per user.">
-        {all.activity.length === 0 && <p className="text-sm text-slate-600">Nothing yet.</p>}
-        <ul className="space-y-1 text-sm">
-          {all.activity.slice(0, 12).map((a, i) => <li key={i}><strong>{a.name}</strong> · {plainLog(a.line)}</li>)}
-        </ul>
+      <Box title="Activity" info="The latest screen changes and their causes, up to three per user.">
+        <ActivityList entries={all.changes.slice(0, 12)} />
+        {all.activity.length > 0 && (
+          <details className="text-sm">
+            <summary className="min-h-8 cursor-pointer text-slate-600">System notes</summary>
+            <ul className="space-y-1">
+              {all.activity.slice(0, 12).map((a, i) => <li key={i}><strong>{a.name}</strong> · {plainLog(a.line)}</li>)}
+            </ul>
+          </details>
+        )}
       </Box>
     </div>
   );

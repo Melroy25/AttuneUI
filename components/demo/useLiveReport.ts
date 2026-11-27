@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { buildContext } from "@/lib/attune-ui/telemetry/context";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
+import type { Activity } from "@/lib/demo/activity";
 import { explain } from "@/lib/demo/explain";
 import type { LiveSnapshot } from "@/lib/demo/live";
 import { newParticipantId } from "@/lib/study/records";
@@ -13,17 +14,17 @@ const EVERY_MS = 2000;
 const HEARTBEAT_MS = 30_000;
 
 /** Sends what the X-Ray shows to the admin page. Failures never disturb the visitor. */
-export function useLiveReport(d: ReturnType<typeof useDemo>, page: string) {
+export function useLiveReport(d: ReturnType<typeof useDemo>, page: string, activity: Activity[]) {
   const [id] = useState(() => (typeof window === "undefined" ? "" : newParticipantId()));
-  const latest = useRef({ d, page });
-  useEffect(() => { latest.current = { d, page }; });
+  const latest = useRef({ d, page, activity });
+  useEffect(() => { latest.current = { d, page, activity }; });
 
   useEffect(() => {
     let sent = "";
     let sentAt = 0;
     let busy = false;
     const timer = setInterval(async () => {
-      const { d, page } = latest.current;
+      const { d, page, activity } = latest.current;
       const { session } = d;
       const sensed = summarizeFriction(d.events, d.modality);
       // Whole numbers, so pointer movement alone does not count as a change.
@@ -34,7 +35,7 @@ export function useLiveReport(d: ReturnType<typeof useDemo>, page: string) {
         locale: d.ui.preferences.locale, viewportWidth: window.innerWidth, modality: d.modality, friction,
         context: buildContext({ friction, viewportWidth: window.innerWidth, priorSessions: session.blocks }),
         decision: decision && { action: decision.action, propensity: decision.propensity, probs: decision.probs },
-        why: explain(session), changes: d.changes.slice(0, 12), log: session.log.slice(0, 8),
+        why: explain(session), changes: d.changes.slice(0, 12), log: session.log.slice(0, 8), activity: activity.slice(0, 8),
       };
       const body = JSON.stringify(snapshot);
       if (busy || (body === sent && Date.now() - sentAt < HEARTBEAT_MS)) return;

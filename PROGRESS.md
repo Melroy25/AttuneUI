@@ -18,7 +18,9 @@
   saved per browser, cleared by Reset (exception to invariant 11 "in-memory").
 - /demo habits (rules, mid-task, saved per browser, cleared by Reset): 2 wishlist presses put
   it on order cards; 2 opens of an order offer similar items; 2 support clicks add a header
-  button (3 s highlight). 107/107 tests.
+  button (3 s highlight).
+- Admin Activity shows problem -> change with time (saved per browser, cleared by Reset).
+  Long policy read now asks with a bubble before enlarging text. 110/110 tests.
 
 ## Setup before phone test / pilot (user)
 1. Vercel and .env.local: FIREBASE_* values, EXPORT_TOKEN, STUDY_CODE, STUDY_PHASE (empty =
@@ -29,11 +31,9 @@
    STUDY_PHASE=confirmatory.
 
 ## Open findings
-- Not tested: habits in a browser, real phone/touch, study writes to Firestore, freeze on human data, screen reader.
-- /demo counts any finished action as success (even opening a product).
-- SIMULATED prior rarely picks large targets (3-13%); headroom small: oracle .785 vs static
+- Not tested: habits, activity and bubble in a browser, real phone/touch, study writes to Firestore, freeze on human data, screen reader.
+- /demo counts any finished action as success (even opening a product). SIMULATED prior rarely picks large targets (3-13%); headroom small: oracle .785 vs static
   .755, learner +.01 to +.015 at 3000.
 - Calm blocks give spread arm probabilities (~.3). Decide v (0.25) before the freeze.
 - /demo learning uncapped; live and events APIs unlimited; Kannada unreviewed.
-
 ## Next: phone test, pilot, freeze, then replay slider, attribution ladder, falsification.

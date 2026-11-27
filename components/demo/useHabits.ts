@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { habitChanges, type Change } from "@/lib/demo/activity";
 import {
   NO_HABITS, REPEAT, askSupport, habitsKey, openOrder, parseHabits, toggleWish, type Habits,
 } from "@/lib/demo/habits";
 
 const HIGHLIGHT_MS = 3000;
 
-export function useHabits(user: string | null) {
+export function useHabits(user: string | null, record: (change: Change) => void) {
   const key = habitsKey(user);
   const [habits, setHabits] = useState(NO_HABITS);
   const [fresh, setFresh] = useState(false); // support was promoted just now, not on an earlier visit
@@ -28,6 +29,7 @@ export function useHabits(user: string | null) {
   }, [fresh]);
 
   const save = (next: Habits) => {
+    habitChanges(habits, next).forEach(record);
     setHabits(next);
     try {
       localStorage.setItem(key, JSON.stringify(next));

@@ -5,7 +5,7 @@ import type { PortalContext } from "@/components/portal/context";
 const HINT_AFTER = 2;
 
 /** A fixed rule, not the bandit. It lasts until the card is opened or the block ends. */
-export function useCardHint() {
+export function useCardHint(log?: PortalContext["logChange"]) {
   const [taps, setTaps] = useState<Record<string, number>>({});
   return {
     hinted: (id: string) => (taps[id] ?? 0) >= HINT_AFTER,
@@ -16,6 +16,9 @@ export function useCardHint() {
       onMouseDown: (e: MouseEvent) => { if (e.detail > 1) e.preventDefault(); },
       onClick: (e: MouseEvent) => {
         if ((e.target as Element).closest("button")) return;
+        if ((taps[id] ?? 0) + 1 === HINT_AFTER) {
+          log?.({ trigger: `Tapped the ${id} card ${HINT_AFTER}× without opening it`, change: "Highlighted its arrow" });
+        }
         setTaps((t) => ({ ...t, [id]: (t[id] ?? 0) + 1 }));
       },
     }),

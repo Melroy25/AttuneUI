@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import type { Change } from "@/lib/demo/activity";
 import type { HabitsApi } from "@/components/demo/useHabits";
 import { SimilarCards } from "@/components/store/Habits";
 import { StoreHeader } from "@/components/store/StoreHeader";
@@ -33,6 +34,8 @@ export interface StoreChrome {
   user: string | null;
   onGoal: () => void;
   habits: HabitsApi;
+  log: (change: Change) => void;
+  reading?: PortalContext["readingPrompt"];
 }
 
 export function Portal({ surface, preferences, task, onAction, onSignal, onView, store }: {
@@ -51,6 +54,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
   const large = surface.targetSize === "large";
   const ctx: PortalContext = {
     s: STRINGS[preferences.locale], surface, preferences, large, onSignal, onGoal: store?.onGoal, habits: store?.habits,
+    logChange: store?.log, readingPrompt: store?.reading,
     control: large ? "min-h-12 min-w-12 text-base" : "min-h-6",
   };
   const { s } = ctx;

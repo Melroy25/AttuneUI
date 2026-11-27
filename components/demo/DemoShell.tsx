@@ -8,17 +8,19 @@ import { useShop } from "@/components/store/useShop";
 import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import type { UiState } from "@/lib/demo/uiState";
 import { SettingsMenu } from "./SettingsMenu";
+import { useActivity } from "./useActivity";
 import { useDemo } from "./useDemo";
 import { useHabits } from "./useHabits";
 import { useLiveReport } from "./useLiveReport";
 
 export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; renderedAt: string; user: string | null }) {
-  const d = useDemo(serverUi, user);
+  const { activity, add } = useActivity(user);
+  const d = useDemo(serverUi, user, add);
   const [hud, setHud] = useState(false);
   const [page, setPage] = useState<Page>("home");
   const shop = useShop();
-  const habits = useHabits(user);
-  useLiveReport(d, page);
+  const habits = useHabits(user, add);
+  useLiveReport(d, page, activity);
   const surface = SURFACES[d.ui.arm];
   const renderedBy = d.offline
     ? "client (offline fallback)"
@@ -43,7 +45,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
-          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits }} />
+          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, log: add, reading: d.readingPrompt }} />
       </div>
       <footer className="mx-auto mt-4 max-w-6xl">
         <button type="button" className="min-h-11 text-sm font-semibold underline"

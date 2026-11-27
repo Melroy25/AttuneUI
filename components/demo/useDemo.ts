@@ -12,9 +12,11 @@ import { startCapture, type Capture } from "@/lib/attune-ui/telemetry/capture";
 import { modalityOf } from "@/lib/attune-ui/telemetry/context";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import type { ArmId, InteractionEvent, Modality } from "@/lib/attune-ui/types";
+import { activityKey, fromReason, layoutChange, struggle, type Change } from "@/lib/demo/activity";
 import { shouldAdapt } from "@/lib/demo/auto";
+import { SURFACE_NAMES } from "@/lib/demo/explain";
 import { habitsKey } from "@/lib/demo/habits";
-import { encodeMemory, memoryKey, parseMemory } from "@/lib/demo/memory";
+import { memoryKey } from "@/lib/demo/memory";
 import { simulatorPrior } from "@/lib/demo/prior";
 import {
   GOALS_PER_LESSON, fastForward, finishBlock, goalOutcome, learn, newSession, previewSurface, togglePin, undo,
@@ -22,12 +24,14 @@ import {
 } from "@/lib/demo/session";
 import { UI_COOKIE, encodeUi, type UiState } from "@/lib/demo/uiState";
 import type { PortalAction } from "@/lib/study/tasks";
+import { useModelMemory } from "./useModelMemory";
+import { readingKey, useReading } from "./useReading";
 
 const writeCookie = (value: string, maxAge: number) => {
   document.cookie = `${UI_COOKIE}=${value}; path=/; max-age=${maxAge}; samesite=lax`;
 };
 
-export function useDemo(serverUi: UiState, user: string | null) {
+export function useDemo(serverUi: UiState, user: string | null, record: (change: Change) => void) {
   const router = useRouter();
   const [session, setSession] = useState(() => newSession(serverUi.arm));
   const [offlineUi, setOfflineUi] = useState<UiState | null>(null);
@@ -54,25 +58,8 @@ export function useDemo(serverUi: UiState, user: string | null) {
     return () => clearTimeout(timer);
   }, []);
 
-  // What was learned stays in this browser, one memory per account.
-  useEffect(() => {
-    try {
-      const memory = parseMemory(localStorage.getItem(store));
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- storage exists only after mount
-      if (memory) setSession((s) => ({ ...s, ...memory }));
-    } catch {
-      // storage blocked: this tab starts from the prior
-    }
-  }, [store]);
-  const { models, liveUpdates, simulatedUpdates } = session;
-  useEffect(() => {
-    if (!models || liveUpdates + simulatedUpdates === 0) return;
-    try {
-      localStorage.setItem(store, encodeMemory({ models, liveUpdates, simulatedUpdates }));
-    } catch {
-      // storage full or blocked: learning lasts as long as the tab
-    }
-  }, [store, models, liveUpdates, simulatedUpdates]);
+  useModelMemory(store, session, setSession);
+  const reading = useReading();
 
   const ui = offlineUi ?? serverUi;
 
@@ -120,15 +107,31 @@ export function useDemo(serverUi: UiState, user: string | null) {
     if (action.type !== "filter") onGoal();
   };
 
+  const readingLimit = () => READ_THRESHOLD_MS[demoReading ? "demo" : "normal"];
+
   const onSignal = (delta: Partial<PreferenceSignals>) => {
+    if ((delta.longestReadMs ?? 0) >= readingLimit()) reading.offer(delta.longestReadMs!);
     const s = signals.current;
     for (const [key, value] of Object.entries(delta) as [keyof PreferenceSignals, number][]) {
       s[key] = key === "longestReadMs" ? Math.max(s[key], value) : s[key] + value;
     }
   };
 
+  // A long read never changes the text by itself: the reading bubble asks first.
   const derive = () =>
-    derivePreferences(ui.preferences, signals.current, READ_THRESHOLD_MS[demoReading ? "demo" : "normal"]);
+    derivePreferences(ui.preferences, { ...signals.current, longestReadMs: 0 }, readingLimit());
+
+  const readingPrompt = reading.seconds > 0 && ui.preferences.textScale !== "large" ? {
+    confirm: () => {
+      reading.answered();
+      setPriorPreferences(ui.preferences);
+      setSession((s) => ({ ...s, previous: null }));
+      setChanges(["Larger text, sections and bullets"]);
+      record({ trigger: `Read the Refund policy for ${reading.seconds} s and pressed ✓`, change: "Reading comfort: larger text, sections and bullets" });
+      publish({ arm: ui.arm, preferences: { ...ui.preferences, textScale: "large", structure: "sections" } });
+    },
+    dismiss: reading.answered,
+  } : undefined;
 
   /** A decision from what was just sensed. Automatic ones keep the page, tasks and filters. */
   const adapt = (automatic: boolean) => {
@@ -150,6 +153,10 @@ export function useDemo(serverUi: UiState, user: string | null) {
     const previous = next.rendered === session.rendered && derived.reasons.length > 0 ? null : next.previous;
     setSession({ ...next, previous, log: [...derived.reasons.map((r) => `Preference rule: ${r}`), ...next.log].slice(0, 20) });
     setChanges([...describeChanges(SURFACES[ui.arm], SURFACES[next.rendered]), ...derived.reasons]);
+    if (next.rendered !== ui.arm) {
+      record({ trigger: struggle(next.friction!, blockEvents), change: layoutChange(next.rendered) });
+    }
+    derived.reasons.forEach((r) => record(fromReason(r)));
     publish({ arm: next.rendered, preferences: derived.preferences });
     if (automatic) clearBlock();
     else startBlock();
@@ -183,6 +190,7 @@ export function useDemo(serverUi: UiState, user: string | null) {
     setPriorPreferences(ui.preferences);
     setSession((s) => ({ ...s, previous: null, log: [...derived.reasons.map((r) => `Preference rule: ${r}`), ...s.log].slice(0, 20) }));
     setChanges(derived.reasons);
+    derived.reasons.forEach((r) => record(fromReason(r)));
     publish({ arm: ui.arm, preferences: derived.preferences });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the closure of this render is the current one
   }, [events]);
@@ -190,6 +198,7 @@ export function useDemo(serverUi: UiState, user: string | null) {
   const preview = (arm: ArmId) => {
     if (arm !== ui.arm) setPriorPreferences(ui.preferences);
     setSession((s) => previewSurface(s, arm));
+    record({ trigger: "Picked by hand in X-Ray", change: layoutChange(arm) });
     setChanges(describeChanges(SURFACES[ui.arm], SURFACES[arm]));
     publish({ arm, preferences: ui.preferences });
     startBlock();
@@ -209,6 +218,7 @@ export function useDemo(serverUi: UiState, user: string | null) {
     });
     setPriorPreferences(null);
     setChanges([]);
+    record({ trigger: "Pressed Undo", change: `Back to ${SURFACE_NAMES[next.rendered]} and earlier preferences; auto-change off` });
     publish({ arm: next.rendered, preferences });
   };
 
@@ -217,6 +227,7 @@ export function useDemo(serverUi: UiState, user: string | null) {
     // An explicit choice applies at once and outranks the rule.
     if (locale === "en") signals.current.kannada = 0;
     setPriorPreferences((p) => p && { ...p, locale }); // Undo must not revert it
+    record({ trigger: "Chose a language in the menu", change: `Switched language to ${locale === "kn" ? "Kannada" : "English"}` });
     publish({ arm: ui.arm, preferences: { ...ui.preferences, locale } });
   };
 
@@ -225,6 +236,8 @@ export function useDemo(serverUi: UiState, user: string | null) {
     try {
       localStorage.removeItem(store);
       localStorage.removeItem(habitsKey(user));
+      localStorage.removeItem(activityKey(user));
+      sessionStorage.removeItem(readingKey);
     } catch {
       // nothing was saved
     }
@@ -235,8 +248,14 @@ export function useDemo(serverUi: UiState, user: string | null) {
     rootRef, session, ui, mode, setMode, demoReading, setDemoReading, changes, events, modality,
     portalKey, canUndo: session.previous !== null || priorPreferences !== null,
     offline: offlineUi !== null, onAction, onGoal, onSignal, onView: (v: string) => capture.current?.view(v),
-    endBlock: () => adapt(false), preview, undoLast, chooseLocale, reset, auto, setAuto,
-    togglePin: () => setSession(togglePin),
+    readingPrompt, endBlock: () => adapt(false), preview, undoLast, chooseLocale, reset, auto, setAuto,
+    togglePin: () => {
+      record({
+        trigger: session.pinned ? "Turned Pin off" : "Pressed Pin",
+        change: session.pinned ? "Layout unlocked" : `Layout locked to ${SURFACE_NAMES[ui.arm]}`,
+      });
+      setSession(togglePin);
+    },
     forward: (n: number) => setSession((s) => fastForward(s, n, simulatorPrior().models)),
   };
 }
