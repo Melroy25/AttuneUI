@@ -15,7 +15,7 @@ export function OrderDetail({ ctx, order, onRefund }: {
         <h2 className="font-bold">{order.id}</h2>
         {/* The buried path stays in every surface: adaptations duplicate, never move. */}
         <details key={order.id} className="relative">
-          <summary aria-label={s.moreActions} className={`cursor-pointer list-none rounded px-2 ${control}`}>⋯</summary>
+          <summary aria-label={s.moreActions} data-tip={ctx.habits ? "More actions" : undefined} className={`cursor-pointer list-none rounded px-2 ${control}`}>⋯</summary>
           <div className="absolute right-0 z-10 flex w-44 flex-col rounded border bg-white p-1 shadow">
             <button type="button" className={`text-left ${control}`}>{s.printSlip}</button>
             <button type="button" className={`text-left ${control}`}>{s.contact}</button>

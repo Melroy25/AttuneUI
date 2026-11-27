@@ -5,6 +5,7 @@ import { XRayHud } from "@/components/hud/XRayHud";
 import { Portal } from "@/components/portal/Portal";
 import { StoreFooter } from "@/components/store/StoreFooter";
 import type { Page } from "@/components/store/text";
+import { TooltipLayer } from "@/components/ui/Tooltip";
 import { useShop } from "@/components/store/useShop";
 import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
@@ -37,7 +38,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
 
   const actions = (
     <>
-      <select aria-label="Language" value={d.ui.preferences.locale}
+      <select aria-label="Language" data-tip="Change language" value={d.ui.preferences.locale}
         className="min-h-11 rounded-lg border-0 bg-white px-2 text-sm font-medium text-slate-900"
         onChange={(e) => d.chooseLocale(e.target.value === "kn" ? "kn" : "en")}>
         <option value="en">English</option>
@@ -62,6 +63,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <p className="mx-auto mt-2 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.
       </p>
+      <TooltipLayer />
       {hud && <XRayHud d={d} surface={surface} renderedBy={renderedBy} onClose={() => setHud(false)} />}
     </main>
   );

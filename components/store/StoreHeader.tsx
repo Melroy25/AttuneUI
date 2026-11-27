@@ -24,20 +24,20 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
   return (
     <header data-part="header" className="space-y-3 pb-1">
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" data-part="brand" className="min-h-11 px-4" onClick={() => onPage("home")}>
+        <button type="button" data-part="brand" data-tip="Go to home" className="min-h-11 px-4" onClick={() => onPage("home")}>
           <span data-part="mark" aria-hidden>V</span> VeroxaKart
         </button>
         {/* One support button: the promoted one takes the default one's place. */}
         {ctx.shortcuts?.on("support") ? (
           <>
-            <button type="button" data-part="support-quick" data-fresh={ctx.shortcuts.fresh} className="min-h-11 px-4 text-sm"
+            <button type="button" data-part="support-quick" data-tip="Get help & support" data-fresh={ctx.shortcuts.fresh} className="min-h-11 px-4 text-sm"
               onClick={() => { ctx.shortcuts?.use("support"); help(); }}>
               ⚡ {t.customerSupport}
             </button>
             <DismissShortcut ctx={ctx} kind="support" />
           </>
         ) : (
-          <button type="button" data-part="pill" className="min-h-11 px-4 text-sm" onClick={help}>
+          <button type="button" data-part="pill" data-tip="Get help & support" className="min-h-11 px-4 text-sm" onClick={help}>
             🎧 {t.support}
           </button>
         )}
@@ -50,7 +50,7 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
             e.preventDefault();
             showResults();
           }}>
-          <button type="submit" aria-label={t.search} className="min-h-8 min-w-8">🔍</button>
+          <button type="submit" aria-label={t.search} data-tip="Search products" className="min-h-8 min-w-8">🔍</button>
           <input type="search" aria-label={t.searchProducts} placeholder={t.searchProducts} value={shop.query}
             className="min-h-11 min-w-0 flex-1 bg-transparent outline-none"
             onChange={(e) => { shop.setQuery(e.target.value); if (e.target.value) showResults(); }}
@@ -59,8 +59,9 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
               if (text) ctx.onSignal({ textSearches: 1, kannada: hasKannada(text) ? 1 : 0 });
             }} />
         </form>
-        <span data-attune-id="account" className="px-2 text-sm">👤 {user ?? t.guest}</span>
-        <button type="button" data-part="cart" aria-current={page === "cart" ? "page" : undefined}
+        <span data-attune-id="account" tabIndex={0}
+          data-tip={user ? "Switch user in settings ⚙" : "Guest account"} className="px-2 text-sm">👤 {user ?? t.guest}</span>
+        <button type="button" data-part="cart" data-tip="View cart" aria-current={page === "cart" ? "page" : undefined}
           className="relative ml-auto min-h-11 px-3 text-sm font-semibold" onClick={() => onPage("cart")}>
           🛒 {t.cart}
           {count > 0 && <span data-part="count">{count}</span>}

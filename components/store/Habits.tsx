@@ -10,7 +10,8 @@ export function WishlistButton({ ctx, id, compact, iconOnly }: {
   const t = PAGE_TEXT[ctx.preferences.locale];
   const saved = ctx.habits?.habits.wished.includes(id) ?? false;
   return (
-    <button type="button" aria-pressed={saved} aria-label={`${t.wishlist}: ${id}`} onClick={() => {
+    <button type="button" aria-pressed={saved} aria-label={`${t.wishlist}: ${id}`}
+      data-tip={saved ? "Remove from wishlist" : "Save to wishlist"} onClick={() => {
         if (compact) ctx.shortcuts?.use("wishlist"); // only the promoted copy earns a reward
         ctx.habits?.wish(id);
       }}
@@ -24,7 +25,7 @@ export function WishlistButton({ ctx, id, compact, iconOnly }: {
 export function DismissShortcut({ ctx, kind, label }: { ctx: PortalContext; kind: Shortcut; label?: boolean }) {
   const t = PAGE_TEXT[ctx.preferences.locale];
   return (
-    <button type="button" aria-label={t.hideShortcut} title={t.hideShortcut}
+    <button type="button" aria-label={t.hideShortcut} data-tip={t.hideShortcut}
       className={`flex-none rounded-full border bg-white px-3 text-xs text-slate-700 ${ctx.control}`}
       onClick={() => ctx.shortcuts?.dismiss(kind, "Pressed ✕")}>
       ✕{label && ` ${t.hideShortcut}: ${t.wishlist}`}
@@ -39,7 +40,7 @@ export function SimilarCards({ ctx, shop, onPick }: { ctx: PortalContext; shop: 
   return (
     <div className="flex gap-2 overflow-x-auto">
       {items.map((p) => (
-        <button key={p.id} type="button"
+        <button key={p.id} type="button" data-tip="Find similar items"
           className={`flex flex-none items-center gap-2 rounded-xl border bg-white px-3 py-1 text-xs font-semibold ${ctx.control}`}
           onClick={() => {
             ctx.shortcuts?.use("similar");

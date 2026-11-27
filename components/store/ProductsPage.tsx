@@ -52,7 +52,7 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
                 </span>
               </div>
               {ctx.surface.quickActions.length > 0 && p.stock > 0 && (
-                <button type="button" data-part="quick-add" aria-label={`${t.addToCart}: ${p.name}`}
+                <button type="button" data-part="quick-add" aria-label={`${t.addToCart}: ${p.name}`} data-tip="Add to cart"
                   className={`flex-none px-3 text-xs ${ctx.control}`}
                   onClick={() => add(p.id, 1)}>
                   {t.quickAdd}
@@ -74,10 +74,10 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
           </p>
           <div className="flex items-center gap-2">
             <span>{t.quantity}</span>
-            <button type="button" aria-label={`${t.quantity} −`} className={`w-8 border ${ctx.control}`}
+            <button type="button" aria-label={`${t.quantity} −`} data-tip="Decrease quantity" className={`w-8 border ${ctx.control}`}
               disabled={quantity <= 1} onClick={() => setQuantity(quantity - 1)}>−</button>
             <output className="w-6 text-center font-semibold">{quantity}</output>
-            <button type="button" aria-label={`${t.quantity} +`} className={`w-8 border ${ctx.control}`}
+            <button type="button" aria-label={`${t.quantity} +`} data-tip="Increase quantity" className={`w-8 border ${ctx.control}`}
               disabled={quantity >= product.stock} onClick={() => setQuantity(quantity + 1)}>+</button>
           </div>
           {/* A disabled button that looks tappable: taps on it are sensed as dead clicks. */}

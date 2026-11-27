@@ -23,10 +23,10 @@ export function CartPage({ ctx, shop, onView }: { ctx: PortalContext; shop: Shop
               <p data-part="price">₹{(p.price * quantity).toLocaleString("en-IN")}</p>
             </div>
             <span className="flex items-center gap-1">
-              <button type="button" aria-label={`${t.quantity} − ${p.name}`} className={step}
+              <button type="button" aria-label={`${t.quantity} − ${p.name}`} data-tip="Decrease quantity" className={step}
                 onClick={() => shop.setQuantity(p.id, quantity - 1)}>−</button>
               <output className="w-6 text-center font-semibold">{quantity}</output>
-              <button type="button" aria-label={`${t.quantity} + ${p.name}`} className={step} disabled={quantity >= p.stock}
+              <button type="button" aria-label={`${t.quantity} + ${p.name}`} data-tip="Increase quantity" className={step} disabled={quantity >= p.stock}
                 onClick={() => shop.setQuantity(p.id, quantity + 1)}>+</button>
             </span>
             <button type="button" className={`px-2 text-xs underline ${ctx.control}`} onClick={() => shop.setQuantity(p.id, 0)}>

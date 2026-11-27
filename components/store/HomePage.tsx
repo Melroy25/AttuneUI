@@ -30,6 +30,7 @@ function Rail({ title, items, dark, ctx, onOpen, onAdd }: {
         <span className="flex gap-1">
           {([[-1, "‹", t.previous], [1, "›", t.nextItems]] as const).map(([d, glyph, label]) => (
             <button key={label} type="button" data-part="slide" aria-label={label} onClick={() => slide(d)}
+              data-tip={d < 0 ? "Scroll left" : "Scroll right"}
               className="grid h-10 w-10 place-items-center text-2xl">{glyph}</button>
           ))}
         </span>
@@ -44,7 +45,7 @@ function Rail({ title, items, dark, ctx, onOpen, onAdd }: {
               <span className="block font-bold">₹{p.price.toLocaleString("en-IN")}</span>
             </button>
             {ctx.surface.quickActions.length > 0 && p.stock > 0 && (
-              <button type="button" data-part="quick-add" aria-label={`${t.addToCart}: ${p.name}`}
+              <button type="button" data-part="quick-add" aria-label={`${t.addToCart}: ${p.name}`} data-tip="Add to cart"
                 className={`mt-1 w-full text-sm ${ctx.control}`} onClick={() => onAdd(p.id)}>
                 {t.quickAdd}
               </button>
@@ -106,7 +107,7 @@ export function HomePage({ ctx, shop, onPage }: { ctx: PortalContext; shop: Shop
         <div className="flex justify-center gap-1">
           {BANNERS.map((b, i) => (
             <button key={b.title} type="button" aria-label={t[b.title]} aria-current={i === first ? "true" : undefined}
-              data-part="dot" className="grid h-6 w-6 place-items-center" onClick={() => setFirst(i)}>
+              data-part="dot" data-tip="Show this offer" className="grid h-6 w-6 place-items-center" onClick={() => setFirst(i)}>
               <span />
             </button>
           ))}

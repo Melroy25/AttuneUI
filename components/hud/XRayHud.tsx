@@ -24,7 +24,7 @@ export function XRayHud({ d, surface, renderedBy, onClose }: {
       className="fixed inset-x-0 bottom-0 z-[25] h-[55dvh] space-y-4 overflow-y-auto overscroll-contain rounded-t-2xl bg-slate-950 p-3 text-xs text-slate-100 shadow-2xl lg:inset-y-0 lg:left-auto lg:h-auto lg:w-96 lg:rounded-none lg:rounded-l-2xl">
       <div className="sticky -top-3 z-10 -mx-3 -mt-3 flex items-center justify-between bg-slate-950 px-3 py-2">
         <h2 className="text-sm font-bold">X-Ray HUD · Block {session.blocks + 1}</h2>
-        <button type="button" onClick={onClose} aria-label="Close X-Ray HUD" className="h-10 w-10 rounded-lg text-lg hover:bg-slate-800">✕</button>
+        <button type="button" onClick={onClose} aria-label="Close X-Ray HUD" data-tip="Close AI logs" className="h-10 w-10 rounded-lg text-lg hover:bg-slate-800">✕</button>
       </div>
 
       <HudControls d={d} />

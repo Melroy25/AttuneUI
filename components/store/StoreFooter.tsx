@@ -35,7 +35,7 @@ export function StoreFooter({ locale, onSupport, onSupportHover, onPage }: {
   const link = "min-h-8 text-left hover:underline";
   const go = (page: Page) => { onPage(page); window.scrollTo(0, 0); };
   const support = (label: string) => (
-    <button key={label} type="button" className={link}
+    <button key={label} type="button" className={link} data-tip="Get help & support"
       onPointerEnter={(e) => { if (e.pointerType === "mouse") timer.current = setTimeout(onSupportHover, HOVER_MS); }}
       onPointerLeave={stop}
       onClick={() => { stop(); onSupport(); go("help"); }}>
@@ -64,7 +64,7 @@ export function StoreFooter({ locale, onSupport, onSupportHover, onPage }: {
         <address className="not-italic">{ADDRESS.map((line) => <p key={line}>{line}</p>)}</address>
         <ul className="mt-3 flex gap-2">
           {SOCIAL.map(([glyph, name]) => (
-            <li key={name} title={name} aria-label={name} className="grid h-8 w-8 place-items-center rounded-full bg-slate-700">
+            <li key={name} data-tip={name} aria-label={name} className="grid h-8 w-8 place-items-center rounded-full bg-slate-700">
               <span aria-hidden>{glyph}</span>
             </li>
           ))}
@@ -73,7 +73,7 @@ export function StoreFooter({ locale, onSupport, onSupportHover, onPage }: {
       <section>
         <h2 className={heading}>{t.office}</h2>
         <address className="not-italic">{ADDRESS.map((line) => <p key={line}>{line}</p>)}</address>
-        <button type="button" aria-expanded={map} className="min-h-8 font-semibold text-sky-300 underline"
+        <button type="button" aria-expanded={map} data-tip="Show map drawing" className="min-h-8 font-semibold text-sky-300 underline"
           onClick={() => setMap(!map)}>
           📍 {t.map}
         </button>

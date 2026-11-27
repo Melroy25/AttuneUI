@@ -37,9 +37,9 @@ export function PolicyCard({ ctx }: { ctx: PortalContext }) {
         <div role="group" aria-label={t.hardToRead}
           className="mt-2 flex w-fit items-center gap-2 rounded-2xl border border-sky-500 bg-sky-50 px-3 py-1 text-sm text-slate-900">
           <span role="status">{t.hardToRead}</span>
-          <button type="button" aria-label={t.comfortYes} onClick={readingPrompt.confirm}
+          <button type="button" aria-label={t.comfortYes} data-tip={t.comfortYes} onClick={readingPrompt.confirm}
             className="grid h-9 w-9 place-items-center rounded-full bg-sky-700 font-bold text-white">✓</button>
-          <button type="button" aria-label={t.comfortNo} onClick={readingPrompt.dismiss}
+          <button type="button" aria-label={t.comfortNo} data-tip={t.comfortNo} onClick={readingPrompt.dismiss}
             className="grid h-9 w-9 place-items-center rounded-full border border-slate-400 bg-white font-bold">✕</button>
         </div>
       )}
