@@ -14,8 +14,8 @@ Global brain (shared weights), personal adaptation (live context vector). No LLM
 | Signal | Definition | Pointer |
 |---|---|---|
 | rage | >=3 downs within 1 s and 40 px; clusters do not overlap | both |
-| miss | down on non-interactive spot <=24 px from a target | both |
-| dead | other down on a labelled non-interactive element | both |
+| dead | down on a labelled non-interactive element (wins over miss) | both |
+| miss | down on an unlabelled spot <=24 px from a target | both |
 | dwell | hover > 1.5 s | fine only |
 | thrash | >=4 scroll direction reversals within 2 s | both |
 | backtrack | view sequence A -> B -> A | both |
@@ -64,6 +64,37 @@ button (live adaptation visible within 20 s of a 3-minute pitch); separate "Fast
 +10/+50" labelled SIMULATED; Pin, Reset, X-Ray HUD (friction pings, context, probabilities,
 per-feature contributions theta_a*x, causal log, surface JSON), time-travel replay slider.
 In-memory model only; never writes study data.
+
+### 8a. Preference layer (team requirements; /demo only)
+Deterministic rules, not the bandit, so 3-arm propensities and causal maths are untouched.
+| Rule | Trigger | Effect at next block boundary |
+|---|---|---|
+| Language | Accept-Language kn on first visit, or >=2 Kannada signals (picks Kannada, types Kannada) outnumbering English picks | Kannada UI, server-rendered |
+| Reading size | policy text open and page visible > 60 s (demo mode 5 s) | larger text |
+| Structure | same reading signal | sectioned text becomes accordion + bullets |
+| Search | >=2 photo searches and more than text searches | photo search shown first |
+An explicit language choice wins. Undo, Pin and Reset cover preferences too. Photo search is
+a sample-catalogue picker, NOT computer vision. Kannada strings need native-speaker review.
+Reading dwell is a proxy (a reader may be idle). Not evaluated causally; disclose as such.
+
+### 8b. SSR and "beyond static GenUI"
+/demo is a dynamic server route: cookie -> strict validator -> SurfaceConfig + preferences ->
+server HTML. After a boundary the client writes the cookie and calls router.refresh();
+offline it renders locally and says so. Learning is continuous: every block updates the
+model, over a closed catalogue of validated layouts (no generated markup).
+
+### 8c. Model delivery and Android
+GET /api/policy: versioned JSON (hash, features, config, surfaces, weights, marginals,
+provenance SIMULATED until frozen). POST /api/decide: validated context in; decision,
+surface and server-measured latency out. Android path in scope: installable web app
+(manifest + icons; Chrome on Android can install it as a WebAPK). A native APK is out of
+scope; after deploy one may be packaged from the manifest (e.g. PWABuilder), optional.
+A native client would consume the same two endpoints.
+
+### 8d. Demo behaviour
+Prior: 1500 SIMULATED sessions, seed 2026, computed lazily (data/policy.prior.json is only
+needed from the pilot on). Latency shown is measured on the device. Changed elements are
+listed and outlined after each boundary. The policy may keep the static layout; never rig it.
 
 ## 9. Data
 Supabase tables participants and events via plain fetch from API routes (service key

@@ -31,6 +31,16 @@ Run typecheck + test after logic changes; build before deploy. Never claim done 
 11. Simulated and human data are never pooled. Every simulated view says SIMULATED.
     /demo uses an in-memory model and never writes study data.
 
+12. Preference layer (language, text size, content structure, search priority) is rule-based,
+    separate from the bandit, applied only at block boundaries on /demo. It never enters
+    context, reward, propensities or OPE. /study uses defaults and collects no preferences.
+13. Server renders the layout from a validated cookie. Cookies and API bodies are untrusted.
+14. Never state a latency or effect number that was not measured.
+
+## Git
+Remote origin: https://github.com/Melroy25/AttuneUI.git (main). Push after each commit.
+Never commit .env*, secrets, or the problem-statement PDF. Never force push.
+
 ## Study and statistics
 - Arms: A static, B context-blind placebo (frozen marginals, same mask), C frozen AttuneUI.
 - Pilot (uniform random) updates the prior; then freeze and commit before confirmatory data.

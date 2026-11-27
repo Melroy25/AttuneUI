@@ -1,23 +1,25 @@
 # Progress
 
-## Phase 1 (engine + tests): DONE 2026-11-27
-- Verified: typecheck pass, 18/18 tests pass (3 files), build pass.
-- Built: lib/attune-ui/{types,rng}, telemetry/{friction,context},
-  bandit/{linalg,policy,reward}, surface/{catalog,validate}, lib/eval/simulator.
-- Reward refinement: failed tasks get no speed credit.
-- App has only a placeholder home page.
+## Phase 1 (engine + tests): DONE
+## Phase 2a (portal, SSR demo, delivery API): DONE 2026-11-27
+- Verified: typecheck pass, 33/33 tests (5 files), clean build pass.
+- Browser check (local prod build): rage+dead -> shortcut (p=.64), server re-rendered;
+  preference rules, Kannada SSR, API 200/400, manifest, icon, 375 px width all worked.
+- Built: components/{portal,demo,hud}, lib/{demo,study,delivery}, preferences, capture,
+  /demo, /api/policy, /api/decide, PWA manifest, stub /study and /eval.
+- Measured decide() latency: 0.33-0.37 ms median in Node (n=50, two runs); 0.8-1.05 ms in app browser (n<=4).
 
 ## Open findings
-- SIMULATED headroom is small: oracle 0.785 vs static 0.755 reward (n=4000 users);
-  learner gains about +0.01 to +0.015 after 3000 sessions (3 seeds).
-  A 10-person pilot will barely move the prior. Say so; claim learning from simulation
-  curves plus measured pilot weight change only.
-- Before the freeze: tune exploration v (0.25) on the simulator; set Tref from pilot.
-- Learning test was changed to a paired, 3000-session comparison (margin 0.005).
-- Not yet built: replay, per-session update cap, discount scenario, capture code.
-- Not measured: the "<1 ms inference" claim.
-- If build reports a missing module after an install, delete .next and rebuild.
+- SIMULATED headroom small: oracle .785 vs static .755; learner +.01 to +.015 at 3000.
+- On calm blocks (no friction) arm probabilities are spread (~.3), so the demo layout can
+  change at each boundary. Tune v (0.25) before the freeze, or Pin during the pitch.
+- Not tested: real phone, real touch, Android install, offline fallback, screen reader.
+- Kannada strings need a native-speaker review.
+- Not built: replay, update cap, discount scenario, policy.prior.json, frozen policy.
+- Not deployed: import the GitHub repo into Vercel.
+- Stale `.next` can break builds: delete it and rebuild.
 
-## Next: Phase 2a (new session)
-Portal with 3 task templates, 5 surfaces rendered from SurfaceConfig, /demo with
-"Finish Task / Trigger Next Block Decision" and SIMULATED Fast-Forward, empty Vercel deploy.
+## Next: Phase 2b (new session)
+/study flow (consent, 2 blocks, SEQ, 90 s cap), assignment, Supabase tables + API routes,
+offline queue, export; Vercel deploy; phone test; pilot; prior, freeze, PREREGISTRATION.md.
+/study must pass DEFAULT_PREFERENCES and ignore preference signals.

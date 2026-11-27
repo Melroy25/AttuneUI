@@ -72,8 +72,9 @@ export function summarizeFriction(events: InteractionEvent[], modality: Modality
   let miss = 0;
   for (const d of downs) {
     if (d.interactive) continue;
-    if (d.nearTargetPx !== null && d.nearTargetPx <= THRESHOLDS.missHaloPx) miss++;
-    else if (d.targetId !== null) dead++;
+    // A labelled element was aimed at, even when a real target sits close by.
+    if (d.targetId !== null) dead++;
+    else if (d.nearTargetPx !== null && d.nearTargetPx <= THRESHOLDS.missHaloPx) miss++;
   }
   const views = of("view");
   let backtrack = 0;

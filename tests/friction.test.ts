@@ -19,8 +19,8 @@ describe("friction", () => {
   it("separates a near miss from a dead click and ignores blank background", () => {
     const s = summarizeFriction(
       [
-        down(0, { interactive: false, nearTargetPx: 10 }),
-        down(2000, { interactive: false, nearTargetPx: 80, targetId: "badge" }),
+        down(0, { interactive: false, nearTargetPx: 10, targetId: null }),
+        down(2000, { interactive: false, nearTargetPx: 8, targetId: "badge" }),
         down(4000, { interactive: false, nearTargetPx: null, targetId: null }),
       ],
       "fine",

@@ -1,0 +1,154 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  DEFAULT_PREFERENCES, EMPTY_SIGNALS, READ_THRESHOLD_MS, derivePreferences,
+  type Locale, type PreferenceSignals, type Preferences,
+} from "@/lib/attune-ui/preferences/rules";
+import { SURFACES } from "@/lib/attune-ui/surface/catalog";
+import { describeChanges } from "@/lib/attune-ui/surface/diff";
+import { startCapture, type Capture } from "@/lib/attune-ui/telemetry/capture";
+import { modalityOf } from "@/lib/attune-ui/telemetry/context";
+import type { InteractionEvent, Modality } from "@/lib/attune-ui/types";
+import { simulatorPrior } from "@/lib/demo/prior";
+import { fastForward, finishBlock, newSession, undo, type DemoMode } from "@/lib/demo/session";
+import { UI_COOKIE, encodeUi, type UiState } from "@/lib/demo/uiState";
+import { TASKS, isComplete, type PortalAction, type Variant } from "@/lib/study/tasks";
+
+const writeCookie = (value: string, maxAge: number) => {
+  document.cookie = `${UI_COOKIE}=${value}; path=/; max-age=${maxAge}; samesite=lax`;
+};
+
+export function useDemo(serverUi: UiState) {
+  const router = useRouter();
+  const [session, setSession] = useState(() => newSession(serverUi.arm));
+  const [offlineUi, setOfflineUi] = useState<UiState | null>(null);
+  const [mode, setMode] = useState<DemoMode>("attune");
+  const [demoReading, setDemoReading] = useState(true);
+  const [changes, setChanges] = useState<string[]>([]);
+  const [taskIndex, setTaskIndex] = useState(0);
+  const [events, setEvents] = useState<InteractionEvent[]>([]);
+  const [modality, setModality] = useState<Modality>("fine");
+  const [portalKey, setPortalKey] = useState(0);
+  const [priorPreferences, setPriorPreferences] = useState<Preferences | null>(null);
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const capture = useRef<Capture | null>(null);
+  const buffer = useRef<InteractionEvent[]>([]);
+  const signals = useRef<PreferenceSignals>({ ...EMPTY_SIGNALS });
+  const outcomes = useRef<{ success: boolean; timeMs: number }[]>([]);
+  const taskStart = useRef(0);
+
+  const ui = offlineUi ?? serverUi;
+  const variant: Variant = session.blocks % 2 === 0 ? "A" : "B";
+  const task = TASKS[variant][taskIndex] ?? null;
+
+  const flush = useCallback(() => {
+    if (!capture.current) return;
+    buffer.current = [...buffer.current, ...capture.current.drain()];
+    setEvents(buffer.current);
+    setModality(modalityOf(capture.current.pointer()));
+  }, []);
+
+  useEffect(() => {
+    if (!rootRef.current) return;
+    capture.current = startCapture(rootRef.current);
+    taskStart.current = performance.now();
+    const timer = setInterval(flush, 1000); // HUD refresh only
+    return () => {
+      clearInterval(timer);
+      capture.current?.stop();
+    };
+  }, [flush]);
+
+  /** Server renders the new layout from the cookie; offline we render it here. */
+  const publish = (next: UiState) => {
+    writeCookie(encodeUi(next), 60 * 60 * 24 * 30);
+    if (navigator.onLine) {
+      setOfflineUi(null);
+      router.refresh();
+    } else setOfflineUi(next);
+  };
+
+  const onAction = (action: PortalAction) => {
+    if (!task || !isComplete(task, action)) return;
+    outcomes.current.push({ success: true, timeMs: Math.max(performance.now() - taskStart.current, 1) });
+    taskStart.current = performance.now();
+    setTaskIndex((i) => i + 1);
+  };
+
+  const onSignal = (delta: Partial<PreferenceSignals>) => {
+    const s = signals.current;
+    for (const [key, value] of Object.entries(delta) as [keyof PreferenceSignals, number][]) {
+      s[key] = key === "longestReadMs" ? Math.max(s[key], value) : s[key] + value;
+    }
+  };
+
+  const endBlock = () => {
+    flush();
+    const attempted = [...outcomes.current];
+    // An unfinished task counts as failed only if the user actually did something on it.
+    const touched = buffer.current.some((e) => e.type === "down" && e.t >= taskStart.current);
+    if (task && touched) {
+      attempted.push({ success: false, timeMs: Math.max(performance.now() - taskStart.current, 1) });
+    }
+    const next = finishBlock(session, {
+      mode,
+      events: buffer.current,
+      outcomes: attempted,
+      pointer: capture.current?.pointer() ?? "mouse",
+      viewportWidth: window.innerWidth,
+      seed: 2026 + session.blocks,
+      prior: simulatorPrior(),
+      now: () => performance.now(),
+    });
+    const derived = session.pinned
+      ? { preferences: ui.preferences, reasons: [] }
+      : derivePreferences(ui.preferences, signals.current, READ_THRESHOLD_MS[demoReading ? "demo" : "normal"]);
+    setPriorPreferences(ui.preferences);
+    setSession({ ...next, log: [...derived.reasons.map((r) => `Preference rule: ${r}`), ...next.log].slice(0, 20) });
+    setChanges([...describeChanges(SURFACES[ui.arm], SURFACES[next.rendered]), ...derived.reasons]);
+    publish({ arm: next.rendered, preferences: derived.preferences });
+    buffer.current = [];
+    outcomes.current = [];
+    signals.current.longestReadMs = 0;
+    setEvents([]);
+    setTaskIndex(0);
+    setPortalKey((k) => k + 1); // fresh filters and selection for the next block
+    taskStart.current = performance.now();
+  };
+
+  const undoLast = () => {
+    const next = undo(session);
+    const preferences = priorPreferences ?? ui.preferences;
+    // Forget the evidence, or the same rule would fire again at the next boundary.
+    signals.current = { ...EMPTY_SIGNALS };
+    setSession(next);
+    setPriorPreferences(null);
+    setChanges([]);
+    publish({ arm: next.rendered, preferences });
+  };
+
+  const chooseLocale = (locale: Locale) => {
+    onSignal(locale === "kn" ? { kannada: 1 } : { english: 1 });
+    // An explicit choice applies at once and outranks the rule.
+    if (locale === "en") signals.current.kannada = 0;
+    publish({ arm: ui.arm, preferences: { ...ui.preferences, locale } });
+  };
+
+  const reset = () => {
+    writeCookie("", 0);
+    window.location.reload();
+  };
+
+  return {
+    rootRef, session, ui, mode, setMode, demoReading, setDemoReading, changes, events, modality,
+    portalKey, task, taskIndex, canUndo: session.previous !== null || priorPreferences !== null,
+    offline: offlineUi !== null, onAction, onSignal, onView: (v: string) => capture.current?.view(v),
+    endBlock, undoLast, chooseLocale, reset,
+    togglePin: () => setSession((s) => ({ ...s, pinned: !s.pinned })),
+    forward: (n: number) => setSession((s) => fastForward(s, n, simulatorPrior().models)),
+    isDefault: JSON.stringify(ui.preferences) === JSON.stringify(DEFAULT_PREFERENCES),
+  };
+}
