@@ -3,10 +3,10 @@ import type { ArmId, FrictionSummary, InteractionEvent } from "../attune-ui/type
 import { SURFACE_NAMES, describeFriction } from "./explain";
 import { REPEAT, similarTo, type Habits } from "./habits";
 
-export interface Change { trigger: string; change: string }
+export interface Change { trigger: string; change: string; confidence?: number } // 0..1
 export interface Activity extends Change { at: number } // ms since epoch
 
-export const MAX_ACTIVITY = 20;
+export const MAX_ACTIVITY = 500; // kept in the browser, also through Reset
 export const activityKey = (user: string | null) => `attune-activity:${user ?? "guest"}`;
 
 const APPLIED: Record<ArmId, string> = {
@@ -64,5 +64,8 @@ export function parseActivity(v: unknown, max: number): Activity[] | null {
   const text = (x: unknown) => typeof x === "string" && x.length <= 200;
   if (!Array.isArray(v) || v.length > max) return null;
   const ok = v.every((e: Partial<Activity> | null) => !!e && Number.isFinite(e.at) && text(e.trigger) && text(e.change));
-  return ok ? (v as Activity[]).map(({ at, trigger, change }) => ({ at, trigger, change })) : null;
+  return ok ? (v as Activity[]).map(({ at, trigger, change, confidence }) => ({
+    at, trigger, change,
+    ...(typeof confidence === "number" && confidence >= 0 && confidence <= 1 && { confidence }),
+  })) : null;
 }

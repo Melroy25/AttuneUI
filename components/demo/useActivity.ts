@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { MAX_ACTIVITY, activityKey, parseActivity, type Activity, type Change } from "@/lib/demo/activity";
 
-/** Newest first, kept in this browser until Reset. */
+/** Newest first, kept in this browser. */
 export function useActivity(user: string | null) {
   const key = activityKey(user);
   const [activity, setActivity] = useState<Activity[]>([]);
@@ -28,7 +28,7 @@ export function useActivity(user: string | null) {
   }, [key, activity]);
 
   const add = useCallback((c: Change) => {
-    const entry = { at: Date.now(), trigger: c.trigger.slice(0, 200), change: c.change.slice(0, 200) };
+    const entry = { at: Date.now(), trigger: c.trigger.slice(0, 200), change: c.change.slice(0, 200), confidence: c.confidence };
     setActivity((list) => [entry, ...list].slice(0, MAX_ACTIVITY));
   }, []);
 

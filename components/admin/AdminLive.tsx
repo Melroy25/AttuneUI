@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { findUsers, groupUsers, type Row } from "@/lib/demo/aggregate";
 import { SURFACE_NAMES } from "@/lib/demo/explain";
 import { GlobalOverview } from "./GlobalOverview";
+import { SavedLogs } from "./SavedLogs";
 import { InfoTip } from "./ui";
 import { useLiveRows } from "./useLiveRows";
 import { VisitorXRay } from "./VisitorXRay";
 
 const tab = "min-h-10 rounded-full border border-slate-300 bg-white px-4 text-sm font-semibold aria-pressed:border-blue-700 aria-pressed:bg-blue-700 aria-pressed:text-white";
 const TABS = [
+  ["saved", "Saved logs", "Every user ever saved: behaviours, and each change with its cause."],
   ["all", "All users", "Totals and a list of everyone using the store."],
   ["one", "Find a user", "Search by username or full email to see one person."],
 ] as const;
@@ -17,7 +19,7 @@ const TABS = [
 /** "All users", or search one person by username or email and open their X-Ray. */
 export function AdminLive() {
   const { rows, storage, now, error } = useLiveRows();
-  const [view, setView] = useState<"all" | "one">("all");
+  const [view, setView] = useState<"saved" | "all" | "one">("saved");
   const [query, setQuery] = useState("");
   const [emailHash, setEmailHash] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export function AdminLive() {
       <div className="mx-auto max-w-6xl space-y-3">
         <header className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-bold">Admin</h1>
-          <InfoTip about="this page">Live view of how people use the store and how it adapts to them. It covers the last 24 hours.</InfoTip>
+          <InfoTip about="this page">Live view of how people use the store and how it adapts to them. Saved logs keep everything; the other two tabs cover the last 24 hours.</InfoTip>
           {storage === "memory" && (
             <InfoTip warn about="no database">
               No database yet, so users can disappear from this page. Add FIREBASE_SERVICE_ACCOUNT in Vercel and redeploy.
@@ -60,7 +62,8 @@ export function AdminLive() {
           ))}
         </div>
         {error && <p role="alert" className="text-sm font-semibold text-red-700">{error}</p>}
-        {users.length === 0 && !error && <p className="rounded-xl bg-white p-4 shadow-sm">No users yet.</p>}
+        {view === "saved" && <SavedLogs />}
+        {view !== "saved" && users.length === 0 && !error && <p className="rounded-xl bg-white p-4 shadow-sm">No users yet.</p>}
         {users.length > 0 && view === "all" && <GlobalOverview users={users} onPick={pick} />}
         {users.length > 0 && view === "one" && (
           <div className="grid items-start gap-3 lg:grid-cols-[15rem_minmax(0,1fr)]">

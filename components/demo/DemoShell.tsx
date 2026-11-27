@@ -13,6 +13,7 @@ import type { UiState } from "@/lib/demo/uiState";
 import { SettingsMenu } from "./SettingsMenu";
 import { useActivity } from "./useActivity";
 import { useDemo } from "./useDemo";
+import { useFrictionLog } from "./useFrictionLog";
 import { useHabits } from "./useHabits";
 import { useLiveReport } from "./useLiveReport";
 import { useShortcuts } from "./useShortcuts";
@@ -28,6 +29,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const habits = useHabits(user, (kind, next) => shortcuts.consider(
     kind, next, struggles(d.session.totals, summarizeFriction(d.events, d.modality))));
   useLiveReport(d, page, activity, user);
+  useFrictionLog(user, d.session.totals, d.events, d.modality);
   const surface = SURFACES[d.ui.arm];
   const renderedBy = d.offline
     ? "client (offline fallback)"

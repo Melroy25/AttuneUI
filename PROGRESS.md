@@ -17,10 +17,10 @@
   Support; invariant 9 exception): a 2-arm Thompson bandit each (lib/bandit/shortcutBandit.ts,
   hand-set prior), +1 on use, -1 on ✕ or Undo. Wishlist and Support are considered only from
   3 uses (2 mouse hovers on a footer support link = 1 use). Dark footer.
-- Layout, habits, shortcuts and learning are per account. Reset archives the session, shows
-  Baseline and clears counts; weights and history stay (admin: Earlier sessions).
-- Admin Activity shows problem -> change with time and bandit confidence. A long policy read
-  asks with a bubble before enlarging text. 117/117 tests.
+- Saved per user in Firestore demo_users/{userId} + activity (server REST, /api/demo-user;
+  browser cache first, newer saved copy applied on load). Reset changes the screen only: logs,
+  totals, counts and weights stay. Admin "Saved logs" tab: user selector, cause -> effect.
+- A long policy read asks with a bubble before enlarging text. 122/122 tests.
 
 ## Setup before phone test / pilot (user)
 1. Vercel and .env.local: FIREBASE_* values, EXPORT_TOKEN, STUDY_CODE, STUDY_PHASE (empty =
@@ -31,7 +31,7 @@
    STUDY_PHASE=confirmatory.
 
 ## Open findings
-- Not tested: shortcuts, footer, history, bubble (browser), phone, study writes, human freeze, screen reader.
+- Not tested: saved logs on real Firestore, shortcuts, footer, bubble (browser), phone, study writes, human freeze, screen reader.
 - /demo counts any finished action as success. SIMULATED prior rarely picks large targets
   (3-13%); headroom small: oracle .785 vs static .755, learner +.01 to +.015 at 3000.
 - Calm blocks spread arm probabilities (~.3): decide v (0.25) before the freeze.

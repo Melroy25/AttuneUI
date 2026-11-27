@@ -31,7 +31,9 @@
 Fixed rules: two taps on a product or order card make its arrow glow; after 5 s on the refund policy a
 bubble offers larger text (✓ or ✕); two photo searches move photo search first; Kannada.
 Gear menu: Undo (also turns automatic changes off), Pin, automatic changes on/off, Reset
-(archives the session and shows Baseline; learning is kept).
+(only the screen goes back to Baseline and default shortcuts; logs, totals and learning
+are kept). Admin -> **Saved logs** shows every saved user: behaviour totals, and each change
+with its cause and model confidence. Press Refresh there for new entries.
 
 ## Judge dashboard in 30 seconds
 

@@ -64,6 +64,7 @@ export function useShortcuts(user: string | null, record: (change: Change) => vo
         : kind === "support" ? "Replaced Support with a Customer Support button in the header"
         : `Added "Search similar to ${similarTo(habits, 1)[0]?.name}" cards`;
       record({
+        confidence: decided.confidence,
         trigger: `${ACTIONS[kind]}: ${usesOf(kind, habits)}, struggles: ${friction}, visit ${decided.state.visits}`,
         change: `${change} (Bandit: ${Math.round(decided.confidence * 100)}% confidence)`,
       });

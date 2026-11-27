@@ -71,13 +71,15 @@ export function firestore(key: ServiceAccount, fetcher: typeof fetch = fetch): D
       return { docs: (body.documents ?? []).map(fromDoc), next: body.nextPageToken };
     },
     async where(collection, field, op, value, limit) {
+      const cut = collection.lastIndexOf("/"); // a subcollection is queried under its parent
+      const parent = cut < 0 ? root : `${root}/${collection.slice(0, cut)}`;
       const structuredQuery = {
-        from: [{ collectionId: collection }],
+        from: [{ collectionId: collection.slice(cut + 1) }],
         where: { fieldFilter: { field: { fieldPath: field }, op: OPS[op], value: encode(value) } },
         orderBy: [{ field: { fieldPath: field }, direction: op === ">" ? "DESCENDING" : "ASCENDING" }],
         limit,
       };
-      const response = await call(`${root}:runQuery`, { method: "POST", body: JSON.stringify({ structuredQuery }) });
+      const response = await call(`${parent}:runQuery`, { method: "POST", body: JSON.stringify({ structuredQuery }) });
       const results = (await response.json()) as { document?: Parameters<typeof fromDoc>[0] }[];
       return results.flatMap((r) => (r.document ? [fromDoc(r.document)] : []));
     },

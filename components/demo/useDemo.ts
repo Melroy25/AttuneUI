@@ -138,7 +138,8 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
     setSession({ ...next, previous, log: [...derived.reasons.map((r) => `Preference rule: ${r}`), ...next.log].slice(0, 20) });
     setChanges([...describeChanges(SURFACES[ui.arm], SURFACES[next.rendered]), ...derived.reasons]);
     if (next.rendered !== ui.arm) {
-      record({ trigger: struggle(next.friction!, blockEvents), change: layoutChange(next.rendered) });
+      const picked = next.decision?.action === next.rendered ? next.decision.propensity : undefined;
+      record({ trigger: struggle(next.friction!, blockEvents), change: layoutChange(next.rendered), confidence: picked });
     }
     derived.reasons.forEach((r) => record(fromReason(r)));
     publish({ arm: next.rendered, preferences: derived.preferences });
