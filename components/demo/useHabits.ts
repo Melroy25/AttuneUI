@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { habitChanges, type Change } from "@/lib/demo/activity";
+import type { Shortcut } from "@/lib/bandit/shortcutBandit";
 import {
-  NO_HABITS, REPEAT, askSupport, habitsKey, openOrder, parseHabits, toggleWish, type Habits,
+  NO_HABITS, askSupport, habitsKey, openOrder, parseHabits, toggleWish, type Habits,
 } from "@/lib/demo/habits";
 
-const HIGHLIGHT_MS = 3000;
-
-export function useHabits(user: string | null, record: (change: Change) => void) {
+export function useHabits(user: string | null, onUse: (kind: Shortcut, habits: Habits) => void) {
   const key = habitsKey(user);
   const [habits, setHabits] = useState(NO_HABITS);
-  const [fresh, setFresh] = useState(false); // support was promoted just now, not on an earlier visit
 
   useEffect(() => {
     try {
@@ -22,14 +19,8 @@ export function useHabits(user: string | null, record: (change: Change) => void)
     }
   }, [key]);
 
-  useEffect(() => {
-    if (!fresh) return;
-    const timer = setTimeout(() => setFresh(false), HIGHLIGHT_MS);
-    return () => clearTimeout(timer);
-  }, [fresh]);
-
-  const save = (next: Habits) => {
-    habitChanges(habits, next).forEach(record);
+  const save = (kind: Shortcut, next: Habits) => {
+    onUse(kind, next);
     setHabits(next);
     try {
       localStorage.setItem(key, JSON.stringify(next));
@@ -40,14 +31,9 @@ export function useHabits(user: string | null, record: (change: Change) => void)
 
   return {
     habits,
-    fresh,
-    wish: (id: string) => save(toggleWish(habits, id)),
-    opened: (id: string) => save(openOrder(habits, id)),
-    support: () => {
-      const next = askSupport(habits);
-      if (next.supportUses === REPEAT) setFresh(true);
-      save(next);
-    },
+    wish: (id: string) => save("wishlist", toggleWish(habits, id)),
+    opened: (id: string) => save("similar", openOrder(habits, id)),
+    support: () => save("support", askSupport(habits)),
   };
 }
 

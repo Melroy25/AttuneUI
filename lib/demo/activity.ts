@@ -42,7 +42,7 @@ export function fromReason(reason: string): Change {
   return { trigger, change };
 }
 
-/** The promotions this one action has just earned. */
+/** Earlier fixed-count rule, kept for its test. The store now asks lib/bandit/shortcutBandit. */
 export function habitChanges(before: Habits, after: Habits): Change[] {
   const out: Change[] = [];
   if (before.wishUses < REPEAT && after.wishUses >= REPEAT) {

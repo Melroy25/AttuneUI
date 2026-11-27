@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import type { Change } from "@/lib/demo/activity";
 import type { HabitsApi } from "@/components/demo/useHabits";
+import type { ShortcutsApi } from "@/components/demo/useShortcuts";
 import { SimilarCards } from "@/components/store/Habits";
 import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreOrderList } from "@/components/store/StoreOrderList";
@@ -34,6 +35,7 @@ export interface StoreChrome {
   user: string | null;
   onGoal: () => void;
   habits: HabitsApi;
+  shortcuts: ShortcutsApi;
   log: (change: Change) => void;
   reading?: PortalContext["readingPrompt"];
 }
@@ -53,7 +55,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
   const [notice, setNotice] = useState("");
   const large = surface.targetSize === "large";
   const ctx: PortalContext = {
-    s: STRINGS[preferences.locale], surface, preferences, large, onSignal, onGoal: store?.onGoal, habits: store?.habits,
+    s: STRINGS[preferences.locale], surface, preferences, large, onSignal, onGoal: store?.onGoal, habits: store?.habits, shortcuts: store?.shortcuts,
     logChange: store?.log, readingPrompt: store?.reading,
     control: large ? "min-h-12 min-w-12 text-base" : "min-h-6",
   };

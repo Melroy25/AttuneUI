@@ -1,5 +1,6 @@
 import type { Change } from "@/lib/demo/activity";
 import type { HabitsApi } from "@/components/demo/useHabits";
+import type { ShortcutsApi } from "@/components/demo/useShortcuts";
 import type { PreferenceSignals, Preferences } from "@/lib/attune-ui/preferences/rules";
 import type { SurfaceConfig } from "@/lib/attune-ui/surface/catalog";
 import type { Strings } from "./strings";
@@ -17,6 +18,8 @@ export interface PortalContext {
   onGoal?: () => void;
   /** Store only: shortcuts earned by repeated use. */
   habits?: HabitsApi;
+  /** Store only: which shortcuts the bandit has promoted. */
+  shortcuts?: ShortcutsApi;
   /** Store only: note a screen change for the admin. */
   logChange?: (change: Change) => void;
   /** Store only: set while the policy text should offer larger type. */

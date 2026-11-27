@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   EMPTY_SIGNALS, READ_THRESHOLD_MS, derivePreferences,
@@ -12,29 +11,25 @@ import { startCapture, type Capture } from "@/lib/attune-ui/telemetry/capture";
 import { modalityOf } from "@/lib/attune-ui/telemetry/context";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import type { ArmId, InteractionEvent, Modality } from "@/lib/attune-ui/types";
-import { activityKey, fromReason, layoutChange, struggle, type Change } from "@/lib/demo/activity";
+import { fromReason, layoutChange, struggle, type Change } from "@/lib/demo/activity";
 import { shouldAdapt } from "@/lib/demo/auto";
 import { SURFACE_NAMES } from "@/lib/demo/explain";
-import { habitsKey } from "@/lib/demo/habits";
 import { memoryKey } from "@/lib/demo/memory";
 import { simulatorPrior } from "@/lib/demo/prior";
 import {
   GOALS_PER_LESSON, fastForward, finishBlock, goalOutcome, learn, newSession, previewSurface, togglePin, undo,
   type DemoMode, type Outcome,
 } from "@/lib/demo/session";
-import { UI_COOKIE, encodeUi, type UiState } from "@/lib/demo/uiState";
+import type { UiState } from "@/lib/demo/uiState";
 import type { PortalAction } from "@/lib/study/tasks";
+import { forgetDemo } from "./storage";
 import { useModelMemory } from "./useModelMemory";
-import { readingKey, useReading } from "./useReading";
-
-const writeCookie = (value: string, maxAge: number) => {
-  document.cookie = `${UI_COOKIE}=${value}; path=/; max-age=${maxAge}; samesite=lax`;
-};
+import { usePublish, writeUiCookie } from "./usePublish";
+import { useReading } from "./useReading";
 
 export function useDemo(serverUi: UiState, user: string | null, record: (change: Change) => void) {
-  const router = useRouter();
   const [session, setSession] = useState(() => newSession(serverUi.arm));
-  const [offlineUi, setOfflineUi] = useState<UiState | null>(null);
+  const { ui, offline, publish } = usePublish(serverUi);
   const [mode, setMode] = useState<DemoMode>("attune");
   const [demoReading, setDemoReading] = useState(true);
   const [changes, setChanges] = useState<string[]>([]);
@@ -61,8 +56,6 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
   useModelMemory(store, session, setSession);
   const reading = useReading();
 
-  const ui = offlineUi ?? serverUi;
-
   /** HUD refresh. It must not drain: ending a hover each second would hide long hovers. */
   const refresh = useCallback(() => {
     if (!capture.current) return;
@@ -80,15 +73,6 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
       capture.current?.stop();
     };
   }, [refresh]);
-
-  /** Server renders the new layout from the cookie; offline we render it here. */
-  const publish = (next: UiState) => {
-    writeCookie(encodeUi(next), 60 * 60 * 24 * 30);
-    if (navigator.onLine) {
-      setOfflineUi(null);
-      router.refresh();
-    } else setOfflineUi(next);
-  };
 
   /** A finished action in the store. After a few, the layout on screen is scored; nothing moves. */
   const onGoal = () => {
@@ -232,22 +216,15 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
   };
 
   const reset = () => {
-    writeCookie("", 0);
-    try {
-      localStorage.removeItem(store);
-      localStorage.removeItem(habitsKey(user));
-      localStorage.removeItem(activityKey(user));
-      sessionStorage.removeItem(readingKey);
-    } catch {
-      // nothing was saved
-    }
+    writeUiCookie("", 0);
+    forgetDemo(user);
     window.location.reload();
   };
 
   return {
     rootRef, session, ui, mode, setMode, demoReading, setDemoReading, changes, events, modality,
     portalKey, canUndo: session.previous !== null || priorPreferences !== null,
-    offline: offlineUi !== null, onAction, onGoal, onSignal, onView: (v: string) => capture.current?.view(v),
+    offline, onAction, onGoal, onSignal, onView: (v: string) => capture.current?.view(v),
     readingPrompt, endBlock: () => adapt(false), preview, undoLast, chooseLocale, reset, auto, setAuto,
     togglePin: () => {
       record({

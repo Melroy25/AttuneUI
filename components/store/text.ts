@@ -35,7 +35,7 @@ const en = {
   byStatus: "Orders by status", byRegion: "Orders by region", byPayment: "Orders by payment",
   faq: "Common questions", contactTitle: "Write to support", message: "Your message",
   send: "Send", sent: "Message noted (demo only, nothing is sent)",
-  wishlist: "Wishlist", similarTo: "Search similar to", customerSupport: "Customer Support",
+  wishlist: "Wishlist", similarTo: "Search similar to", customerSupport: "Customer Support", hideShortcut: "Hide shortcut",
   hardToRead: "Feeling hard to read?", comfortYes: "Yes, make the text larger", comfortNo: "No, keep the text",
 };
 export type PageText = typeof en;
@@ -71,7 +71,7 @@ const kn: PageText = {
   byStatus: "ಸ್ಥಿತಿ ಪ್ರಕಾರ", byRegion: "ಪ್ರದೇಶ ಪ್ರಕಾರ", byPayment: "ಪಾವತಿ ಪ್ರಕಾರ",
   faq: "ಸಾಮಾನ್ಯ ಪ್ರಶ್ನೆಗಳು", contactTitle: "ಬೆಂಬಲಕ್ಕೆ ಬರೆಯಿರಿ", message: "ನಿಮ್ಮ ಸಂದೇಶ",
   send: "ಕಳುಹಿಸಿ", sent: "ಸಂದೇಶ ದಾಖಲಾಗಿದೆ (ಡೆಮೊ ಮಾತ್ರ, ಏನನ್ನೂ ಕಳುಹಿಸುವುದಿಲ್ಲ)",
-  wishlist: "ಇಚ್ಛಾಪಟ್ಟಿ", similarTo: "ಇದರಂತಹವು ಹುಡುಕಿ", customerSupport: "ಗ್ರಾಹಕ ಬೆಂಬಲ",
+  wishlist: "ಇಚ್ಛಾಪಟ್ಟಿ", similarTo: "ಇದರಂತಹವು ಹುಡುಕಿ", customerSupport: "ಗ್ರಾಹಕ ಬೆಂಬಲ", hideShortcut: "ಶಾರ್ಟ್‌ಕಟ್ ಮರೆಮಾಡಿ",
   hardToRead: "ಓದಲು ಕಷ್ಟವಾಗುತ್ತಿದೆಯೇ?", comfortYes: "ಹೌದು, ಅಕ್ಷರ ದೊಡ್ಡದು ಮಾಡಿ", comfortNo: "ಬೇಡ, ಹೀಗೇ ಇರಲಿ",
 };
 

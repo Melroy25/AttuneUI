@@ -23,9 +23,10 @@ export const openOrder = (h: Habits, id: string): Habits =>
   ({ ...h, opens: { ...h.opens, [id]: (h.opens[id] ?? 0) + 1 } });
 export const askSupport = (h: Habits): Habits => ({ ...h, supportUses: h.supportUses + 1 });
 
-/** One catalog item for each product whose order was opened repeatedly. */
-export const similarTo = (h: Habits): Product[] => [...new Set(
-  ORDERS.filter((o) => (h.opens[o.id] ?? 0) >= REPEAT)
+/** One catalog item for each product whose order was opened at least `min` times, most first. */
+export const similarTo = (h: Habits, min = REPEAT): Product[] => [...new Set(
+  ORDERS.filter((o) => (h.opens[o.id] ?? 0) >= min)
+    .sort((a, b) => h.opens[b.id] - h.opens[a.id])
     .flatMap((o) => CATALOG.find((p) => p.icon === PRODUCTS[o.product]) ?? []),
 )];
 

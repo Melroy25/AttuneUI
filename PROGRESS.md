@@ -16,11 +16,11 @@
   Kannada unreviewed). Guide and claim corrections: docs/SHOWCASE.md.
 - /demo learns again: a score after 3 finished actions (or a failure after struggle only),
   saved per browser, cleared by Reset (exception to invariant 11 "in-memory").
-- /demo habits (rules, mid-task, saved per browser, cleared by Reset): 2 wishlist presses put
-  it on order cards; 2 opens of an order offer similar items; 2 support clicks add a header
-  button (3 s highlight).
-- Admin Activity shows problem -> change with time (saved per browser, cleared by Reset).
-  Long policy read now asks with a bubble before enlarging text. 110/110 tests.
+- /demo shortcuts (Wishlist on cards, Search similar, Customer Support replacing the header
+  Support; invariant 9 exception): a 2-arm Thompson bandit each (lib/bandit/shortcutBandit.ts,
+  hand-set prior), +1 on use, -1 on ✕ or Undo; saved per browser, cleared by Reset.
+- Admin Activity shows problem -> change with time and bandit confidence. A long policy read
+  asks with a bubble before enlarging text. 114/114 tests.
 
 ## Setup before phone test / pilot (user)
 1. Vercel and .env.local: FIREBASE_* values, EXPORT_TOKEN, STUDY_CODE, STUDY_PHASE (empty =
@@ -31,7 +31,7 @@
    STUDY_PHASE=confirmatory.
 
 ## Open findings
-- Not tested: habits, activity and bubble in a browser, real phone/touch, study writes to Firestore, freeze on human data, screen reader.
+- Not tested: shortcuts, activity and bubble in a browser, real phone/touch, study writes to Firestore, freeze on human data, screen reader.
 - /demo counts any finished action as success (even opening a product). SIMULATED prior rarely picks large targets (3-13%); headroom small: oracle .785 vs static
   .755, learner +.01 to +.015 at 3000.
 - Calm blocks give spread arm probabilities (~.3). Decide v (0.25) before the freeze.

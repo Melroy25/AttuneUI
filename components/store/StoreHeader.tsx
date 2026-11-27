@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { PortalContext } from "@/components/portal/context";
 import { hasKannada } from "@/lib/attune-ui/preferences/rules";
 import { CATEGORIES, CATEGORY_ICONS, cartSummary } from "@/lib/demo/catalog";
-import { REPEAT } from "@/lib/demo/habits";
+import { DismissShortcut } from "./Habits";
 import { PAGE_TEXT, categoryLabel, type Page } from "./text";
 import type { Shop } from "./useShop";
 
@@ -27,13 +27,18 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
         <button type="button" data-part="brand" className="min-h-11 px-4" onClick={() => onPage("home")}>
           <span data-part="mark" aria-hidden>V</span> VeroxaKart
         </button>
-        <button type="button" data-part="pill" className="min-h-11 px-4 text-sm" onClick={help}>
-          🎧 {t.support}
-        </button>
-        {(ctx.habits?.habits.supportUses ?? 0) >= REPEAT && (
-          <button type="button" data-part="support-quick" data-fresh={ctx.habits?.fresh} className="min-h-11 px-4 text-sm"
-            onClick={help}>
-            ⚡ {t.customerSupport}
+        {/* One support button: the promoted one takes the default one's place. */}
+        {ctx.shortcuts?.on("support") ? (
+          <>
+            <button type="button" data-part="support-quick" data-fresh={ctx.shortcuts.fresh} className="min-h-11 px-4 text-sm"
+              onClick={() => { ctx.shortcuts?.use("support"); help(); }}>
+              ⚡ {t.customerSupport}
+            </button>
+            <DismissShortcut ctx={ctx} kind="support" />
+          </>
+        ) : (
+          <button type="button" data-part="pill" className="min-h-11 px-4 text-sm" onClick={help}>
+            🎧 {t.support}
           </button>
         )}
         <span data-attune-id="location" className="ml-auto text-sm">📍 {t.deliverTo}</span>
