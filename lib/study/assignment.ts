@@ -10,8 +10,8 @@ export const VARIANT_ORDERS = ["AB", "BA"] as const;
 export type VariantOrder = (typeof VARIANT_ORDERS)[number];
 export interface Assignment { arm: StudyArm; order: VariantOrder }
 
-/** "confirmatory" is deliberately absent until a frozen policy is wired in. Phases are never pooled. */
-export const PHASES = ["test", "pilot"] as const;
+/** Phases are never pooled. "confirmatory" also needs data/policy.frozen.json (lib/server/frozen.ts). */
+export const PHASES = ["test", "pilot", "confirmatory"] as const;
 export type Phase = (typeof PHASES)[number];
 
 /** From the STUDY_PHASE env var. A typo must not silently file real data under "test". */

@@ -34,6 +34,7 @@ export function OrderDetail({ ctx, order, onRefund }: {
       {surface.thumbZoneCta && (
         <button
           type="button"
+          data-thumb-cta
           className="fixed inset-x-4 bottom-4 z-20 min-h-14 rounded-xl bg-indigo-600 text-base font-semibold text-white shadow-lg sm:static sm:mt-3 sm:w-full"
           onClick={onRefund}
         >

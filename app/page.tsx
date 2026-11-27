@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const PAGES = [
   { href: "/demo", title: "Live testbed", note: "Adaptive order portal with X-Ray view" },
-  { href: "/study", title: "3-arm study", note: "Pre-freeze build: test runs only" },
+  { href: "/study", title: "3-arm study", note: "Anonymous usability study; needs an invite link" },
   { href: "/eval", title: "Evaluation lab", note: "Not built yet" },
 ];
 

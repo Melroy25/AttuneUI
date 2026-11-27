@@ -2,3 +2,8 @@
 
 /* Pull-to-refresh would restart a study run mid-task. */
 html, body { overscroll-behavior-y: contain; }
+
+/* The fixed thumb-zone button must not hide the end of the page on narrow screens. */
+@media (width < 40rem) {
+  body:has([data-thumb-cta]) { padding-bottom: 5.5rem; }
+}

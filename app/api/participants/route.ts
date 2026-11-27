@@ -1,3 +1,4 @@
+import { loadFrozenPolicy } from "@/lib/server/frozen";
 import { fail, readJson, sameSecret } from "@/lib/server/http";
 import { register } from "@/lib/server/register";
 import { supabaseRest } from "@/lib/server/supabase";
@@ -16,6 +17,13 @@ export async function POST(request: Request) {
   const phase = parsePhase(process.env.STUDY_PHASE);
   if (!phase) return fail(503, "study phase not configured");
   if (parsed.phase !== phase) return fail(409, "study phase has changed");
+  if (phase === "confirmatory") {
+    const { error } = loadFrozenPolicy();
+    if (error) {
+      console.error("participants:", error);
+      return fail(503, error);
+    }
+  }
   const rest = supabaseRest();
   if (!rest) return fail(503, "storage not configured");
   try {

@@ -106,7 +106,8 @@ export function useDemo(serverUi: UiState) {
     const derived = session.pinned
       ? { preferences: ui.preferences, reasons: [] }
       : derivePreferences(ui.preferences, signals.current, READ_THRESHOLD_MS[demoReading ? "demo" : "normal"]);
-    setPriorPreferences(ui.preferences);
+    // A boundary that changes nothing must not discard what Undo would restore.
+    if (next.rendered !== session.rendered || derived.reasons.length > 0) setPriorPreferences(ui.preferences);
     setSession({ ...next, log: [...derived.reasons.map((r) => `Preference rule: ${r}`), ...next.log].slice(0, 20) });
     setChanges([...describeChanges(SURFACES[ui.arm], SURFACES[next.rendered]), ...derived.reasons]);
     publish({ arm: next.rendered, preferences: derived.preferences });
@@ -134,6 +135,7 @@ export function useDemo(serverUi: UiState) {
     onSignal(locale === "kn" ? { kannada: 1 } : { english: 1 });
     // An explicit choice applies at once and outranks the rule.
     if (locale === "en") signals.current.kannada = 0;
+    setPriorPreferences((p) => p && { ...p, locale }); // Undo must not revert it
     publish({ arm: ui.arm, preferences: { ...ui.preferences, locale } });
   };
 

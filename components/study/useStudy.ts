@@ -10,6 +10,7 @@ import { blockCount, offlineAssignment, variantFor, type Block, type Phase } fro
 import { boundaryDecision } from "@/lib/study/boundary";
 import { chunk, newParticipantId, roundEvents, type ParticipantRecord } from "@/lib/study/records";
 import { TASKS } from "@/lib/study/tasks";
+import type { StudyPolicy } from "@/lib/server/frozen";
 import type { Registered } from "@/lib/server/register";
 import type { TaskResult } from "./TaskRun";
 import { post, useUploads } from "./useUploads";
@@ -28,7 +29,8 @@ function markDevice(): boolean {
   }
 }
 
-export function useStudy(phase: Phase) {
+/** `frozen` is set in the confirmatory phase; test and pilot use the SIMULATED prior. */
+export function useStudy(phase: Phase, frozen: StudyPolicy | null) {
   const blocks = blockCount(phase);
   const uploads = useUploads();
   const [stage, setStage] = useState<Stage>("consent");
@@ -42,9 +44,10 @@ export function useStudy(phase: Phase) {
 
   // Built up front (and cached): at the block boundary the freeze let extra taps hit Undo.
   useEffect(() => {
+    if (frozen) return;
     const timer = setTimeout(simulatorPrior, 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [frozen]);
 
   const begin = async (pointer: PointerKind) => {
     setStage("starting");
@@ -100,12 +103,15 @@ export function useStudy(phase: Phase) {
 
   /** One decision per boundary, from the finished block's events only. */
   const decideBlock = (record: ParticipantRecord, block: Block) => {
-    const { models, marginals } = simulatorPrior();
+    const { models, marginals } = frozen ?? simulatorPrior();
     const decision = boundaryDecision({
       arm: record.arm, previous: blockFriction.current, block, pointer: record.pointer,
       viewportWidth: window.innerWidth, participantId: record.id, policy: { models, marginals },
     });
-    const provenance = record.arm === "P" ? "uniform random (pilot)" : "SIMULATED prior; not frozen";
+    const provenance =
+      record.arm === "P" ? "uniform random (pilot)"
+      : frozen ? `frozen policy ${frozen.hash}`
+      : "SIMULATED prior; not frozen";
     uploads.record(block, "decision", { ...decision, provenance });
     blockFriction.current = [];
     setAdapted(decision.action);

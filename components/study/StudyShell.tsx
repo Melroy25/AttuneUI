@@ -1,6 +1,7 @@
 "use client";
 
 import { STRINGS, taskText } from "@/components/portal/strings";
+import type { StudyPolicy } from "@/lib/server/frozen";
 import type { Phase } from "@/lib/study/assignment";
 import { TaskRun } from "./TaskRun";
 import { useStudy } from "./useStudy";
@@ -8,8 +9,8 @@ import { useStudy } from "./useStudy";
 const primary = "min-h-12 w-full rounded bg-indigo-600 px-4 font-semibold text-white disabled:opacity-50";
 const secondary = "min-h-12 rounded border px-3 text-sm disabled:opacity-50";
 
-export function StudyShell({ phase }: { phase: Phase }) {
-  const d = useStudy(phase);
+export function StudyShell({ phase, frozen }: { phase: Phase; frozen: StudyPolicy | null }) {
+  const d = useStudy(phase, frozen);
   const { block, index } = d.position;
   const s = STRINGS.en;
 

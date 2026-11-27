@@ -103,7 +103,7 @@ describe("pilot assignment", () => {
 
   it("accepts only known phases", () => {
     expect([parsePhase(undefined), parsePhase("pilot")]).toEqual(["test", "pilot"]);
-    expect([parsePhase("Pilot"), parsePhase("confirmatory")]).toEqual([null, null]);
+    expect([parsePhase("Pilot"), parsePhase("Confirmatory")]).toEqual([null, null]);
   });
 
   it("draws uniformly over eligible arms, independently per block", () => {
