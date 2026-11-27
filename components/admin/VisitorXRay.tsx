@@ -1,65 +1,73 @@
-import type { ReactNode } from "react";
 import { FEATURES } from "@/lib/attune-ui/telemetry/context";
 import { ARM_IDS } from "@/lib/attune-ui/types";
-import { SURFACE_NAMES, describeFriction } from "@/lib/demo/explain";
-import type { LiveSnapshot } from "@/lib/demo/live";
+import { COUNTED, type UserView } from "@/lib/demo/aggregate";
+import { SURFACE_NAMES } from "@/lib/demo/explain";
+import { STRUGGLE_LABELS, plainLog } from "@/lib/demo/labels";
+import { Bars, Box } from "./ui";
 
-function Box({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="min-w-0 space-y-2 rounded-xl bg-white p-3 shadow-sm">
-      <h2 className="font-bold">{title}</h2>
-      {children}
-    </section>
-  );
-}
+const chip = "rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium";
 
-const SIGNALS = ["rage", "dead", "miss", "dwell", "thrash", "backtrack", "tortuosity"] as const;
-
-export function VisitorXRay({ s }: { s: LiveSnapshot }) {
+export function VisitorXRay({ u }: { u: UserView }) {
+  const s = u.latest.snapshot;
+  const chosen = s.decision?.action;
   return (
     <div className="grid min-w-0 gap-3 md:grid-cols-2">
-      <Box title={`Showing now: ${SURFACE_NAMES[s.arm]}`}>
-        <p className="text-sm">
-          Page {s.page} · block {s.block} · {s.mode} mode · language {s.locale} · automatic {s.auto ? "on" : "off"}
-          {s.pinned ? " · layout pinned" : ""}
-        </p>
-        <h3 className="text-sm font-semibold">What happened</h3>
-        {s.why.map((line, i) => <p key={i} className="text-sm">{line}</p>)}
+      <div className="min-w-0 md:col-span-2">
+        <Box title={u.name} info="Who this is and what they are doing. Visits counts browser tabs in the last 24 hours.">
+          <div className="flex flex-wrap gap-1.5">
+            <span className={chip}>{u.online ? "● Online" : "○ Away"}</span>
+            {s.email && <span className={chip}>{s.email}</span>}
+            <span className={chip}>Page: <span className="capitalize">{s.page}</span></span>
+            <span className={chip}>{s.viewportWidth < 768 ? "Phone" : "Computer"} · {s.viewportWidth}px</span>
+            <span className={chip}>Changes: {u.adaptations}</span>
+            <span className={chip}>Visits: {u.sessions}</span>
+          </div>
+        </Box>
+      </div>
+      <Box title="Screen now" info={<>{s.why.map((line, i) => <p key={i}>{line}</p>)}</>}>
+        <p className="text-xl font-bold">{SURFACE_NAMES[s.arm]}</p>
+        {chosen && s.decision && (
+          <p className="text-sm">Picked: {SURFACE_NAMES[chosen]} ({Math.round(s.decision.propensity * 100)}% chance)</p>
+        )}
+        <div className="flex flex-wrap gap-1.5">
+          <span className={chip}>Auto-change: {s.auto ? "on" : "off"}</span>
+          {s.pinned && <span className={chip}>Locked</span>}
+          {chosen && chosen !== s.arm && <span className={chip}>Changed back</span>}
+          {s.locale === "kn" && <span className={chip}>ಕನ್ನಡ</span>}
+        </div>
         {s.changes.length > 0 && <ul className="list-disc pl-5 text-sm">{s.changes.map((c, i) => <li key={i}>{c}</li>)}</ul>}
       </Box>
-      <Box title="Struggle since the last change">
-        <p className="text-sm">Detected: {describeFriction(s.friction)}.</p>
-        <dl className="grid grid-cols-4 gap-1 text-sm">
-          {SIGNALS.map((k) => (
-            <div key={k} className={`rounded-lg p-2 ${k !== "tortuosity" && s.friction[k] > 0 ? "bg-amber-100" : "bg-slate-100"}`}>
-              <dt className="truncate text-xs text-slate-600">{k}</dt>
-              <dd className="text-lg font-semibold tabular-nums">{k === "tortuosity" ? s.friction[k].toFixed(1) : s.friction[k]}</dd>
+      <Box title="Struggles" info="Totals for this user. An orange box marks signs seen since the last change.">
+        <dl className="grid grid-cols-3 gap-1.5 text-sm">
+          {COUNTED.map((k) => (
+            <div key={k} className={`rounded-lg p-2 ${s.friction[k] > 0 ? "bg-amber-100" : "bg-slate-100"}`}>
+              <dt className="text-xs text-slate-600">{STRUGGLE_LABELS[k]}</dt>
+              <dd className="text-lg font-semibold tabular-nums">
+                {u.totals[k]}{s.friction[k] > 0 && <span className="ml-1 text-xs font-medium">+{s.friction[k]} now</span>}
+              </dd>
             </div>
           ))}
         </dl>
       </Box>
-      <Box title="Last decision: arm probabilities">
-        {!s.decision && <p className="text-sm text-slate-600">No sampled decision yet.</p>}
-        {s.decision && ARM_IDS.map((a) => (
-          <div key={a} className="flex items-center gap-2 text-sm">
-            <span className="w-24">{a}{a === s.decision!.action ? " ✓" : ""}</span>
-            <span aria-hidden className="h-3 flex-1 rounded-r bg-slate-100">
-              <span className={`block h-3 rounded-r ${a === s.decision!.action ? "bg-[#2a78d6]" : "bg-slate-400"}`}
-                style={{ width: `${s.decision!.probs[a] * 100}%` }} />
-            </span>
-            <span className="w-10 text-right tabular-nums">{Math.round(s.decision!.probs[a] * 100)}%</span>
-          </div>
-        ))}
-        <h3 className="pt-1 text-sm font-semibold">Live context ({s.modality} model)</h3>
-        <dl className="grid grid-cols-2 gap-x-4 text-sm">
-          {FEATURES.map((f, i) => (
-            <div key={f} className="flex justify-between"><dt className="text-slate-600">{f}</dt><dd className="tabular-nums">{s.context[i].toFixed(2)}</dd></div>
-          ))}
-        </dl>
+      <Box title="Why this layout" info="The chance each layout had at the last change. The tick marks the one picked; it is not always the highest, because the system also explores.">
+        {!s.decision && <p className="text-sm text-slate-600">No change yet.</p>}
+        {s.decision && (
+          <Bars unit="%" chosen={SURFACE_NAMES[s.decision.action]}
+            rows={ARM_IDS.map((a) => [SURFACE_NAMES[a], Math.round(s.decision!.probs[a] * 100)])} />
+        )}
+        <details className="text-sm">
+          <summary className="min-h-8 cursor-pointer text-slate-600">Technical details</summary>
+          <p>{s.modality === "coarse" ? "Touch" : "Mouse"} model · {s.mode} · block {s.block}</p>
+          <dl className="grid grid-cols-2 gap-x-4">
+            {FEATURES.map((f, i) => (
+              <div key={f} className="flex justify-between"><dt className="text-slate-600">{f}</dt><dd className="tabular-nums">{s.context[i].toFixed(2)}</dd></div>
+            ))}
+          </dl>
+        </details>
       </Box>
-      <Box title="Event log (newest first)">
+      <Box title="Activity" info="What happened on this user's screen, newest first.">
         {s.log.length === 0 && <p className="text-sm text-slate-600">Nothing yet.</p>}
-        <ol className="space-y-1 text-sm">{s.log.map((line, i) => <li key={i}>• {line}</li>)}</ol>
+        <ol className="space-y-1 text-sm">{s.log.map((line, i) => <li key={i}>• {plainLog(line)}</li>)}</ol>
       </Box>
     </div>
   );

@@ -4,6 +4,7 @@ import { GET, POST } from "../app/api/live/route";
 import { DELETE as signOut, POST as signIn } from "../app/api/user/route";
 import { findUsers, groupUsers, summariseAll } from "../lib/demo/aggregate";
 import { shouldAdapt } from "../lib/demo/auto";
+import { plainLog } from "../lib/demo/labels";
 import { parseSnapshot, type LiveSnapshot } from "../lib/demo/live";
 import { firestore } from "../lib/server/db";
 import { canSignIn, loginRequired, storeUser, userFromToken, userToken } from "../lib/server/users";
@@ -144,5 +145,15 @@ describe("per-user and global views", () => {
     expect(findUsers(users, "r@x.com", "abc").map((u) => u.name)).toEqual(["ravi"]);
     expect(findUsers(users, "r@x.com", "")).toEqual([]);
     expect(findUsers(users, "  ", "")).toHaveLength(2);
+  });
+});
+
+describe("plain admin wording", () => {
+  it("shortens engineer log lines and keeps unknown ones", () => {
+    expect(plainLog("rage 1, dead 0, miss 4, dwell 0 -> disclosure (p = 0.23, attune)"))
+      .toBe("Switched to Simplified filters (23% chance)");
+    expect(plainLog("Undo: back to baseline")).toBe("Undone: back to Static layout");
+    expect(plainLog("Preference rule: 7 s on a text block -> larger text")).toBe("Preference: 7 s on a text block → larger text");
+    expect(plainLog("something new")).toBe("something new");
   });
 });
