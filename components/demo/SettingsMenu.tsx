@@ -5,7 +5,7 @@ const item =
   "flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent";
 
 /** Native popover: Escape and outside taps close it. */
-export function SettingsMenu({ canUndo, pinned, hud, onUndo, onPin, onHud, onReset }: {
+export function SettingsMenu({ canUndo, pinned, hud, onUndo, onPin, onHud, onReset, user }: {
   canUndo: boolean;
   pinned: boolean;
   hud: boolean;
@@ -13,6 +13,7 @@ export function SettingsMenu({ canUndo, pinned, hud, onUndo, onPin, onHud, onRes
   onPin: () => void;
   onHud: () => void;
   onReset: () => void;
+  user: string | null;
 }) {
   const close = { popoverTarget: ID, popoverTargetAction: "hide" } as const;
   return (
@@ -49,6 +50,12 @@ export function SettingsMenu({ canUndo, pinned, hud, onUndo, onPin, onHud, onRes
         <a href="/eval" target="_blank" rel="noopener" className={item}>
           <span>Judge Dashboard (/eval)</span><span aria-hidden>↗</span>
         </a>
+        {user && (
+          <button type="button" className={`${item} border-t border-slate-200`}
+            onClick={async () => { await fetch("/api/user", { method: "DELETE" }); window.location.reload(); }}>
+            <span>Sign out ({user})</span><span aria-hidden>⎋</span>
+          </button>
+        )}
       </div>
     </>
   );

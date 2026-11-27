@@ -1,19 +1,27 @@
 # Showcase guide: try it yourself
 
-## Live admin X-Ray (two windows)
+## Store users and the admin (live)
 
-1. Add to `.env.local`: `ADMIN_USER=...` and `ADMIN_PASSWORD=...` (long). Restart the app.
-2. Window 1: `/admin`, sign in. Window 2 (side by side): `/demo`.
-3. In the store, click two or three status labels, a couple of seconds apart.
-4. After 3 struggles (rage, dead, miss, long hover, scroll thrash, backtrack) the store adapts by
-   itself, at most once every 8 s, keeping your page and task. The admin shows what was detected,
-   the layout, the probabilities and a log, about a second or two behind.
-5. The sampled layout may be the one already shown. Undo pauses automatic adapting (turn it back
-   on in the store's X-Ray HUD).
+| Who | Address |
+|---|---|
+| Shopper (phone or laptop) | https://attune-ui-smoky.vercel.app/demo |
+| Admin | https://attune-ui-smoky.vercel.app/admin |
 
-**Vercel:** set `ADMIN_USER`, `ADMIN_PASSWORD`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, run
-`supabase/schema.sql` again (new `live_sessions` table), redeploy. Without the table the live view
-is unreliable there. There is no login lockout, so use a long password.
+**One-time database step:** run all of `supabase/schema.sql` in Supabase's SQL editor (tables
+`demo_users` and `live_sessions`). Without it, creating a store account fails.
+
+1. Store: "New here? Create an account" with a made-up name (3-20 letters, numbers, _) and a
+   password used nowhere else. Each person needs their own account. On one computer use a private
+   window for the second user.
+2. Admin: sign in. **All users** = totals, where users struggle, layouts shown and chosen, a table
+   and recent activity. **One user** = that user's totals, layout history and live X-Ray.
+3. In the store, click two or three status labels on Orders, a couple of seconds apart. After 3
+   struggles the store adapts by itself (at most every 8 s). The admin follows about 1-2 s behind.
+4. The sampled layout may be the one already shown. Undo pauses automatic adapting.
+
+Totals add up a user's browser tabs from the last 24 hours; reloading a tab starts that tab's
+counts again. Locally, put `ADMIN_USER` and `ADMIN_PASSWORD` in `.env.local` (without them the
+store has no sign-in). Anyone can create a store account and there is no rate limit.
 
 ## Start the app
 

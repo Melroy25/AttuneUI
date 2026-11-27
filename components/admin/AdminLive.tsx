@@ -2,15 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { COUNTED, groupUsers } from "@/lib/demo/aggregate";
 import { SURFACE_NAMES } from "@/lib/demo/explain";
 import type { LiveRow, Storage } from "@/lib/server/live";
+import { GlobalOverview } from "./GlobalOverview";
 import { VisitorXRay } from "./VisitorXRay";
 
 const POLL_MS = 1000;
+const tab = "min-h-10 rounded-full border border-slate-300 bg-white px-4 text-sm font-semibold aria-pressed:border-blue-700 aria-pressed:bg-blue-700 aria-pressed:text-white";
 
 export function AdminLive() {
   const router = useRouter();
-  const [data, setData] = useState<{ storage: Storage; sessions: LiveRow[] } | null>(null);
+  const [data, setData] = useState<{ storage: Storage; sessions: LiveRow[]; at: number } | null>(null);
+  const [view, setView] = useState<"all" | "one">("all");
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -23,7 +27,7 @@ export function AdminLive() {
         if (response.status === 401) return router.refresh();
         if (!response.ok) throw new Error(String(response.status));
         const next = await response.json();
-        if (!stopped) { setData(next); setError(""); }
+        if (!stopped) { setData({ ...next, at: Date.now() }); setError(""); }
       } catch {
         if (!stopped) setError("Connection lost. Retrying…");
       }
@@ -33,8 +37,9 @@ export function AdminLive() {
     return () => { stopped = true; clearTimeout(timer); };
   }, [router]);
 
-  const sessions = data?.sessions ?? [];
-  const current = sessions.find((s) => s.snapshot.id === selected) ?? sessions[0];
+  const users = data ? groupUsers(data.sessions, data.at) : [];
+  const current = users.find((u) => u.name === selected) ?? users[0];
+  const pick = (name: string) => { setSelected(name); setView("one"); };
 
   return (
     <main className="min-h-dvh bg-slate-100 p-2 text-slate-900 sm:p-4">
@@ -49,28 +54,45 @@ export function AdminLive() {
           </button>
         </header>
         <p className="text-sm text-slate-600">
-          Demo visitors active in the last minute. Updates every second. Demo activity is not study data.
-          {data?.storage === "memory" && " Storage: this server's memory (fine locally; on Vercel create the live_sessions table)."}
+          Store users seen in the last 24 hours. Updates every second. Demo activity is not study data.
+          {data?.storage === "memory" && " Storage: this server's memory (fine locally; on Vercel run supabase/schema.sql)."}
         </p>
+        <div role="group" aria-label="View" className="flex gap-2">
+          <button type="button" className={tab} aria-pressed={view === "all"} onClick={() => setView("all")}>All users</button>
+          <button type="button" className={tab} aria-pressed={view === "one"} onClick={() => setView("one")}>One user</button>
+        </div>
         {error && <p role="alert" className="text-sm font-semibold text-red-700">{error}</p>}
-        {data && sessions.length === 0 && (
-          <p className="rounded-xl bg-white p-4 shadow-sm">No visitors yet. Open the store in another window.</p>
+        {data && users.length === 0 && (
+          <p className="rounded-xl bg-white p-4 shadow-sm">No users yet. Open the store in another window or on your phone and sign in.</p>
         )}
-        {current && (
+        {users.length > 0 && view === "all" && <GlobalOverview users={users} onPick={pick} />}
+        {current && view === "one" && (
           <div className="grid items-start gap-3 lg:grid-cols-[17rem_minmax(0,1fr)]">
-            <ul aria-label="Visitors" className="space-y-2">
-              {sessions.map(({ snapshot: s, updatedAt }) => (
-                <li key={s.id}>
-                  <button type="button" aria-pressed={s.id === current.snapshot.id} onClick={() => setSelected(s.id)}
+            <ul aria-label="Users" className="space-y-2">
+              {users.map((u) => (
+                <li key={u.name}>
+                  <button type="button" aria-pressed={u.name === current.name} onClick={() => setSelected(u.name)}
                     className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left text-sm aria-pressed:border-blue-700 aria-pressed:ring-2 aria-pressed:ring-blue-200">
-                    <strong className="font-mono">Visitor {s.id.slice(0, 6)}</strong>
-                    <span className="block text-slate-600">{s.page} · {SURFACE_NAMES[s.arm]} · {s.viewportWidth}px</span>
-                    <span className="block text-slate-600">seen {new Date(updatedAt).toLocaleTimeString()}</span>
+                    <strong>{u.online ? "●" : "○"} {u.name}</strong>
+                    <span className="block text-slate-600">{u.latest.snapshot.page} · {SURFACE_NAMES[u.latest.snapshot.arm]} · {u.latest.snapshot.viewportWidth}px</span>
+                    <span className="block text-slate-600">seen {new Date(u.latest.updatedAt).toLocaleTimeString()}</span>
                   </button>
                 </li>
               ))}
             </ul>
-            <VisitorXRay s={current.snapshot} />
+            <div className="min-w-0 space-y-3">
+              <section className="rounded-xl bg-white p-3 text-sm shadow-sm">
+                <h2 className="text-base font-bold">{current.name}: totals</h2>
+                <p>
+                  {current.adaptations} layout decisions · {current.sessions} browser session(s) ·{" "}
+                  {COUNTED.map((k) => `${k} ${current.totals[k]}`).join(" · ")}
+                </p>
+                <p className="text-slate-600">
+                  Layout history: {current.latest.snapshot.history.map((h) => `block ${h.block} ${SURFACE_NAMES[h.arm]}`).join(" → ") || "no decisions yet"}
+                </p>
+              </section>
+              <VisitorXRay s={current.latest.snapshot} />
+            </div>
           </div>
         )}
       </div>

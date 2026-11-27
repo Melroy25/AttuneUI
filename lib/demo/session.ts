@@ -23,6 +23,9 @@ export interface DemoSession {
   friction: FrictionSummary | null;
   preview: boolean; // the layout was picked by hand, not by the policy
   overrides: { undo: number; pin: number }; // shown only; never part of context or reward
+  /** Admin view only: friction of finished blocks, and the latest layout decisions. */
+  totals: FrictionSummary;
+  history: { block: number; arm: ArmId }[];
   blocks: number;
   liveUpdates: number;
   simulatedUpdates: number;
@@ -30,7 +33,11 @@ export interface DemoSession {
   log: string[];
 }
 
+const NONE: FrictionSummary = { rage: 0, dead: 0, miss: 0, dwell: 0, thrash: 0, backtrack: 0, tortuosity: 1 };
+export const HISTORY = 10;
+
 export const newSession = (rendered: ArmId = "baseline"): DemoSession => ({
+  totals: NONE, history: [],
   models: null, rendered, previous: null, pinned: false, active: null, decision: null,
   mode: null, friction: null, preview: false, overrides: { undo: 0, pin: 0 }, blocks: 0, liveUpdates: 0, simulatedUpdates: 0, decisionMs: [], log: [],
 });
@@ -45,6 +52,11 @@ export interface BlockInput {
   prior: { models: Models; marginals: Probs };
   now: () => number;
 }
+
+const addFriction = (a: FrictionSummary, b: FrictionSummary): FrictionSummary => ({
+  rage: a.rage + b.rage, dead: a.dead + b.dead, miss: a.miss + b.miss, dwell: a.dwell + b.dwell,
+  thrash: a.thrash + b.thrash, backtrack: a.backtrack + b.backtrack, tortuosity: Math.max(a.tortuosity, b.tortuosity),
+});
 
 /** Block boundary: learn from the block just finished, then decide the next surface. */
 export function finishBlock(session: DemoSession, input: BlockInput): DemoSession {
@@ -95,6 +107,8 @@ export function finishBlock(session: DemoSession, input: BlockInput): DemoSessio
     mode: input.mode,
     friction,
     preview: false,
+    totals: addFriction(session.totals, friction),
+    history: [...session.history, { block: session.blocks + 1, arm: rendered }].slice(-HISTORY),
     blocks: session.blocks + 1,
     liveUpdates,
     decisionMs: decision ? [...session.decisionMs, elapsed].slice(-50) : session.decisionMs,

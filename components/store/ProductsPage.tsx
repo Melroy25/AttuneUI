@@ -1,55 +1,36 @@
 import { useState } from "react";
 import type { PortalContext } from "@/components/portal/context";
-import { hasKannada } from "@/lib/attune-ui/preferences/rules";
-import { CATALOG, CATEGORIES, searchCatalog, type Category, type Product } from "@/lib/demo/catalog";
+import { CATALOG, searchCatalog, type Product } from "@/lib/demo/catalog";
 import { ArrowButton, useCardHint } from "./cardHint";
-import { PAGE_TEXT } from "./text";
+import { PAGE_TEXT, categoryLabel } from "./text";
+import type { Shop } from "./useShop";
 
 const stockOf = (p: Product) => (p.stock === 0 ? "outOfStock" : p.stock <= 5 ? "lowStock" : "inStock");
 
-export function ProductsPage({ ctx, onView }: { ctx: PortalContext; onView: (view: string) => void }) {
+export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: Shop; onView: (view: string) => void }) {
   const t = PAGE_TEXT[ctx.preferences.locale];
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<Category | "">("");
-  const [selected, setSelected] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [cart, setCart] = useState(0);
   const hint = useCardHint();
-  const found = searchCatalog(query, category);
-  const product = CATALOG.find((p) => p.id === selected);
+  const found = searchCatalog(shop.query, shop.category);
+  const product = CATALOG.find((p) => p.id === shop.selected);
+  const inCart = product ? shop.cart[product.id] ?? 0 : 0;
   const open = (id: string) => {
     hint.clear(id);
-    setSelected(id);
+    shop.setSelected(id);
     setQuantity(1);
     onView(`product:${id}`);
   };
 
   return (
-    <div className="space-y-3">
-      <section data-part="filters" className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <input type="search" aria-label={t.searchProducts} placeholder={t.searchProducts} value={query}
-            className={`min-w-40 flex-1 border px-2 ${ctx.control}`} onChange={(e) => setQuery(e.target.value)}
-            onBlur={(e) => {
-              const text = e.target.value.trim();
-              if (text) ctx.onSignal({ textSearches: 1, kannada: hasKannada(text) ? 1 : 0 });
-            }} />
-          <span data-part="cart" data-attune-id="cart" className="text-sm font-semibold">🛒 {t.cart}: {cart}</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {(["", ...CATEGORIES] as const).map((c) => (
-            <button key={c || "all"} type="button" data-part="preset" aria-pressed={category === c}
-              className={`rounded-full border px-3 text-sm ${ctx.control}`} onClick={() => setCategory(c)}>
-              {c ? t[c] : t.all}
-            </button>
-          ))}
-        </div>
-      </section>
-      <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
+    <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
+      <div className="order-2 space-y-2 md:order-1">
+        <h2 data-attune-id="results-title" className="font-bold">
+          {shop.category ? categoryLabel(t, shop.category) : t.products} ({found.length})
+        </h2>
         <ul className="grid content-start gap-2 sm:grid-cols-2">
           {found.length === 0 && <li className="p-3 text-sm">{t.noProducts}</li>}
           {found.map((p) => (
-            <li key={p.id} data-part="order" data-selected={selected === p.id} className="flex items-center gap-3 p-3"
+            <li key={p.id} data-part="order" data-selected={shop.selected === p.id} className="flex items-center gap-3 p-3"
               {...hint.cardProps(p.id)}>
               <span aria-hidden data-part="thumb" data-attune-id={`thumb-${p.id}`}>{p.icon}</span>
               <div className="min-w-0 flex-1">
@@ -63,30 +44,35 @@ export function ProductsPage({ ctx, onView }: { ctx: PortalContext; onView: (vie
             </li>
           ))}
         </ul>
-        {!product ? <p data-part="detail" className="self-start p-3 text-sm">{t.selectProduct}</p> : (
-          <section data-part="detail" className="space-y-3 self-start p-3 text-sm">
-            <h2 className="font-bold">{product.icon} {product.name}</h2>
-            <p>{product.id} · {t[product.category]} · ₹{product.price.toLocaleString("en-IN")}</p>
-            <div className="flex items-center gap-2">
-              <span>{t.quantity}</span>
-              <button type="button" aria-label={`${t.quantity} −`} className={`w-8 border ${ctx.control}`}
-                disabled={quantity <= 1} onClick={() => setQuantity(quantity - 1)}>−</button>
-              <output className="w-6 text-center font-semibold">{quantity}</output>
-              <button type="button" aria-label={`${t.quantity} +`} className={`w-8 border ${ctx.control}`}
-                disabled={quantity >= product.stock} onClick={() => setQuantity(quantity + 1)}>+</button>
-            </div>
-            {/* A disabled button that looks tappable: taps on it are sensed as dead clicks. */}
-            <span className="block" data-attune-tap={`buy-${product.id}`}>
-              <button type="button" data-part="primary" disabled={product.stock === 0}
-                className={`w-full px-3 disabled:pointer-events-none disabled:opacity-50 ${ctx.control}`}
-                onClick={() => setCart(cart + quantity)}>
-                {t.addToCart}
-              </button>
-            </span>
-            {product.stock === 0 && <p>{t.outOfStock} · {t.notify}</p>}
-          </section>
-        )}
       </div>
+      {!product ? <p data-part="detail" className="order-1 hidden self-start p-3 text-sm md:order-2 md:block">{t.selectProduct}</p> : (
+        <section data-part="detail" className="order-1 space-y-3 self-start p-3 text-sm md:order-2">
+          <div aria-hidden data-part="art" data-attune-id="detail-art" className="grid h-40 place-items-center text-7xl">{product.icon}</div>
+          <h2 className="text-base font-bold">{product.name}</h2>
+          <p>
+            <span data-part="price" className="text-xl">₹{product.price.toLocaleString("en-IN")}</span>{" "}
+            {product.off > 0 && <span data-stock="inStock" className="font-semibold">↓{product.off}%</span>}
+          </p>
+          <div className="flex items-center gap-2">
+            <span>{t.quantity}</span>
+            <button type="button" aria-label={`${t.quantity} −`} className={`w-8 border ${ctx.control}`}
+              disabled={quantity <= 1} onClick={() => setQuantity(quantity - 1)}>−</button>
+            <output className="w-6 text-center font-semibold">{quantity}</output>
+            <button type="button" aria-label={`${t.quantity} +`} className={`w-8 border ${ctx.control}`}
+              disabled={quantity >= product.stock} onClick={() => setQuantity(quantity + 1)}>+</button>
+          </div>
+          {/* A disabled button that looks tappable: taps on it are sensed as dead clicks. */}
+          <span className="block" data-attune-tap={`buy-${product.id}`}>
+            <button type="button" data-part="primary" disabled={product.stock === 0 || inCart >= product.stock}
+              className={`w-full px-3 disabled:pointer-events-none disabled:opacity-50 ${ctx.control}`}
+              onClick={() => shop.setQuantity(product.id, inCart + quantity)}>
+              {t.addToCart}
+            </button>
+          </span>
+          {inCart > 0 && <p role="status">🛒 {t.cart}: {inCart}</p>}
+          {product.stock === 0 && <p>{t.outOfStock} · {t.notify}</p>}
+        </section>
+      )}
     </div>
   );
 }

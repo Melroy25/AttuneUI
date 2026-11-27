@@ -47,3 +47,14 @@ create table if not exists public.live_sessions (
 alter table public.live_sessions enable row level security;
 revoke all on public.live_sessions from anon, authenticated;
 grant select, insert, update, delete on public.live_sessions to service_role;
+
+-- Demo-store accounts (made-up names; passwords stored only as salted scrypt hashes).
+create table if not exists public.demo_users (
+  username text primary key check (username ~ '^[a-z0-9_]{3,20}$'),
+  salt text not null,
+  hash text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.demo_users enable row level security;
+revoke all on public.demo_users from anon, authenticated;
+grant select, insert on public.demo_users to service_role;

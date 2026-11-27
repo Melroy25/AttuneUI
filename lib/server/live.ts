@@ -2,9 +2,10 @@
 import type { LiveSnapshot } from "../demo/live";
 import { rows, type Rest } from "./supabase";
 
-export const ACTIVE_MS = 60_000;
-const KEEP_MS = 3_600_000;
-const MAX_IN_MEMORY = 50;
+/** How long a user's latest snapshot is shown and kept. */
+export const KEEP_MS = 24 * 3_600_000;
+const MAX_SHOWN = 100;
+const MAX_IN_MEMORY = 100;
 
 export interface LiveRow { snapshot: LiveSnapshot; updatedAt: string }
 export type Storage = "database" | "memory";
@@ -33,14 +34,14 @@ export async function saveLive(rest: Rest | null, snapshot: LiveSnapshot, now = 
 }
 
 export async function listLive(rest: Rest | null, now = Date.now()): Promise<{ storage: Storage; sessions: LiveRow[] }> {
-  const since = new Date(now - ACTIVE_MS).toISOString();
+  const since = new Date(now - KEEP_MS).toISOString();
   if (rest) {
     try {
       const found = await rows<{ snapshot: LiveSnapshot; updated_at: string }>(
-        rest, `live_sessions?updated_at=gt.${since}&select=snapshot,updated_at&order=updated_at.desc&limit=20`,
+        rest, `live_sessions?updated_at=gt.${since}&select=snapshot,updated_at&order=updated_at.desc&limit=${MAX_SHOWN}`,
       );
       // Old visitors are not kept.
-      await rest(`live_sessions?updated_at=lt.${new Date(now - KEEP_MS).toISOString()}`, { method: "DELETE" });
+      await rest(`live_sessions?updated_at=lt.${since}`, { method: "DELETE" });
       return { storage: "database", sessions: found.map((r) => ({ snapshot: r.snapshot, updatedAt: r.updated_at })) };
     } catch (error) {
       console.error("live:", error);

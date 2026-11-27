@@ -5,6 +5,7 @@ import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreOrderList } from "@/components/store/StoreOrderList";
 import { StoreNav, StorePage } from "@/components/store/StorePages";
 import type { Page } from "@/components/store/text";
+import type { Shop } from "@/components/store/useShop";
 import type { PreferenceSignals, Preferences } from "@/lib/attune-ui/preferences/rules";
 import type { SurfaceConfig } from "@/lib/attune-ui/surface/catalog";
 import { ORDERS } from "@/lib/study/data";
@@ -26,6 +27,8 @@ export interface StoreChrome {
   banner: ReactNode;
   page: Page; // held by the caller, so a new block stays on the same page
   onPage: (page: Page) => void;
+  shop: Shop;
+  user: string | null;
 }
 
 export function Portal({ surface, preferences, task, onAction, onSignal, onView, store }: {
@@ -69,13 +72,12 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
   const refundOrder = ORDERS.find((o) => o.id === refunding);
   const showList = () => { setSelected(null); filter(NO_FILTERS); onView("list"); };
   const page = store?.page ?? "orders";
-  const nav = store ? (
-    <StoreNav ctx={ctx} page={page} onPage={(next) => {
-      store.onPage(next);
-      if (next === "orders") showList();
-      else onView(`page:${next}`);
-    }} />
-  ) : (
+  const goTo = (next: Page) => {
+    store?.onPage(next);
+    if (next === "orders") showList();
+    else onView(`page:${next}`);
+  };
+  const nav = store ? <StoreNav ctx={ctx} page={page} onPage={goTo} /> : (
     <nav className="flex gap-3 text-sm">
       <button type="button" onClick={showList}>{s.orders}</button>
       <span data-attune-id="nav-reports">{s.reports}</span>
@@ -88,7 +90,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
     <div lang={preferences.locale} className={`${store ? "store " : ""}space-y-3 pb-20 sm:pb-0`}>
       {/* Locked skeleton: header and navigation never change position. */}
       {store ? (
-        <StoreHeader title={s.title} nav={nav} actions={store.actions} />
+        <StoreHeader ctx={ctx} shop={store.shop} page={page} onPage={goTo} nav={nav} actions={store.actions} user={store.user} />
       ) : (
         <header className="flex flex-wrap items-center justify-between gap-2 rounded bg-slate-900 p-3 text-white">
           <h1 className="font-bold">{s.title}</h1>
@@ -96,7 +98,14 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
         </header>
       )}
       {store?.banner}
-      {page !== "orders" ? <StorePage ctx={ctx} page={page} onView={onView} /> : (<>
+      {/* Shortcuts stay visible away from Orders, so an adaptation is seen on every page. */}
+      {store && page !== "orders" && surface.quickActions.length > 0 && (
+        <QuickActions ctx={ctx} selected={selected} onRefund={startRefund}
+          onFilter={(next) => { store.onPage("orders"); filter(next); }} />
+      )}
+      {store && page !== "orders" ? (
+        <StorePage ctx={ctx} shop={store.shop} page={page} onPage={goTo} onView={onView} />
+      ) : (<>
       {surface.stepHints && task && (
         <p data-part="hint" className="rounded border border-sky-400 bg-sky-50 p-2 text-sm">
           {/* The /demo cards have an arrow where the study table has an Open button. */}

@@ -1,18 +1,79 @@
 import type { ReactNode } from "react";
+import type { PortalContext } from "@/components/portal/context";
+import { hasKannada } from "@/lib/attune-ui/preferences/rules";
+import { CATEGORIES, CATEGORY_ICONS, cartSummary } from "@/lib/demo/catalog";
+import { PAGE_TEXT, categoryLabel, type Page } from "./text";
+import type { Shop } from "./useShop";
 
-/** /demo storefront header. The navigation keeps its place and its telemetry labels. */
-export function StoreHeader({ title, nav, actions }: { title: string; nav: ReactNode; actions: ReactNode }) {
+/** Locked skeleton of the /demo store: brand, search, categories and navigation never move. */
+export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
+  ctx: PortalContext;
+  shop: Shop;
+  page: Page;
+  onPage: (page: Page) => void;
+  nav: ReactNode;
+  actions: ReactNode;
+  user: string | null;
+}) {
+  const t = PAGE_TEXT[ctx.preferences.locale];
+  const { count } = cartSummary(shop.cart);
+  const showResults = () => { shop.setSelected(null); onPage("products"); };
+
   return (
-    <header data-part="header" className="flex flex-wrap items-center gap-x-4 gap-y-2 p-3 text-white">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span aria-hidden data-part="mark">V</span>
-        <div className="min-w-0">
-          <p data-part="brand">Veroxa<span>Kart</span></p>
-          <h1 className="truncate text-xs font-medium text-blue-100">{title}</h1>
-        </div>
+    <header data-part="header" className="space-y-3 pb-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" data-part="brand" className="min-h-11 px-4" onClick={() => onPage("home")}>
+          <span data-part="mark" aria-hidden>V</span> VeroxaKart
+        </button>
+        <button type="button" data-part="pill" className="min-h-11 px-4 text-sm" onClick={() => onPage("help")}>
+          🎧 {t.support}
+        </button>
+        <span data-attune-id="location" className="ml-auto text-sm">📍 {t.deliverTo}</span>
       </div>
-      <div className="order-last w-full sm:order-none sm:w-auto">{nav}</div>
-      <div data-attune-ignore className="flex items-center gap-2">{actions}</div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <form role="search" data-part="searchbar" className="flex min-w-0 flex-1 basis-full items-center gap-2 px-3 sm:basis-0"
+          onSubmit={(e) => {
+            e.preventDefault();
+            showResults();
+          }}>
+          <button type="submit" aria-label={t.search} className="min-h-8 min-w-8">🔍</button>
+          <input type="search" aria-label={t.searchProducts} placeholder={t.searchProducts} value={shop.query}
+            className="min-h-11 min-w-0 flex-1 bg-transparent outline-none"
+            onChange={(e) => { shop.setQuery(e.target.value); if (e.target.value) showResults(); }}
+            onBlur={(e) => {
+              const text = e.target.value.trim();
+              if (text) ctx.onSignal({ textSearches: 1, kannada: hasKannada(text) ? 1 : 0 });
+            }} />
+        </form>
+        <span data-attune-id="account" className="px-2 text-sm">👤 {user ?? t.guest}</span>
+        <button type="button" data-part="cart" aria-current={page === "cart" ? "page" : undefined}
+          className="relative ml-auto min-h-11 px-3 text-sm font-semibold" onClick={() => onPage("cart")}>
+          🛒 {t.cart}
+          {count > 0 && <span data-part="count">{count}</span>}
+        </button>
+        <div data-attune-ignore className="flex items-center gap-2">{actions}</div>
+      </div>
+
+      <div data-part="categories" className="flex gap-1 overflow-x-auto">
+        {(["", ...CATEGORIES] as const).map((c) => {
+          const active = c === "" ? page === "home" : page === "products" && shop.category === c;
+          return (
+            <button key={c || "for-you"} type="button" aria-current={active ? "true" : undefined}
+              className={`flex min-w-20 flex-none flex-col items-center gap-1 px-2 py-1 text-xs ${ctx.control}`}
+              onClick={() => {
+                shop.setCategory(c);
+                shop.setQuery("");
+                if (c) showResults();
+                else onPage("home");
+              }}>
+              <span aria-hidden className="text-2xl">{c ? CATEGORY_ICONS[c] : "🛍️"}</span>
+              {c ? categoryLabel(t, c) : t.forYou}
+            </button>
+          );
+        })}
+      </div>
+      {nav}
     </header>
   );
 }

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CATALOG, refundQueue, searchCatalog, summarise } from "../lib/demo/catalog";
+import {
+  CATALOG, CATEGORIES, cartSummary, refundQueue, searchCatalog, summarise, withQuantity,
+} from "../lib/demo/catalog";
 import { ORDERS } from "../lib/study/data";
 
 describe("demo catalogue", () => {
@@ -8,6 +10,15 @@ describe("demo catalogue", () => {
     expect(searchCatalog(" KETTLE ", "").map((p) => p.id)).toEqual(["PRD-103"]);
     expect(searchCatalog("kettle", "fashion")).toEqual([]);
     expect(searchCatalog("", "home").every((p) => p.category === "home")).toBe(true);
+  });
+
+  it("keeps the cart within stock and totals it", () => {
+    expect(CATEGORIES.every((c) => searchCatalog("", c).length > 0)).toBe(true);
+    let cart = withQuantity({}, "PRD-105", 99); // only 3 in stock
+    cart = withQuantity(cart, "PRD-103", 2); // out of stock
+    cart = withQuantity(cart, "nope", 1);
+    expect(cartSummary(cart)).toMatchObject({ count: 3, total: 3 * 4599 });
+    expect(withQuantity(cart, "PRD-105", 0)).toEqual({});
   });
 
   it("derives returns and report totals from the orders", () => {

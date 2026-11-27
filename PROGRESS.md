@@ -7,16 +7,16 @@
 ## Phase 3b + demo polish: DONE 2026-11-27
 - /demo: storefront skin (study look unchanged), gear menu, X-Ray drawer, manual layout
   preview (not a model decision). /eval: sample, upload, live fetch, metrics, OPE, timelines.
-- Verified: typecheck, 87/87 tests (13 files), clean build. Chrome, local prod build, in-memory
-  database stand-in: demo friction signals, adaptations, 5 layouts, study run -> own JSON ->
-  /eval, live fetch. 375 px frame (no touch emulation): demo, eval, study first task.
 - Fixed: /demo never detected long hovers (HUD refresh ended them).
 - Arrow cue (/demo only): 2 taps on a card body -> its arrow glows. Rule-based, changes mid-task
   (exception to invariant 5, requested by the user); card taps count as dead clicks.
+- Store look: own-brand marketplace layout (search, categories, banners, rails, demo cart).
+- Store accounts (/api/user, demo_users); admin has All users and One user views (24 h).
+  97/97 tests. Production: attune-ui-smoky.vercel.app (pushes to main deploy).
 - Live admin: /admin (ADMIN_USER/ADMIN_PASSWORD) shows each demo visitor's X-Ray; /demo now
   adapts by itself after 3 struggles (user chose this; /demo exception to invariants 5, 10).
 - /demo pages: Products, Returns, Reports, Help (fictional data, lib/demo/catalog.ts; new
-  Kannada unreviewed). 94/94 tests. Guide and claim corrections: docs/SHOWCASE.md.
+  Kannada unreviewed). Guide and claim corrections: docs/SHOWCASE.md.
 
 ## Setup before phone test / pilot (user)
 1. Run supabase/schema.sql (again if already run: it widens the arm and block checks).

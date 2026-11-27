@@ -7,6 +7,10 @@ const SIGNALS = ["rage", "dead", "miss", "dwell", "thrash", "backtrack", "tortuo
 
 export interface LiveSnapshot {
   id: string;
+  /** Set by the server from the sign-in cookie; whatever the browser sends is ignored. */
+  user: string | null;
+  totals: FrictionSummary;
+  history: { block: number; arm: ArmId }[];
   page: string;
   arm: ArmId;
   mode: string;
@@ -31,6 +35,9 @@ const text = (v: unknown, max: number): v is string => typeof v === "string" && 
 const lines = (v: unknown, count: number): v is string[] =>
   Array.isArray(v) && v.length <= count && v.every((x) => text(x, 300));
 const arm = (v: unknown) => ARM_IDS.find((a) => a === v);
+const isFriction = (v: unknown): v is Record<string, number> => isRecord(v) && SIGNALS.every((k) => num(v[k]));
+const friction = (f: Record<string, number>) =>
+  Object.fromEntries(SIGNALS.map((k) => [k, f[k]])) as unknown as FrictionSummary;
 
 function decision(v: unknown): LiveSnapshot["decision"] | undefined {
   if (v === null) return null;
@@ -47,19 +54,22 @@ function decision(v: unknown): LiveSnapshot["decision"] | undefined {
 export function parseSnapshot(v: unknown): LiveSnapshot | null {
   if (!isRecord(v) || !text(v.id, 36) || !UUID.test(v.id)) return null;
   const chosen = decision(v.decision);
-  const f = v.friction;
+  const { friction: f, totals, history } = v;
   if (
     chosen === undefined || !arm(v.arm) || !text(v.page, 20) || !text(v.mode, 10) || !text(v.locale, 5) ||
     !text(v.modality, 10) || !num(v.block) || !num(v.viewportWidth, 10_000) ||
     typeof v.auto !== "boolean" || typeof v.pinned !== "boolean" ||
-    !isRecord(f) || !SIGNALS.every((k) => num(f[k])) ||
+    !isFriction(f) || !isFriction(totals) ||
+    !Array.isArray(history) || history.length > 10 ||
+    !history.every((h) => isRecord(h) && num(h.block) && arm(h.arm)) ||
     !Array.isArray(v.context) || v.context.length !== DIM || !v.context.every((x) => num(x, 1)) ||
     !lines(v.why, 6) || !lines(v.changes, 12) || !lines(v.log, 8)
   ) return null;
   return {
-    id: v.id, page: v.page, arm: arm(v.arm)!, mode: v.mode, block: v.block, auto: v.auto, pinned: v.pinned,
+    id: v.id, user: null, page: v.page, arm: arm(v.arm)!, mode: v.mode, block: v.block, auto: v.auto, pinned: v.pinned,
     locale: v.locale, viewportWidth: v.viewportWidth, modality: v.modality,
-    friction: Object.fromEntries(SIGNALS.map((k) => [k, f[k]])) as unknown as FrictionSummary,
+    friction: friction(f), totals: friction(totals),
+    history: history.map((h) => ({ block: h.block as number, arm: h.arm as ArmId })),
     context: v.context as number[], decision: chosen, why: v.why, changes: v.changes, log: v.log,
   };
 }

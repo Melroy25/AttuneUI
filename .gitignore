@@ -8,3 +8,6 @@ next-env.d.ts
 *.pdf
 __pycache__/
 .claude/settings.local.json
+
+.vercel
+.env*.local

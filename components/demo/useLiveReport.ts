@@ -27,7 +27,7 @@ export function useLiveReport(d: ReturnType<typeof useDemo>, page: string) {
       const friction = summarizeFriction(d.events, d.modality);
       const { decision } = session;
       const snapshot: LiveSnapshot = {
-        id, page, arm: d.ui.arm, mode: d.mode, block: session.blocks + 1, auto: d.auto, pinned: session.pinned,
+        id, user: null, totals: session.totals, history: session.history, page, arm: d.ui.arm, mode: d.mode, block: session.blocks + 1, auto: d.auto, pinned: session.pinned,
         locale: d.ui.preferences.locale, viewportWidth: window.innerWidth, modality: d.modality, friction,
         context: buildContext({ friction, viewportWidth: window.innerWidth, priorSessions: session.blocks }),
         decision: decision && { action: decision.action, propensity: decision.propensity, probs: decision.probs },

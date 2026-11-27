@@ -1,19 +1,49 @@
 /* Storefront skin for /demo only; everything is scoped to .store / .store-page.
    Unlayered, so it wins over utilities. Control sizes stay with the SurfaceConfig. */
-.store-page { background: #f1f3f6; color: #172033; }
+.store-page { background: #fff; color: #172033; }
 .store { --card-shadow: 0 1px 2px rgb(15 23 42 / .08), 0 2px 10px rgb(15 23 42 / .06); }
 
-.store [data-part="header"] {
-  background: linear-gradient(105deg, #172f72, #2563eb);
-  border-radius: .875rem;
-  box-shadow: 0 6px 18px rgb(30 58 138 / .22);
+.store [data-part="header"] { border-bottom: 1px solid #e2e8f0; }
+.store [data-part="brand"] {
+  display: inline-flex; align-items: center; gap: .5rem; border-radius: .875rem;
+  background: #fcd34d; color: #172f72; font-weight: 800; font-style: italic;
 }
 .store [data-part="mark"] {
-  display: grid; place-items: center; width: 2.25rem; height: 2.25rem; flex: none;
-  border-radius: .625rem; background: #fbbf24; color: #172f72; font-weight: 800;
+  display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: .5rem;
+  background: #172f72; color: #fcd34d; font-style: normal;
 }
-.store [data-part="brand"] { font-weight: 800; line-height: 1.15; letter-spacing: -.01em; }
-.store [data-part="brand"] span { color: #fde68a; }
+.store [data-part="pill"] { border-radius: .875rem; background: #eef2f7; font-weight: 600; }
+.store [data-part="searchbar"] { border: 2px solid #3b82f6; border-radius: .875rem; background: #fff; }
+.store [data-part="searchbar"]:focus-within { box-shadow: 0 0 0 3px rgb(59 130 246 / .25); }
+.store [data-part="searchbar"] input[type="search"] { border: 0; background: transparent; padding-inline: 0; outline: none; }
+.store [data-part="count"] {
+  position: absolute; top: .1rem; left: 1.35rem; min-width: 1.15rem; border-radius: 999px;
+  background: #dc2626; color: #fff; font-size: .7rem; line-height: 1.15rem; text-align: center;
+}
+.store [data-part="categories"] { scrollbar-width: none; }
+.store [data-part="rail"] ul { scrollbar-width: none; }
+.store [data-part="categories"] button { border-bottom: 3px solid transparent; border-radius: 0; }
+.store [data-part="categories"] button[aria-current] { border-bottom-color: #2563eb; font-weight: 700; }
+.store [data-part="categories"] button[aria-current] > span { background: #dbeafe; border-radius: .5rem; }
+
+.store [data-part="banner"] { border-radius: 1rem; }
+.store [data-part="banner"][data-tone="0"] { background: linear-gradient(115deg, #2e1065, #7e22ce); }
+.store [data-part="banner"][data-tone="1"] { background: linear-gradient(115deg, #0c4a6e, #1d4ed8); }
+.store [data-part="banner"][data-tone="2"] { background: linear-gradient(115deg, #022c22, #047857); }
+.store [data-part="shop"] { background: #fff; color: #172033; font-weight: 700; border-radius: 999px; }
+.store [data-part="dot"] > span { width: .45rem; height: .45rem; border-radius: 999px; background: #cbd5e1; }
+.store [data-part="dot"][aria-current] > span { width: 1.1rem; background: #475569; }
+
+.store [data-part="rail"] { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; }
+.store [data-part="rail"][data-dark="true"] { border: 0; color: #fff; background: linear-gradient(180deg, #4c1d95, #17102e 45%); }
+.store [data-part="slide"] { background: #fff; color: #172033; border-radius: 999px; box-shadow: 0 2px 8px rgb(15 23 42 / .2); }
+.store [data-part="tile"] { background: #fff; color: #172033; border: 1px solid #e2e8f0; border-radius: .875rem; }
+.store [data-part="tile"]:hover { box-shadow: 0 6px 16px rgb(15 23 42 / .16); }
+.store [data-part="art"] { background: linear-gradient(160deg, #f8fafc, #e2e8f0); border-radius: .625rem; }
+.store [data-part="off"] {
+  position: absolute; top: .375rem; left: .375rem; border-radius: .5rem 0 .5rem 0;
+  background: #1d4ed8; color: #fff; font-size: .75rem; font-weight: 700; padding: .15rem .4rem;
+}
 
 .store :is([data-part="filters"], [data-part="detail"], [data-part="policy"]) {
   background: #fff; border: 0; border-radius: .875rem; box-shadow: var(--card-shadow);
@@ -79,11 +109,11 @@
 .store [data-part="detail"] dd { font-weight: 600; }
 .store [role="dialog"] { border-radius: 1rem; box-shadow: 0 20px 50px rgb(15 23 42 / .35); }
 
-.store [data-part="nav"] button { color: #dbeafe; }
-.store [data-part="nav"] button[aria-current="page"] { background: rgb(255 255 255 / .18); color: #fff; font-weight: 700; }
+.store [data-part="nav"] button { color: #334155; }
+.store [data-part="nav"] button[aria-current="page"] { background: #1d4ed8; color: #fff; font-weight: 700; }
 .store [data-part="primary"] { background: #2563eb; border-color: #2563eb; color: #fff; font-weight: 600; }
 .store [data-part="preset"][aria-pressed="true"] { background: #1d4ed8; color: #fff; }
-.store [data-part="cart"] { background: #fef3c7; border-radius: 999px; padding: .25rem .75rem; }
+.store [data-part="cart"][aria-current="page"] { background: #dbeafe; }
 .store [data-stock="inStock"] { color: #166534; }
 .store [data-stock="lowStock"] { color: #854d0e; }
 .store [data-stock="outOfStock"] { color: #b91c1c; }
