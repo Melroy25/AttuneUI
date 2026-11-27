@@ -42,6 +42,14 @@ participant. Fill every TBD first.**
 - Off-policy evaluation (IPS, SNIPS, DR) on randomised logs with logged propensities, always
   with effective sample size. Human OPE is exploratory.
 
+## Implementation (code is the definition)
+- `lib/eval/stats.ts` and `lib/eval/ope.ts`; independent check `evaluation/verify_results.py`.
+- Permutation p = (hits + 1) / 10001. Bootstrap: percentile, resampled within arm, theta held
+  fixed. Mann-Whitney: normal approximation with tie and continuity corrections.
+- OPE uses only decisions where every eligible arm had positive probability (arm A is
+  deterministic and dropped). DR reward model: ridge (lambda 1) per pointer model and arm,
+  cross-fitted over 5 participant folds.
+
 ## Exclusions (decided now, applied before looking at outcomes)
 - Phase other than "confirmatory" (test and pilot rows are never analysed here).
 - Repeat device: the browser had started the study before.
