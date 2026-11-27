@@ -119,6 +119,33 @@
 .store [data-stock="outOfStock"] { color: #b91c1c; }
 .store [data-part="detail"] :is(input, textarea) { border-color: #cbd5e1; }
 
+/* Layouts that must be noticed: new pieces glow once when they appear. */
+.store [data-part="hint"] { background: #ecfeff; border-color: #0891b2; border-radius: .75rem; }
+.store [data-part="presets"] { background: #eff6ff; border-radius: .875rem; }
+.store [data-part="quick-add"] { background: #4f46e5; color: #fff; font-weight: 700; }
+.store [data-part="more"] > summary { background: #f1f5f9; border-radius: .875rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .store :is([data-part="quick"], [data-part="hint"], [data-part="presets"], [data-part="quick-add"], [data-part="more"]) {
+    animation: attune-new 1.2s ease-out 3;
+  }
+}
+@keyframes attune-new {
+  0% { box-shadow: 0 0 0 0 rgb(245 158 11 / .9); }
+  100% { box-shadow: 0 0 0 12px rgb(245 158 11 / 0); }
+}
+
+/* "Large touch targets": visibly bigger everywhere. */
+.store[data-surface="ergonomic"] { font-size: 1.0625rem; }
+.store[data-surface="ergonomic"] :is(button, select, input[type="search"], summary) { min-height: 3.25rem; }
+.store[data-surface="ergonomic"] button { min-width: 3.25rem; }
+.store[data-surface="ergonomic"] [data-part="nav"] button {
+  border: 2px solid #1d4ed8; padding-inline: 1.25rem; font-size: 1.0625rem; font-weight: 700;
+}
+.store[data-surface="ergonomic"] [data-part="categories"] button { font-size: .95rem; font-weight: 700; min-width: 6.5rem; }
+.store[data-surface="ergonomic"] [data-part="categories"] button > span { font-size: 2.5rem; line-height: 1.1; }
+.store[data-surface="ergonomic"] [data-part="searchbar"] { border-width: 3px; }
+.store[data-surface="ergonomic"] :is([data-part="price"], [data-part="tile"]) { font-size: 1.15rem; }
+
 /* The X-Ray drawer never covers content: reserve its space. */
 @media (width >= 64rem) { .hud-open { padding-right: 25rem; } }
 @media (width < 64rem) { .hud-open { padding-bottom: 55dvh; } }

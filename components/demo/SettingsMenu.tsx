@@ -5,10 +5,12 @@ const item =
   "flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent";
 
 /** Native popover: Escape and outside taps close it. */
-export function SettingsMenu({ canUndo, pinned, hud, onUndo, onPin, onHud, onReset, user }: {
+export function SettingsMenu({ canUndo, pinned, hud, auto, onUndo, onPin, onHud, onReset, onAuto, user }: {
   canUndo: boolean;
   pinned: boolean;
   hud: boolean;
+  auto: boolean;
+  onAuto: () => void;
   onUndo: () => void;
   onPin: () => void;
   onHud: () => void;
@@ -37,6 +39,9 @@ export function SettingsMenu({ canUndo, pinned, hud, onUndo, onPin, onHud, onRes
         </button>
         <button type="button" {...close} className={item} aria-pressed={pinned} onClick={onPin}>
           <span>Lock / Pin Current Layout</span><span className="text-xs font-semibold">{pinned ? "ON" : "OFF"}</span>
+        </button>
+        <button type="button" {...close} className={item} aria-pressed={auto} onClick={onAuto}>
+          <span>Change Layout Automatically</span><span className="text-xs font-semibold">{auto ? "ON" : "OFF"}</span>
         </button>
         <button type="button" {...close} className={item} onClick={onReset}>
           <span>Reset Session</span><span aria-hidden>⟲</span>

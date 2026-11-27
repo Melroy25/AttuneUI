@@ -7,7 +7,6 @@ import type { Page } from "@/components/store/text";
 import { useShop } from "@/components/store/useShop";
 import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import type { UiState } from "@/lib/demo/uiState";
-import { DemoBanner } from "./DemoBanner";
 import { SettingsMenu } from "./SettingsMenu";
 import { useDemo } from "./useDemo";
 import { useLiveReport } from "./useLiveReport";
@@ -32,7 +31,8 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
         <option value="kn">ಕನ್ನಡ</option>
       </select>
       <SettingsMenu canUndo={d.canUndo} pinned={d.session.pinned} hud={hud} onUndo={d.undoLast}
-        onPin={d.togglePin} onHud={() => setHud(!hud)} onReset={d.reset} user={user} />
+        onPin={d.togglePin} onHud={() => setHud(!hud)} onReset={d.reset} user={user}
+        auto={d.auto} onAuto={() => d.setAuto(!d.auto)} />
     </>
   );
 
@@ -41,7 +41,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={d.task}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
-          store={{ actions, banner: <DemoBanner d={d} />, page, onPage: setPage, shop, user }} />
+          store={{ actions, page, onPage: setPage, shop, user }} />
       </div>
       <p className="mx-auto mt-4 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.

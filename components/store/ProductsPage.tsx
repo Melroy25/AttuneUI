@@ -11,7 +11,8 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
   const t = PAGE_TEXT[ctx.preferences.locale];
   const [quantity, setQuantity] = useState(1);
   const hint = useCardHint();
-  const found = searchCatalog(shop.query, shop.category);
+  // A preset only filters while the layout that shows its buttons is on screen.
+  const found = searchCatalog(shop.query, shop.category, ctx.surface.smartPresets ? shop.preset : "");
   const product = CATALOG.find((p) => p.id === shop.selected);
   const inCart = product ? shop.cart[product.id] ?? 0 : 0;
   const open = (id: string) => {
@@ -40,6 +41,13 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
                   {t[stockOf(p)]}
                 </span>
               </div>
+              {ctx.surface.quickActions.length > 0 && p.stock > 0 && (
+                <button type="button" data-part="quick-add" aria-label={`${t.addToCart}: ${p.name}`}
+                  className={`flex-none px-3 text-xs ${ctx.control}`}
+                  onClick={() => shop.setQuantity(p.id, (shop.cart[p.id] ?? 0) + 1)}>
+                  {t.quickAdd}
+                </button>
+              )}
               <ArrowButton ctx={ctx} label={`${ctx.s.openOrder} ${p.name}`} hint={hint.hinted(p.id)} onClick={() => open(p.id)} />
             </li>
           ))}

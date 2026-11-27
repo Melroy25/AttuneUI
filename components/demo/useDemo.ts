@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  DEFAULT_PREFERENCES, EMPTY_SIGNALS, READ_THRESHOLD_MS, derivePreferences,
+  EMPTY_SIGNALS, READ_THRESHOLD_MS, derivePreferences,
   type Locale, type PreferenceSignals, type Preferences,
 } from "@/lib/attune-ui/preferences/rules";
 import { SURFACES } from "@/lib/attune-ui/surface/catalog";
@@ -205,12 +205,6 @@ export function useDemo(serverUi: UiState) {
     window.location.reload();
   };
 
-  const { textScale, structure, searchFirst } = ui.preferences;
-  // An explicit language pick alone is not an "adaptation".
-  const showNotice = ui.arm !== "baseline" || session.pinned || changes.length > 0 ||
-    textScale !== DEFAULT_PREFERENCES.textScale || structure !== DEFAULT_PREFERENCES.structure ||
-    searchFirst !== DEFAULT_PREFERENCES.searchFirst;
-
   return {
     rootRef, session, ui, mode, setMode, demoReading, setDemoReading, changes, events, modality,
     portalKey, task, taskIndex, canUndo: session.previous !== null || priorPreferences !== null,
@@ -218,6 +212,5 @@ export function useDemo(serverUi: UiState) {
     endBlock, preview, undoLast, chooseLocale, reset, auto, setAuto,
     togglePin: () => setSession(togglePin),
     forward: (n: number) => setSession((s) => fastForward(s, n, simulatorPrior().models)),
-    showNotice,
   };
 }

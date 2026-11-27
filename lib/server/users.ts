@@ -11,7 +11,7 @@ export const NAME_DOMAIN = "users.example.com";
 export interface StoreUser { name: string; email: string | null; emailHash: string | null }
 type Env = Record<string, string | undefined>;
 
-const secret = (env: Env) => env.SESSION_SECRET || env.FIREBASE_SERVICE_ACCOUNT || env.ADMIN_PASSWORD || "";
+const secret = (env: Env) => env.SESSION_SECRET || env.FIREBASE_SERVICE_ACCOUNT || "";
 /** Sign-in is on whenever Firebase is configured; without Firebase the store is open (local tries). */
 export const loginRequired = (env: Env = process.env) => webConfig(env) !== null;
 /** Cookies cannot be signed without a server secret, so sign-in then fails rather than opens. */

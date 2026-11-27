@@ -17,9 +17,8 @@ const en = {
   refunded: "Refund recorded", invalidAmount: "Enter an amount up to the order total",
   policy: "Refund policy", delayed: "Delayed", refund_requested: "Refund requested",
   shipped: "Shipped", delivered: "Delivered", high: "High", normal: "Normal", low: "Low",
-  adapted: "Adapted for faster access", undo: "Undo", pin: "Pin layout", unpin: "Unpin",
+  adapted: "Adapted for faster access", undo: "Undo", pin: "Pin layout",
   hintFind: "Hint: type the order ID in search, then press Open.",
-  hintFindArrow: "Hint: type the order ID in search, then press the arrow ›.",
   hintFilter: "Hint: set both Status and Priority.",
   hintRefund: "Hint: open the order, then use the ⋯ menu to refund.",
 };
@@ -40,9 +39,8 @@ const kn: Strings = {
   refunded: "ಮರುಪಾವತಿ ದಾಖಲಾಗಿದೆ", invalidAmount: "ಆರ್ಡರ್ ಮೊತ್ತದೊಳಗಿನ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ",
   policy: "ಮರುಪಾವತಿ ನೀತಿ", delayed: "ವಿಳಂಬ", refund_requested: "ಮರುಪಾವತಿ ಕೋರಿಕೆ",
   shipped: "ರವಾನಿಸಲಾಗಿದೆ", delivered: "ತಲುಪಿಸಲಾಗಿದೆ", high: "ಹೆಚ್ಚು", normal: "ಸಾಮಾನ್ಯ", low: "ಕಡಿಮೆ",
-  adapted: "ವೇಗದ ಬಳಕೆಗಾಗಿ ಹೊಂದಿಸಲಾಗಿದೆ", undo: "ರದ್ದುಗೊಳಿಸಿ", pin: "ವಿನ್ಯಾಸ ಉಳಿಸಿ", unpin: "ಬಿಡುಗಡೆ",
+  adapted: "ವೇಗದ ಬಳಕೆಗಾಗಿ ಹೊಂದಿಸಲಾಗಿದೆ", undo: "ರದ್ದುಗೊಳಿಸಿ", pin: "ವಿನ್ಯಾಸ ಉಳಿಸಿ",
   hintFind: "ಸುಳಿವು: ಆರ್ಡರ್ ಐಡಿ ಹುಡುಕಿ, ನಂತರ ತೆರೆಯಿರಿ ಒತ್ತಿ.",
-  hintFindArrow: "ಸುಳಿವು: ಆರ್ಡರ್ ಐಡಿ ಹುಡುಕಿ, ನಂತರ ಬಾಣ › ಒತ್ತಿ.",
   hintFilter: "ಸುಳಿವು: ಸ್ಥಿತಿ ಮತ್ತು ಆದ್ಯತೆ ಎರಡನ್ನೂ ಆಯ್ಕೆಮಾಡಿ.",
   hintRefund: "ಸುಳಿವು: ಆರ್ಡರ್ ತೆರೆದು, ⋯ ಮೆನುವಿನಿಂದ ಮರುಪಾವತಿ ಮಾಡಿ.",
 };

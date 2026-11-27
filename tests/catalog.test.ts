@@ -12,6 +12,12 @@ describe("demo catalogue", () => {
     expect(searchCatalog("", "home").every((p) => p.category === "home")).toBe(true);
   });
 
+  it("narrows by preset", () => {
+    expect(searchCatalog("", "", "underFive").every((p) => p.price <= 500)).toBe(true);
+    expect(searchCatalog("", "", "halfOff").every((p) => p.off >= 50)).toBe(true);
+    expect(searchCatalog("", "", "halfOff").length).toBeGreaterThan(0);
+  });
+
   it("keeps the cart within stock and totals it", () => {
     expect(CATEGORIES.every((c) => searchCatalog("", c).length > 0)).toBe(true);
     let cart = withQuantity({}, "PRD-105", 99); // only 3 in stock

@@ -55,9 +55,14 @@ export const CATALOG: Product[] = [
   p(128, "Egg storage box", "🥚", "home", 197, 50, 70),
 ];
 
-export const searchCatalog = (query: string, category: Category | ""): Product[] => {
+export const PRESETS = ["underFive", "halfOff"] as const;
+export type Preset = (typeof PRESETS)[number] | "";
+
+export const searchCatalog = (query: string, category: Category | "", preset: Preset = ""): Product[] => {
   const q = query.trim().toLowerCase();
-  return CATALOG.filter((x) => (!category || x.category === category) && (!q || x.name.toLowerCase().includes(q)));
+  return CATALOG.filter((x) =>
+    (!category || x.category === category) && (!q || x.name.toLowerCase().includes(q)) &&
+    (preset !== "underFive" || x.price <= 500) && (preset !== "halfOff" || x.off >= 50));
 };
 
 export type Cart = Record<string, number>;

@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreOrderList } from "@/components/store/StoreOrderList";
+import { Presets, StoreHint } from "@/components/store/SurfaceExtras";
 import { StoreNav, StorePage } from "@/components/store/StorePages";
 import type { Page } from "@/components/store/text";
 import type { Shop } from "@/components/store/useShop";
@@ -17,14 +18,13 @@ import { OrderTable } from "./OrderTable";
 import { PolicyCard } from "./PolicyCard";
 import { QuickActions } from "./QuickActions";
 import { RefundDialog } from "./RefundDialog";
-import { STRINGS, taskText } from "./strings";
+import { STRINGS } from "./strings";
 
 const HINT = { findDelayed: "hintFind", filterRefunds: "hintFilter", partialRefund: "hintRefund" } as const;
 
 /** /demo only: storefront styling plus app chrome. The study never passes this. */
 export interface StoreChrome {
   actions: ReactNode;
-  banner: ReactNode;
   page: Page; // held by the caller, so a new block stays on the same page
   onPage: (page: Page) => void;
   shop: Shop;
@@ -87,7 +87,8 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
   const List = store ? StoreOrderList : OrderTable;
 
   return (
-    <div lang={preferences.locale} className={`${store ? "store " : ""}space-y-3 pb-20 sm:pb-0`}>
+    <div lang={preferences.locale} data-surface={store ? surface.arm : undefined}
+      className={`${store ? "store " : ""}space-y-3 pb-20 sm:pb-0`}>
       {/* Locked skeleton: header and navigation never change position. */}
       {store ? (
         <StoreHeader ctx={ctx} shop={store.shop} page={page} onPage={goTo} nav={nav} actions={store.actions} user={store.user} />
@@ -97,7 +98,10 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
           {nav}
         </header>
       )}
-      {store?.banner}
+      {store && surface.stepHints && <StoreHint ctx={ctx} page={page} />}
+      {store && surface.smartPresets && (page === "home" || page === "products") && (
+        <Presets ctx={ctx} shop={store.shop} onPick={() => goTo("products")} />
+      )}
       {/* Shortcuts stay visible away from Orders, so an adaptation is seen on every page. */}
       {store && page !== "orders" && surface.quickActions.length > 0 && (
         <QuickActions ctx={ctx} selected={selected} onRefund={startRefund}
@@ -106,11 +110,8 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
       {store && page !== "orders" ? (
         <StorePage ctx={ctx} shop={store.shop} page={page} onPage={goTo} onView={onView} />
       ) : (<>
-      {surface.stepHints && task && (
-        <p data-part="hint" className="rounded border border-sky-400 bg-sky-50 p-2 text-sm">
-          {/* The /demo cards have an arrow where the study table has an Open button. */}
-          {s[store && task.id === "findDelayed" ? "hintFindArrow" : HINT[task.id]]}
-        </p>
+      {!store && surface.stepHints && task && (
+        <p data-part="hint" className="rounded border border-sky-400 bg-sky-50 p-2 text-sm">{s[HINT[task.id]]}</p>
       )}
       {surface.quickActions.length > 0 && (
         <QuickActions ctx={ctx} selected={selected} onFilter={filter} onRefund={startRefund} />

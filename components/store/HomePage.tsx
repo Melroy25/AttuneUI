@@ -11,12 +11,13 @@ const BANNERS: { title: keyof PageText; note: keyof PageText; art: string; categ
   { title: "banner3", note: "banner3Note", art: "🛋️💡", category: "home" },
 ];
 
-function Rail({ title, items, dark, ctx, onOpen }: {
+function Rail({ title, items, dark, ctx, onOpen, onAdd }: {
   title: string;
   items: Product[];
   dark?: boolean;
   ctx: PortalContext;
   onOpen: (id: string) => void;
+  onAdd: (id: string) => void;
 }) {
   const t = PAGE_TEXT[ctx.preferences.locale];
   const track = useRef<HTMLUListElement>(null);
@@ -42,6 +43,12 @@ function Rail({ title, items, dark, ctx, onOpen }: {
               <span className="mt-1 block truncate text-sm">{p.name}</span>
               <span className="block font-bold">₹{p.price.toLocaleString("en-IN")}</span>
             </button>
+            {ctx.surface.quickActions.length > 0 && p.stock > 0 && (
+              <button type="button" data-part="quick-add" aria-label={`${t.addToCart}: ${p.name}`}
+                className={`mt-1 w-full text-sm ${ctx.control}`} onClick={() => onAdd(p.id)}>
+                {t.quickAdd}
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -62,6 +69,14 @@ export function HomePage({ ctx, shop, onPage }: { ctx: PortalContext; shop: Shop
   const open = (id: string) => { shop.setCategory(""); shop.setQuery(""); shop.setSelected(id); onPage("products"); };
   const browse = (category: Category) => { shop.setCategory(category); shop.setQuery(""); shop.setSelected(null); onPage("products"); };
   const deals = [...CATALOG].sort((a, b) => b.off - a.off);
+  const add = (id: string) => shop.setQuantity(id, (shop.cart[id] ?? 0) + 1);
+  const extra = (
+    <>
+      <Rail title={t.topDeals} ctx={ctx} onOpen={open} onAdd={add} items={deals.slice(0, 10)} />
+      <Rail title={t.homePicks} ctx={ctx} onOpen={open} onAdd={add}
+        items={CATALOG.filter((p) => p.category === "home" || p.category === "appliances" || p.category === "furniture")} />
+    </>
+  );
 
   return (
     <div className="space-y-3">
@@ -95,10 +110,14 @@ export function HomePage({ ctx, shop, onPage }: { ctx: PortalContext; shop: Shop
           ))}
         </div>
       </section>
-      <Rail dark title={t.stillLooking} ctx={ctx} onOpen={open} items={CATALOG.slice(12, 22)} />
-      <Rail title={t.topDeals} ctx={ctx} onOpen={open} items={deals.slice(0, 10)} />
-      <Rail title={t.homePicks} ctx={ctx} onOpen={open}
-        items={CATALOG.filter((p) => p.category === "home" || p.category === "appliances" || p.category === "furniture")} />
+      <Rail dark title={t.stillLooking} ctx={ctx} onOpen={open} onAdd={add} items={CATALOG.slice(12, 22)} />
+      {/* "Simplified" layout: extra shelves are folded away, never removed. */}
+      {ctx.surface.secondaryFilters === "collapsed" ? (
+        <details data-part="more" className="space-y-3">
+          <summary className={`cursor-pointer p-3 font-bold ${ctx.control}`}>{t.moreOffers}</summary>
+          {extra}
+        </details>
+      ) : extra}
     </div>
   );
 }

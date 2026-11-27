@@ -64,6 +64,7 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
               onClick={() => {
                 shop.setCategory(c);
                 shop.setQuery("");
+                shop.setPreset("");
                 if (c) showResults();
                 else onPage("home");
               }}>

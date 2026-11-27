@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { PortalContext } from "@/components/portal/context";
 import { summarise } from "@/lib/demo/catalog";
 import { PAGE_TEXT } from "./text";
@@ -18,6 +19,7 @@ export function ReportsPage({ ctx }: { ctx: PortalContext }) {
     ["payment", t.byPayment, sum.byPayment],
   ];
   const label = (key: string) => (s as Record<string, string>)[key] ?? key;
+  const [more, setMore] = useState(false);
 
   return (
     <div className="space-y-3">
@@ -30,7 +32,7 @@ export function ReportsPage({ ctx }: { ctx: PortalContext }) {
         ))}
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        {charts.map(([id, title, rows]) => (
+        {charts.slice(0, ctx.surface.secondaryFilters === "collapsed" && !more ? 1 : charts.length).map(([id, title, rows]) => (
           <section key={id} data-part="detail" className="space-y-2 p-3 text-sm">
             <h2 className="font-bold">{title}</h2>
             {rows.map(([key, n]) => (
@@ -45,6 +47,12 @@ export function ReportsPage({ ctx }: { ctx: PortalContext }) {
           </section>
         ))}
       </div>
+      {ctx.surface.secondaryFilters === "collapsed" && !more && (
+        <button type="button" data-part="preset" className={`rounded-full border px-4 text-sm ${ctx.control}`}
+          onClick={() => setMore(true)}>
+          {t.moreCharts}
+        </button>
+      )}
     </div>
   );
 }
