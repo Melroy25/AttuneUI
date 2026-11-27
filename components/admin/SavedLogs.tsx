@@ -39,7 +39,7 @@ const top = (c: Record<string, number>) => Object.entries(c).sort((a, b) => b[1]
 const choiceRow = ({ id, state: s }: CloudRecord) => [
   id, LOCATIONS[s.city ?? 0].en, `${s.hesitation.yes} / ${s.hesitation.no}`,
   `${s.hesitation.threshold} points, ${Math.round(s.hesitation.cooldownMs / 60000)} min rest`,
-  s.use.front.join(", ") || "—", top(s.use.last), top(s.use.current),
+  [...s.use.front, ...(s.use.wishCards ? ["♥ on cards"] : [])].join(", ") || "—", top(s.use.last), top(s.use.current),
 ];
 
 const logRow = (r: LogRow, all: boolean) => [

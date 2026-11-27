@@ -18,6 +18,7 @@ import { AdaptiveBar } from "./AdaptiveBar";
 import { FrictionPulse } from "./FrictionPulse";
 import { ReadingPill } from "./ReadingPill";
 import { SettingsMenu } from "./SettingsMenu";
+import { SuggestionStrip } from "./SuggestionStrip";
 import { useActivity } from "./useActivity";
 import { useBehaviour } from "./useBehaviour";
 import { useComfort } from "./useComfort";
@@ -39,7 +40,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const d = useDemo(serverUi, user, (change) => { shortcuts.supersede(); add(change); }, page === "articles");
   const [hud, setHud] = useState(false);
   const shop = useShop(user);
-  const usage = useFrontUse(user, page, shop.category, add);
+  const usage = useFrontUse(user, page, shop.category, shop.selected, add);
   // Wishlist never moves mid-visit: its presses are counted for the next one instead.
   const habits = useHabits(user, (kind, next) => kind === "wishlist" ? usage.wished() : shortcuts.consider(
     kind, next, struggles(d.session.totals, summarizeFriction(d.events, d.modality))));
@@ -86,7 +87,13 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
-          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt, behaviour, onGuide: openGuide, front: usage.front,
+          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt, behaviour, onGuide: openGuide, front: usage.front, wishCards: usage.wishCards,
+            suggest: <SuggestionStrip locale={d.ui.preferences.locale} use={usage.state}
+              onCategory={(c) => { shop.setCategory(c); shop.setQuery(""); shop.setPreset(""); shop.setSelected(null); setPage("products"); }}
+              onProduct={(id) => {
+                shop.setCategory(CATALOG.find((p) => p.id === id)?.category ?? ""); shop.setQuery(""); shop.setPreset("");
+                shop.setSelected(id); setPage("products");
+              }} />,
             onFront: (part) => {
               if (!part.startsWith("category:")) return setPage(part as Page);
               shop.setCategory(part.slice(9) as Category); shop.setQuery(""); shop.setPreset(""); shop.setSelected(null);

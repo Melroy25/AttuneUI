@@ -1,7 +1,7 @@
 import type { PortalContext } from "@/components/portal/context";
 import { PRODUCTS, type Order } from "@/lib/study/data";
 import { ArrowButton, useCardHint } from "./cardHint";
-import { DismissShortcut, WishlistButton } from "./Habits";
+import { WishlistButton } from "./Habits";
 
 /** /demo version of OrderTable: same labels and control sizes, shown as cards with an arrow. */
 export function StoreOrderList({ ctx, orders, selected, onOpen, onBadge }: {
@@ -13,13 +13,12 @@ export function StoreOrderList({ ctx, orders, selected, onOpen, onBadge }: {
 }) {
   const { s, surface, control } = ctx;
   const hint = useCardHint(ctx.logChange);
-  const wishOnCards = ctx.shortcuts?.on("wishlist");
+  const wishOnCards = ctx.wishCards;
   if (orders.length === 0) return <p data-part="detail" className="p-3 text-sm">{s.noOrders}</p>;
   // Looks clickable. Only actually is when the surface promotes it.
   const badge = "rounded-full border-b-2 px-2 py-0.5 text-xs font-semibold shadow-sm";
   return (
     <ul className="space-y-2">
-      {wishOnCards && <li className="flex justify-end"><DismissShortcut ctx={ctx} kind="wishlist" label /></li>}
       {orders.map((o) => (
         <li key={o.id} data-part="order" data-selected={selected === o.id} className="flex items-center gap-3 p-3"
           {...hint.cardProps(o.id)}>

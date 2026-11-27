@@ -52,7 +52,7 @@ export function resetDemo(user: string | null, ui: UiState): UiState {
     localStorage.setItem(behaviourKey(user), JSON.stringify({ ...behaviour, pinned: null }));
     localStorage.removeItem(textKey(user)); // every text back to normal
     const use = parseUse(read(useKey(user)));
-    localStorage.setItem(useKey(user), JSON.stringify({ ...use, front: [] }));
+    localStorage.setItem(useKey(user), JSON.stringify({ ...use, front: [], wishCards: false, interest: {} }));
     localStorage.setItem(syncKey(user), "local"); // the saved copy must not undo this
     sessionStorage.removeItem(readingKey);
   } catch {

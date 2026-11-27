@@ -11,8 +11,8 @@ export function WishlistButton({ ctx, id, compact, iconOnly }: {
   const saved = ctx.habits?.habits.wished.includes(id) ?? false;
   return (
     <button type="button" aria-pressed={saved} aria-label={`${t.wishlist}: ${id}`}
-      data-tip={saved ? "Remove from wishlist" : "Save to wishlist"} onClick={() => {
-        if (compact) ctx.shortcuts?.use("wishlist"); // only the promoted copy earns a reward
+      data-tip={saved ? "Remove from wishlist" : "Save to wishlist"} onClick={(e) => {
+        e.stopPropagation(); // a press on the card's ♥ is not a press on the card
         ctx.habits?.wish(id);
       }}
       className={`flex-none rounded-full border px-3 text-xs font-semibold ${ctx.control} ${compact ? "" : "mt-2"}`}>

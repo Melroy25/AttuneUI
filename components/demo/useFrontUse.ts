@@ -3,14 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import type { Page } from "@/components/store/text";
 import type { Change } from "@/lib/demo/activity";
-import { NO_USE, parseUse, startVisit, useKey, used, type VisitUse } from "@/lib/demo/frontUse";
+import { NO_USE, parseUse, startVisit, suggestions, useKey, used, type VisitUse } from "@/lib/demo/frontUse";
 import { readJsonItem } from "./cloudCache";
 
 /** One id per page load. Signing in starts a visit for that account; a remount does not. */
 const visit = () => (typeof performance === "undefined" ? "" : String(Math.round(performance.timeOrigin)));
 
 /** Counts silently. The front of the navigation is decided once, when a visit starts. */
-export function useFrontUse(user: string | null, page: Page, category: string, log: (change: Change) => void) {
+export function useFrontUse(
+  user: string | null, page: Page, category: string, product: string | null, log: (change: Change) => void,
+) {
   const key = useKey(user);
   const [state, setState] = useState(NO_USE);
   const current = useRef(NO_USE);
@@ -31,10 +33,24 @@ export function useFrontUse(user: string | null, page: Page, category: string, l
   useEffect(() => {
     const { state: next, started } = startVisit(parseUse(readJsonItem(key)), visit());
     commit(next);
-    if (started && next.front.length > 0) {
+    if (!started) return;
+    if (next.front.length > 0) {
       record.current({
         trigger: `Used ${next.front.map((k) => `${k} ${next.last[k]}×`).join(", ")} in the previous visit`,
         change: `Placed ${next.front.join(", ")} at the front of the navigation for this visit`,
+      });
+    }
+    if (next.wishCards) {
+      record.current({
+        trigger: `Pressed Wishlist ${next.last.wishlist}× in the previous visit`,
+        change: "Added a ♥ Wishlist button to every product card for this visit",
+      });
+    }
+    const ideas = suggestions(next);
+    if (ideas) {
+      record.current({
+        trigger: `Visit ${next.visits}; earlier interest: ${[...ideas.categories, ...ideas.products].join(", ")}`,
+        change: "Showed a quiet suggestion strip at the top",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per account
@@ -46,12 +62,18 @@ export function useFrontUse(user: string | null, page: Page, category: string, l
     // eslint-disable-next-line react-hooks/exhaustive-deps -- counts arrivals only
   }, [page]);
   useEffect(() => {
+    if (page === "products" && product) count(`product:${product}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- counts arrivals only
+  }, [page, product]);
+  useEffect(() => {
     if (page === "products" && category) count(`category:${category}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- counts arrivals only
   }, [page, category]);
 
   return {
+    state,
     front: state.front,
+    wishCards: state.wishCards,
     wished: () => {
       count("wishlist");
       record.current({ trigger: "Pressed Wishlist", change: "Counted for the next visit; nothing moves now" });

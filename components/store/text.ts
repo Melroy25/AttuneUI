@@ -1,7 +1,7 @@
 // /demo-only page text. Kannada was machine-authored: have a native speaker review it.
 import type { Locale } from "@/lib/attune-ui/preferences/rules";
 
-export const PAGES = ["home", "orders", "products", "returns", "reports", "help", "cart", "articles", "wishlist"] as const;
+export const PAGES = ["home", "orders", "products", "returns", "reports", "help", "cart", "articles"] as const;
 export type Page = (typeof PAGES)[number];
 
 const en = {
@@ -41,10 +41,10 @@ const en = {
   close: "Close", viewDetails: "View details", details: "Details", addOne: "Add 1",
   biggerOn: "Made the missed buttons easier to tap",
   searchingFrom: "Are you searching based on {x}?", showSimilar: "Show it and similar items",
-  aboutThis: "No, tell me about {x}", isThis: "Is this what you were searching for?",
+  aboutThis: "No, tell me about {x}", isThis: "Need help with this item?",
   comparing: "Comparing options in {x}? Show quick picks?", categoriesQ: "Not sure where to look? Show categories?",
   no: "No", quickPicks: "Quick picks",
-  emptyWishlist: "Nothing saved yet. Press ♡ Wishlist on a product.", hintWishlist: "Tip: these are the items you saved.",
+  fromLastVisits: "From your last visits",
   articles: "Articles", hintArticles: "Tip: tap an article to read it.", allArticles: "All articles", minRead: "min read",
   simpler: "Simpler explanation", summaryLabel: "Summary", exampleLabel: "Example",
   currentlyReading: "Currently Reading", continueReading: "Continue reading", unpin: "Unpin",
@@ -90,10 +90,10 @@ const kn: PageText = {
   close: "ಮುಚ್ಚಿ", viewDetails: "ವಿವರ ನೋಡಿ", details: "ವಿವರ", addOne: "1 ಸೇರಿಸಿ",
   biggerOn: "ತಪ್ಪಿದ ಬಟನ್‌ಗಳನ್ನು ಒತ್ತಲು ಸುಲಭ ಮಾಡಲಾಗಿದೆ",
   searchingFrom: "ನೀವು {x} ಆಧರಿಸಿ ಹುಡುಕುತ್ತಿದ್ದೀರಾ?", showSimilar: "ಅದನ್ನು ಮತ್ತು ಅಂತಹವನ್ನು ತೋರಿಸಿ",
-  aboutThis: "ಇಲ್ಲ, {x} ಬಗ್ಗೆ ತಿಳಿಸಿ", isThis: "ನೀವು ಹುಡುಕುತ್ತಿದ್ದದ್ದು ಇದೇನಾ?",
+  aboutThis: "ಇಲ್ಲ, {x} ಬಗ್ಗೆ ತಿಳಿಸಿ", isThis: "ಈ ವಸ್ತುವಿನ ಬಗ್ಗೆ ಸಹಾಯ ಬೇಕೇ?",
   comparing: "{x} ವಿಭಾಗದಲ್ಲಿ ಹೋಲಿಸುತ್ತಿದ್ದೀರಾ? ತ್ವರಿತ ಆಯ್ಕೆಗಳನ್ನು ತೋರಿಸಲೇ?", categoriesQ: "ಎಲ್ಲಿ ಹುಡುಕುವುದೆಂದು ಗೊತ್ತಾಗುತ್ತಿಲ್ಲವೇ? ವಿಭಾಗಗಳನ್ನು ತೋರಿಸಲೇ?",
   no: "ಇಲ್ಲ", quickPicks: "ತ್ವರಿತ ಆಯ್ಕೆಗಳು",
-  emptyWishlist: "ಇನ್ನೂ ಏನೂ ಉಳಿಸಿಲ್ಲ. ಉತ್ಪನ್ನದ ♡ ಇಚ್ಛಾಪಟ್ಟಿ ಒತ್ತಿ.", hintWishlist: "ಸುಳಿವು: ನೀವು ಉಳಿಸಿದ ವಸ್ತುಗಳು ಇವು.",
+  fromLastVisits: "ನಿಮ್ಮ ಹಿಂದಿನ ಭೇಟಿಗಳಿಂದ",
   articles: "ಲೇಖನಗಳು", hintArticles: "ಸುಳಿವು: ಓದಲು ಲೇಖನವನ್ನು ಒತ್ತಿ.", allArticles: "ಎಲ್ಲಾ ಲೇಖನಗಳು", minRead: "ನಿಮಿಷದ ಓದು",
   simpler: "ಸರಳ ವಿವರಣೆ", summaryLabel: "ಸಾರಾಂಶ", exampleLabel: "ಉದಾಹರಣೆ",
   currentlyReading: "ಈಗ ಓದುತ್ತಿರುವುದು", continueReading: "ಓದು ಮುಂದುವರಿಸಿ", unpin: "ಪಿನ್ ತೆಗೆಯಿರಿ",

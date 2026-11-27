@@ -3,6 +3,7 @@ import { DEFAULT_PREFERENCES } from "../lib/attune-ui/preferences/rules";
 import { ARTICLES } from "../lib/demo/articles";
 import { CATALOG } from "../lib/demo/catalog";
 import { parseState } from "../lib/demo/cloud";
+import { confused } from "../lib/demo/confusion";
 import { guideFor } from "../lib/demo/guides";
 import { deliberate, enlarge, nextBurst, parseScales, undoLast, type Burst, type Scales } from "../lib/demo/textSize";
 
@@ -43,6 +44,17 @@ describe("text size", () => {
     expect([parseScales("{"), parseScales([125]), parseScales(null)]).toEqual([{}, {}, {}]);
     const state = { arm: "baseline", preferences: DEFAULT_PREFERENCES, textScales: { "cart:total": 112.5 } };
     expect(parseState(state)!.textScales).toEqual({ "cart:total": 112.5 });
+  });
+});
+
+describe("card help only on confusion", () => {
+  it("ignores single and double taps, answers 4 quick taps or taps while scrolling back and forth", () => {
+    expect(confused([1000], [], 1000)).toBeNull();
+    expect(confused([0, 300], [], 300)).toBeNull();
+    expect(confused([0, 500, 1000, 1500], [], 1500)).toBe("rapid");
+    expect(confused([0, 1000, 2000, 4000], [], 4000)).toBeNull(); // too slow
+    expect(confused([0, 5000], [1000, 3000], 5000)).toBe("scrolling");
+    expect(confused([5000], [1000, 3000], 5000)).toBeNull();
   });
 });
 

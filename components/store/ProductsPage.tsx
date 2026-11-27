@@ -3,7 +3,7 @@ import type { PortalContext } from "@/components/portal/context";
 import { CATALOG, searchCatalog, type Product } from "@/lib/demo/catalog";
 import { ArrowButton, useCardHint } from "./cardHint";
 import { GuideLink } from "./GuideLink";
-import { DismissShortcut, WishlistButton } from "./Habits";
+import { WishlistButton } from "./Habits";
 import { PAGE_TEXT, categoryLabel } from "./text";
 import type { Shop } from "./useShop";
 
@@ -38,9 +38,6 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
           {shop.category ? categoryLabel(t, shop.category) : t.products} ({found.length})
         </h2>
         <ul className="grid content-start gap-2 sm:grid-cols-2">
-          {ctx.shortcuts?.on("wishlist") && (
-            <li className="flex justify-end sm:col-span-2"><DismissShortcut ctx={ctx} kind="wishlist" label /></li>
-          )}
           {found.length === 0 && <li className="p-3 text-sm">{t.noProducts}</li>}
           {found.map((p) => (
             <li key={p.id} data-part="order" data-selected={shop.selected === p.id} className="flex items-center gap-3 p-3"
@@ -67,7 +64,8 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
                   {t.quickAdd}
                 </button>
               )}
-              {ctx.shortcuts?.on("wishlist") && <WishlistButton ctx={ctx} id={p.id} compact iconOnly />}
+              {/* Earned in an earlier visit, right of the card and left of › */}
+              {ctx.wishCards && <WishlistButton ctx={ctx} id={p.id} compact />}
               <ArrowButton ctx={ctx} label={`${ctx.s.openOrder} ${p.name}`} hint={hint.hinted(p.id)} onClick={() => open(p.id)} />
             </li>
           ))}

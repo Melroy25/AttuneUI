@@ -26,6 +26,8 @@ export interface PortalContext {
   logChange?: (change: Change) => void;
   /** Store only: parts used often in the previous visit, shown first in the navigation. */
   front?: string[];
+  /** Store only: ♥ Wishlist on product cards, earned in the previous visit. */
+  wishCards?: boolean;
   onFront?: (part: string) => void;
   /** Store only: open the article that goes with a product. */
   onGuide?: (product: Product) => void;

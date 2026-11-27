@@ -41,6 +41,8 @@ export interface StoreChrome {
   behaviour: NonNullable<PortalContext["behaviour"]>;
   onGuide: PortalContext["onGuide"];
   front: string[];
+  wishCards: boolean;
+  suggest: ReactNode;
   onFront: PortalContext["onFront"];
 }
 
@@ -61,7 +63,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
   const ctx: PortalContext = {
     s: STRINGS[preferences.locale], surface, preferences, large, onSignal, onGoal: store?.onGoal, habits: store?.habits, shortcuts: store?.shortcuts,
     logChange: store?.log, readingPrompt: store?.reading,
-    behaviour: store?.behaviour, cues: store?.behaviour.state.cues, onGuide: store?.onGuide, front: store?.front, onFront: store?.onFront,
+    behaviour: store?.behaviour, cues: store?.behaviour.state.cues, onGuide: store?.onGuide, front: store?.front, wishCards: store?.wishCards, onFront: store?.onFront,
     control: large ? "min-h-12 min-w-12 text-base" : "min-h-6",
   };
   const { s } = ctx;
@@ -115,6 +117,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
         </header>
       )}
       {store && surface.stepHints && <StoreHint ctx={ctx} page={page} />}
+      {store && (page === "home" || page === "products") && store.suggest}
       {store && <SimilarCards ctx={ctx} shop={store.shop} onPick={() => goTo("products")} />}
       {store && surface.smartPresets && (page === "home" || page === "products") && (
         <Presets ctx={ctx} shop={store.shop} onPick={() => goTo("products")} />

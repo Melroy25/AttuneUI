@@ -6,7 +6,7 @@ import type { Shop } from "./useShop";
 
 const HINTS = {
   home: "hintHome", products: "hintProducts", orders: "hintOrders", returns: "hintReturns",
-  reports: "hintReports", help: "hintHelp", cart: "hintCart", articles: "hintArticles", wishlist: "hintWishlist",
+  reports: "hintReports", help: "hintHelp", cart: "hintCart", articles: "hintArticles",
 } as const;
 
 /** "Step hints" layout: one plain tip for the page in front of the user. */
