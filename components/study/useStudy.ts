@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import { modalityOf } from "@/lib/attune-ui/telemetry/context";
@@ -37,6 +37,12 @@ export function useStudy() {
   const [pinned, setPinned] = useState(false);
   const participant = useRef<ParticipantRecord | null>(null);
   const block1 = useRef<FrictionSummary[]>([]);
+
+  // Built up front (and cached): at the block boundary the freeze let extra taps hit Undo.
+  useEffect(() => {
+    const timer = setTimeout(simulatorPrior, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const begin = async (pointer: PointerKind) => {
     setStage("starting");

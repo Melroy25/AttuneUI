@@ -44,6 +44,12 @@ export function StudyShell() {
             }}>
             {d.stage === "starting" ? "Starting…" : "I agree – start"}
           </button>
+          {d.stage === "consent" && d.pending + d.rejected > 0 && (
+            <div role="status" className="space-y-2 border-t pt-4 text-sm">
+              <p>Data from an earlier session on this device has not uploaded.</p>
+              <button type="button" className={secondary} onClick={d.download}>Download saved data (JSON)</button>
+            </div>
+          )}
         </>
       )}
 

@@ -1,1 +1,4 @@
 @import "tailwindcss";
+
+/* Pull-to-refresh would restart a study run mid-task. */
+html, body { overscroll-behavior-y: contain; }

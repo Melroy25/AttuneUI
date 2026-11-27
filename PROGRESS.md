@@ -14,6 +14,9 @@
 - Rows are phase "test" (lib/study/assignment.ts). Block 2 uses the SIMULATED prior.
 - Undo/Pin chip shows on the between-task screen only (invariant 5).
 - Hover is now captured for mouse only (pen excluded).
+- Review fixes: no pull-to-refresh, prior built on page load (boundary rating 3 ms in app
+  browser, n=1), saved-data download on consent screen, route tests. Now 49/49 tests (7 files).
+- Before confirmatory data: require a study code on /api/participants.
 
 ## Setup before phone test (user)
 1. Run supabase/schema.sql in the Supabase SQL editor.
