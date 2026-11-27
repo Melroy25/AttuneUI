@@ -58,7 +58,7 @@ export function useUploads() {
   }, [flush, getQueue]);
 
   /** One request per row keeps every body under the API size limit. */
-  const record = useCallback((block: 1 | 2, kind: EventRow["kind"], payload: Record<string, unknown>) => {
+  const record = useCallback((block: EventRow["block"], kind: EventRow["kind"], payload: Record<string, unknown>) => {
     if (!participant.current) return;
     const row: EventRow = {
       seq: log.current.length, block, kind, payload: { ...payload, at: new Date().toISOString() },

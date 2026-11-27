@@ -11,7 +11,9 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "policy:prior": "node scripts/policy.mjs prior",
+    "policy:freeze": "node scripts/policy.mjs freeze"
   },
   "dependencies": {
     "next": "^16.4.6",

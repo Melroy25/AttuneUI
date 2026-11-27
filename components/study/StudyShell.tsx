@@ -1,14 +1,15 @@
 "use client";
 
 import { STRINGS, taskText } from "@/components/portal/strings";
+import type { Phase } from "@/lib/study/assignment";
 import { TaskRun } from "./TaskRun";
 import { useStudy } from "./useStudy";
 
 const primary = "min-h-12 w-full rounded bg-indigo-600 px-4 font-semibold text-white disabled:opacity-50";
 const secondary = "min-h-12 rounded border px-3 text-sm disabled:opacity-50";
 
-export function StudyShell() {
-  const d = useStudy();
+export function StudyShell({ phase }: { phase: Phase }) {
+  const d = useStudy(phase);
   const { block, index } = d.position;
   const s = STRINGS.en;
 
@@ -31,7 +32,7 @@ export function StudyShell() {
             data, and you can stop at any time by closing this page.
           </p>
           <p className="text-sm text-gray-600">
-            Two rounds of 3 short tasks on a made-up order screen. Each task ends after 90 seconds.
+            {d.blocks === 3 ? "Three" : "Two"} rounds of 3 short tasks on a made-up order screen. Each task ends after 90 seconds.
           </p>
           <button type="button" className={primary} disabled={d.stage === "starting"}
             // The pointer used to agree decides the stratum; keyboard users fall back to the media query.
@@ -44,6 +45,11 @@ export function StudyShell() {
             }}>
             {d.stage === "starting" ? "Starting…" : "I agree – start"}
           </button>
+          {d.refused && (
+            <p role="alert" className="text-red-700">
+              Study code not accepted. Open the full invite link from the study team.
+            </p>
+          )}
           {d.stage === "consent" && d.pending + d.rejected > 0 && (
             <div role="status" className="space-y-2 border-t pt-4 text-sm">
               <p>Data from an earlier session on this device has not uploaded.</p>
@@ -55,7 +61,7 @@ export function StudyShell() {
 
       {d.stage === "ready" && (
         <>
-          <p className="text-sm text-gray-600">Round {block} of 2 · Task {index + 1} of 3</p>
+          <p className="text-sm text-gray-600">Round {block} of {d.blocks} · Task {index + 1} of 3</p>
           <p className="text-lg font-semibold">{taskText(d.task, "en")}</p>
           {d.showChip && (
             <div role="status" className="flex flex-wrap items-center gap-2 rounded border border-indigo-400 bg-indigo-50 p-2 text-sm">

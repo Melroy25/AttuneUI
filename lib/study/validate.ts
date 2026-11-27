@@ -1,6 +1,6 @@
 // Trust boundary: every API body is untrusted.
 import type { PointerKind } from "../attune-ui/types";
-import { STUDY_ARMS, VARIANT_ORDERS, type Assignment } from "./assignment";
+import { PHASES, STUDY_ARMS, VARIANT_ORDERS, type Assignment, type Phase } from "./assignment";
 import { EVENT_KINDS, type EventRow } from "./records";
 
 export const MAX_REGISTRATION_BYTES = 1_000;
@@ -13,6 +13,9 @@ export interface Registration {
   pointer: PointerKind;
   viewportWidth: number;
   repeatDevice: boolean;
+  /** The phase the page was running; the server refuses a mismatch. */
+  phase: Phase;
+  code: string; // study code from the invite link, "" if none
   /** Present only when the client already ran with a local assignment. */
   offline: Assignment | null;
 }
@@ -27,17 +30,19 @@ const oneOf = <T extends string>(v: unknown, list: readonly T[]): v is T => list
 
 export function parseRegistration(input: unknown): Registration | null {
   if (!isRecord(input)) return null;
-  const { id, pointer, viewportWidth, repeatDevice, offline } = input;
+  const { id, pointer, viewportWidth, repeatDevice, offline, phase, code = "" } = input;
   if (
     !isId(id) || !oneOf(pointer, ["mouse", "touch", "pen"] as const) ||
-    !isInt(viewportWidth, 10_000) || typeof repeatDevice !== "boolean"
+    !isInt(viewportWidth, 10_000) || typeof repeatDevice !== "boolean" ||
+    !oneOf(phase, PHASES) || typeof code !== "string" || code.length > 64
   ) return null;
   let local: Assignment | null = null;
   if (offline !== undefined && offline !== null) {
-    if (!isRecord(offline) || !oneOf(offline.arm, STUDY_ARMS) || !oneOf(offline.order, VARIANT_ORDERS)) return null;
+    if (!isRecord(offline) || !oneOf(offline.arm, [...STUDY_ARMS, "P"] as const) || !oneOf(offline.order, VARIANT_ORDERS)) return null;
+    if ((offline.arm === "P") !== (phase === "pilot")) return null;
     local = { arm: offline.arm, order: offline.order };
   }
-  return { id, pointer, viewportWidth, repeatDevice, offline: local };
+  return { id, pointer, viewportWidth, repeatDevice, phase, code, offline: local };
 }
 
 export function parseEventBatch(input: unknown): { participantId: string; events: EventRow[] } | null {
@@ -46,7 +51,7 @@ export function parseEventBatch(input: unknown): { participantId: string; events
   const events: EventRow[] = [];
   for (const e of input.events as unknown[]) {
     if (
-      !isRecord(e) || !isInt(e.seq, 10_000) || !(e.block === 1 || e.block === 2) ||
+      !isRecord(e) || !isInt(e.seq, 10_000) || !(e.block === 1 || e.block === 2 || e.block === 3) ||
       !oneOf(e.kind, EVENT_KINDS) || !isRecord(e.payload) ||
       JSON.stringify(e.payload).length > MAX_PAYLOAD_CHARS
     ) return null;

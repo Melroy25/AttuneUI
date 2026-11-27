@@ -6,7 +6,7 @@ import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import { modalityOf } from "@/lib/attune-ui/telemetry/context";
 import type { ArmId, FrictionSummary, PointerKind } from "@/lib/attune-ui/types";
 import { simulatorPrior } from "@/lib/demo/prior";
-import { STUDY_PHASE, offlineAssignment, variantFor } from "@/lib/study/assignment";
+import { blockCount, offlineAssignment, variantFor, type Block, type Phase } from "@/lib/study/assignment";
 import { boundaryDecision } from "@/lib/study/boundary";
 import { chunk, newParticipantId, roundEvents, type ParticipantRecord } from "@/lib/study/records";
 import { TASKS } from "@/lib/study/tasks";
@@ -28,15 +28,17 @@ function markDevice(): boolean {
   }
 }
 
-export function useStudy() {
+export function useStudy(phase: Phase) {
+  const blocks = blockCount(phase);
   const uploads = useUploads();
   const [stage, setStage] = useState<Stage>("consent");
-  const [position, setPosition] = useState<{ block: 1 | 2; index: number }>({ block: 1, index: 0 });
-  const [adapted, setAdapted] = useState<ArmId>("baseline"); // Block 2 surface
+  const [position, setPosition] = useState<{ block: Block; index: number }>({ block: 1, index: 0 });
+  const [adapted, setAdapted] = useState<ArmId>("baseline"); // decided at the last boundary
   const [undone, setUndone] = useState(false);
   const [pinned, setPinned] = useState(false);
   const participant = useRef<ParticipantRecord | null>(null);
-  const block1 = useRef<FrictionSummary[]>([]);
+  const blockFriction = useRef<FrictionSummary[]>([]); // current block only
+  const [refused, setRefused] = useState(false);
 
   // Built up front (and cached): at the block boundary the freeze let extra taps hit Undo.
   useEffect(() => {
@@ -46,17 +48,25 @@ export function useStudy() {
 
   const begin = async (pointer: PointerKind) => {
     setStage("starting");
+    setRefused(false);
     const base = {
-      id: newParticipantId(), pointer, viewportWidth: window.innerWidth, repeatDevice: markDevice(),
+      id: newParticipantId(), pointer, viewportWidth: window.innerWidth, repeatDevice: markDevice(), phase,
+      code: new URLSearchParams(window.location.search).get("code")?.slice(0, 64) ?? "",
     };
     let assigned: Registered;
     try {
       const response = await post("/api/participants", base);
+      // A wrong code must stop here, not fall through to offline mode.
+      if (response.status === 403) {
+        setRefused(true);
+        setStage("consent");
+        return;
+      }
       if (!response.ok) throw new Error(String(response.status));
       assigned = (await response.json()) as Registered;
     } catch {
-      const local = offlineAssignment(base.id);
-      assigned = { ...local, offline: true, phase: STUDY_PHASE };
+      const local = offlineAssignment(base.id, phase);
+      assigned = { ...local, offline: true, phase };
       // Queued first, so it reaches the server before any of this person's events.
       uploads.enqueue({ url: "/api/participants", body: { ...base, offline: local } });
     }
@@ -72,13 +82,13 @@ export function useStudy() {
   const p = participant.current;
   const variant = p ? variantFor(p.variant_order, position.block) : "A";
   const task = TASKS[variant][position.index];
-  const arm: ArmId = position.block === 2 && !undone ? adapted : "baseline";
+  const arm: ArmId = position.block > 1 && !undone ? adapted : "baseline";
 
   const taskDone = ({ success, timeMs, events }: TaskResult) => {
     if (!p) return;
     const raw = roundEvents(events);
     const friction = summarizeFriction(raw, modalityOf(p.pointer));
-    if (position.block === 1) block1.current.push(friction);
+    blockFriction.current.push(friction);
     const key = { taskIndex: position.index, taskId: task.id, variant };
     chunk(raw).forEach((part, i) =>
       uploads.record(position.block, "interactions", { ...key, part: i, events: part }));
@@ -88,15 +98,19 @@ export function useStudy() {
     setStage("rating");
   };
 
-  /** Exactly one decision per participant, from Block 1 events only. */
-  const decideBlock2 = (record: ParticipantRecord) => {
+  /** One decision per boundary, from the finished block's events only. */
+  const decideBlock = (record: ParticipantRecord, block: Block) => {
     const { models, marginals } = simulatorPrior();
     const decision = boundaryDecision({
-      arm: record.arm, block1: block1.current, pointer: record.pointer,
+      arm: record.arm, previous: blockFriction.current, block, pointer: record.pointer,
       viewportWidth: window.innerWidth, participantId: record.id, policy: { models, marginals },
     });
-    uploads.record(2, "decision", { ...decision, provenance: "SIMULATED prior; not frozen" });
+    const provenance = record.arm === "P" ? "uniform random (pilot)" : "SIMULATED prior; not frozen";
+    uploads.record(block, "decision", { ...decision, provenance });
+    blockFriction.current = [];
     setAdapted(decision.action);
+    setUndone(false);
+    setPinned(false);
   };
 
   const rate = (seq: number) => {
@@ -104,11 +118,12 @@ export function useStudy() {
     uploads.record(position.block, "rating", { taskIndex: position.index, taskId: task.id, seq });
     if (position.index < TASKS[variant].length - 1) {
       setPosition({ ...position, index: position.index + 1 });
-    } else if (position.block === 1) {
-      decideBlock2(p);
-      setPosition({ block: 2, index: 0 });
+    } else if (position.block < blocks) {
+      const next = (position.block + 1) as Block;
+      decideBlock(p, next);
+      setPosition({ block: next, index: 0 });
     } else {
-      uploads.record(2, "done", {});
+      uploads.record(position.block, "done", {});
       setStage("done");
       return;
     }
@@ -117,14 +132,14 @@ export function useStudy() {
 
   // Undo and Pin are logged and analysed intention-to-treat; they only act between tasks.
   const chip = (action: "undo" | "pin") => {
-    uploads.record(2, "chip", { action, beforeTask: position.index, surface: arm });
+    uploads.record(position.block, "chip", { action, beforeTask: position.index, surface: arm });
     if (action === "undo") setUndone(true);
     else setPinned(true);
   };
 
   return {
-    stage, position, task, surface: SURFACES[arm], offline: p?.offline ?? false,
-    showChip: position.block === 2 && adapted !== "baseline", undone, pinned,
+    stage, position, blocks, refused, task, surface: SURFACES[arm], offline: p?.offline ?? false,
+    showChip: position.block > 1 && adapted !== "baseline", undone, pinned,
     pending: uploads.pending, rejected: uploads.rejected, download: uploads.download,
     begin, start: () => setStage("task"), taskDone, rate, chip,
   };

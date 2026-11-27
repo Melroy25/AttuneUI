@@ -1,3 +1,10 @@
+import { createHash, timingSafeEqual } from "node:crypto";
+
+const digest = (s: string) => createHash("sha256").update(s).digest();
+/** Constant-time comparison of two secrets of any length. */
+export const sameSecret = (given: string, expected: string) =>
+  timingSafeEqual(digest(given), digest(expected));
+
 export const fail = (status: number, error: string) => Response.json({ error }, { status });
 
 /** Size-limited JSON body; a Response means "reject with this". */

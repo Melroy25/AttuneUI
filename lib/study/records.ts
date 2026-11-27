@@ -1,13 +1,13 @@
 // Shapes of what the study uploads. The event log is the source of truth.
 import type { InteractionEvent, PointerKind } from "../attune-ui/types";
-import type { StudyArm, VariantOrder } from "./assignment";
+import type { Block, StudyArm, VariantOrder } from "./assignment";
 
 export const EVENT_KINDS = ["task", "interactions", "rating", "decision", "chip", "done"] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
 export interface EventRow {
   seq: number; // unique per participant; makes retries idempotent
-  block: 1 | 2;
+  block: Block;
   kind: EventKind;
   payload: Record<string, unknown>;
 }

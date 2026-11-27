@@ -7,7 +7,7 @@ create table if not exists public.participants (
   phase text not null check (phase in ('test', 'pilot', 'confirmatory')),
   pointer text not null check (pointer in ('mouse', 'touch', 'pen')),
   viewport_width integer not null check (viewport_width between 0 and 10000),
-  arm text not null check (arm in ('A', 'B', 'C')),
+  arm text not null check (arm in ('A', 'B', 'C', 'P')), -- P: pilot
   variant_order text not null check (variant_order in ('AB', 'BA')),
   seq integer check (seq >= 0), -- allocation slot; null when assigned offline
   offline boolean not null default false,
@@ -18,12 +18,18 @@ create table if not exists public.participants (
 create table if not exists public.events (
   participant_id uuid not null references public.participants (id) on delete cascade,
   seq integer not null check (seq between 0 and 10000),
-  block smallint not null check (block in (1, 2)),
+  block smallint not null check (block in (1, 2, 3)),
   kind text not null check (kind in ('task', 'interactions', 'rating', 'decision', 'chip', 'done')),
   payload jsonb not null check (jsonb_typeof(payload) = 'object' and octet_length(payload::text) <= 200000),
   created_at timestamptz not null default now(),
   primary key (participant_id, seq)
 );
+
+-- Upgrades tables created by an earlier version of this file; safe to re-run.
+alter table public.participants drop constraint if exists participants_arm_check;
+alter table public.participants add constraint participants_arm_check check (arm in ('A', 'B', 'C', 'P'));
+alter table public.events drop constraint if exists events_block_check;
+alter table public.events add constraint events_block_check check (block in (1, 2, 3));
 
 alter table public.participants enable row level security;
 alter table public.events enable row level security;

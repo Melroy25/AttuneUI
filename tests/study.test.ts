@@ -28,7 +28,7 @@ describe("assignment", () => {
     const blocks = Array.from({ length: 20 }, (_, b) =>
       [0, 1, 2].map((i) => assign("test", "touch", b * 3 + i).arm).join(""));
     expect(new Set(blocks).size).toBeGreaterThan(2);
-    const offline = Array.from({ length: 100 }, (_, i) => offlineAssignment(`id-${i}`).arm);
+    const offline = Array.from({ length: 100 }, (_, i) => offlineAssignment(`id-${i}`, "test").arm);
     expect(new Set(offline).size).toBe(3);
     expect([variantFor("BA", 1), variantFor("BA", 2)]).toEqual(["B", "A"]);
   });
@@ -37,7 +37,7 @@ describe("assignment", () => {
 describe("boundary decision", () => {
   const marginals = { baseline: 0.2, ergonomic: 0.2, disclosure: 0.2, shortcut: 0.2, guided: 0.2 };
   const input = {
-    block1: [{ ...calm, rage: 2 }, { ...calm, dead: 2 }], pointer: "touch" as const,
+    previous: [{ ...calm, rage: 2 }, { ...calm, dead: 2 }], block: 2 as const, pointer: "touch" as const,
     viewportWidth: 375, participantId: "p1", policy: { models: createModels(), marginals },
   };
 
@@ -60,7 +60,7 @@ describe("boundary decision", () => {
 
 describe("API validation", () => {
   const id = newParticipantId();
-  const registration = { id, pointer: "touch", viewportWidth: 375, repeatDevice: false };
+  const registration = { id, pointer: "touch", viewportWidth: 375, repeatDevice: false, phase: "test" };
   const row = { seq: 0, block: 1, kind: "task", payload: {} };
 
   it("accepts valid bodies", () => {
@@ -74,7 +74,7 @@ describe("API validation", () => {
       { ...registration, viewportWidth: -1 }, { ...registration, offline: { arm: "Z", order: "AB" } },
     ]) expect(parseRegistration(bad)).toBeNull();
     for (const events of [
-      [], Array(21).fill(row), [{ ...row, block: 3 }], [{ ...row, kind: "x" }],
+      [], Array(21).fill(row), [{ ...row, block: 4 }], [{ ...row, kind: "x" }],
       [{ ...row, seq: 1.5 }], [{ ...row, payload: [] }], [{ ...row, payload: { s: "a".repeat(100_001) } }],
     ]) expect(parseEventBatch({ participantId: id, events })).toBeNull();
   });
@@ -155,7 +155,7 @@ describe("registration", () => {
     };
   }
   const person = (id: string): Registration =>
-    ({ id, pointer: "touch", viewportWidth: 375, repeatDevice: false, offline: null });
+    ({ id, pointer: "touch", viewportWidth: 375, repeatDevice: false, phase: "test", code: "", offline: null });
 
   it("allocates consecutive slots, retries a taken slot and is idempotent", async () => {
     const table: Row[] = [];

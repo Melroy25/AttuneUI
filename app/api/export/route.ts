@@ -1,17 +1,15 @@
-import { createHash, timingSafeEqual } from "node:crypto";
-import { fail } from "@/lib/server/http";
+import { fail, sameSecret } from "@/lib/server/http";
 import { rows, supabaseRest } from "@/lib/server/supabase";
 
 const PAGE = 200;
 const TABLES = [["participants", "id"], ["events", "participant_id,seq"]] as const;
-const digest = (s: string) => createHash("sha256").update(s).digest();
 
 export async function GET(request: Request) {
   const token = process.env.EXPORT_TOKEN;
   const rest = supabaseRest();
   if (!token || !rest) return fail(503, "export not configured");
   const given = request.headers.get("authorization") ?? "";
-  if (!timingSafeEqual(digest(given), digest(`Bearer ${token}`))) return fail(401, "unauthorised");
+  if (!sameSecret(given, `Bearer ${token}`)) return fail(401, "unauthorised");
 
   // Streamed, so a full study does not hit the serverless response size limit.
   const encoder = new TextEncoder();

@@ -5,7 +5,7 @@ export type KeyValue = Pick<Storage, "getItem" | "setItem">;
 const PENDING = "attune-study-pending";
 const REJECTED = "attune-study-rejected";
 /** The server will never accept these; keep them for export instead of blocking the queue. */
-const PERMANENT = [400, 409, 413];
+const PERMANENT = [400, 403, 409, 413];
 
 // shortcut: two tabs would overwrite each other's queue; the study runs in one tab.
 export function createQueue(storage: KeyValue | null, send: (item: QueueItem) => Promise<number>) {
