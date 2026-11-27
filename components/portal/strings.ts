@@ -20,6 +20,7 @@ const en = {
   done: "All tasks done", next: "Next batch",
   adapted: "Adapted for faster access", undo: "Undo", pin: "Pin layout", unpin: "Unpin",
   hintFind: "Hint: type the order ID in search, then press Open.",
+  hintFindArrow: "Hint: type the order ID in search, then press the arrow ›.",
   hintFilter: "Hint: set both Status and Priority.",
   hintRefund: "Hint: open the order, then use the ⋯ menu to refund.",
 };
@@ -43,6 +44,7 @@ const kn: Strings = {
   done: "ಎಲ್ಲಾ ಕೆಲಸಗಳು ಮುಗಿದಿವೆ", next: "ಮುಂದುವರಿಸಿ",
   adapted: "ವೇಗದ ಬಳಕೆಗಾಗಿ ಹೊಂದಿಸಲಾಗಿದೆ", undo: "ರದ್ದುಗೊಳಿಸಿ", pin: "ವಿನ್ಯಾಸ ಉಳಿಸಿ", unpin: "ಬಿಡುಗಡೆ",
   hintFind: "ಸುಳಿವು: ಆರ್ಡರ್ ಐಡಿ ಹುಡುಕಿ, ನಂತರ ತೆರೆಯಿರಿ ಒತ್ತಿ.",
+  hintFindArrow: "ಸುಳಿವು: ಆರ್ಡರ್ ಐಡಿ ಹುಡುಕಿ, ನಂತರ ಬಾಣ › ಒತ್ತಿ.",
   hintFilter: "ಸುಳಿವು: ಸ್ಥಿತಿ ಮತ್ತು ಆದ್ಯತೆ ಎರಡನ್ನೂ ಆಯ್ಕೆಮಾಡಿ.",
   hintRefund: "ಸುಳಿವು: ಆರ್ಡರ್ ತೆರೆದು, ⋯ ಮೆನುವಿನಿಂದ ಮರುಪಾವತಿ ಮಾಡಿ.",
 };

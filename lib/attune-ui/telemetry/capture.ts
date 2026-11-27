@@ -36,8 +36,8 @@ export function startCapture(root: HTMLElement, onEvent?: () => void): Capture {
     events.push(e);
     onEvent?.();
   };
-  const labelled = (t: EventTarget | null) =>
-    t instanceof Element ? t.closest("[data-attune-id]")?.getAttribute("data-attune-id") ?? null : null;
+  const labelled = (t: EventTarget | null, attribute = "data-attune-id") =>
+    t instanceof Element ? t.closest(`[${attribute}]`)?.getAttribute(attribute) ?? null : null;
   const endHover = () => {
     if (!hover) return;
     push({ type: "hover", t: hover.t, targetId: hover.id, durationMs: performance.now() - hover.t });
@@ -60,7 +60,8 @@ export function startCapture(root: HTMLElement, onEvent?: () => void): Capture {
     }
     pending = {
       type: "down", t: performance.now(), x: e.clientX, y: e.clientY,
-      targetId: labelled(e.target), interactive, nearTargetPx,
+      // "tap" labels name large areas for taps only: resting the pointer on them is not dwell.
+      targetId: labelled(e.target) ?? labelled(e.target, "data-attune-tap"), interactive, nearTargetPx,
     };
   }, options);
   // Committed on release: a touch that turns into a scroll fires pointercancel instead.

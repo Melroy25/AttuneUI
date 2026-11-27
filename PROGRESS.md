@@ -12,6 +12,8 @@
   database stand-in: demo friction signals, adaptations, 5 layouts, study run -> own JSON ->
   /eval, live fetch. 375 px frame (no touch emulation): demo, eval, study first task.
 - Fixed: /demo never detected long hovers (HUD refresh ended them).
+- Arrow cue (/demo only): 2 taps on a card body -> its arrow glows. Rule-based, changes mid-task
+  (exception to invariant 5, requested by the user); card taps count as dead clicks.
 - Study-shared files changed without behaviour change for /study: Portal (optional store skin,
   data-part attributes), capture.ts (peek(), data-attune-ignore).
 - Showcase script and claim corrections: docs/SHOWCASE.md.

@@ -45,6 +45,16 @@ describe("capture", () => {
     expect(capture.drain()).toEqual([]);
   });
 
+  it("names a tap on a card as dead, without counting a rest on it as dwell", () => {
+    const { capture, fire, wait } = setup();
+    fire("pointerover", { "data-attune-tap": "card-1" });
+    wait(3000);
+    fire("pointerdown", { "data-attune-tap": "card-1" });
+    fire("pointerup", {});
+    const friction = summarizeFriction(capture.drain(), "fine");
+    expect([friction.dead, friction.dwell]).toEqual([1, 0]);
+  });
+
   it("ignores taps on app chrome", () => {
     const { capture, fire } = setup();
     fire("pointerdown", { "data-attune-ignore": "" });

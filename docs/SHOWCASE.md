@@ -31,6 +31,7 @@ exactly what was sensed (a resting mouse counts as hesitation). Read "Why this l
 
 | # | Do this | Then | Expect |
 |---|---|---|---|
+| 0 | Click the body of one order card twice, not its arrow | at once | That card's **arrow turns bold and glows**. A fixed rule, not the model; opening the order clears it |
 | 1 | Click 3 different status badges | Trigger Adaptation | Usually **Quick actions** (59-64% in the simulated prior) |
 | 2 | Rest the mouse on a badge 2 s (twice), scroll up and down fast, open order 1, 2, then 1 | Trigger | HUD shows dwell, thrash, backtrack; we got **Simplified filters** (31%) |
 | 3 | Click one spot 3 times quickly | Trigger | HUD shows rage; usually Quick actions, **rarely large targets** |

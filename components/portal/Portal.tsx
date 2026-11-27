@@ -82,7 +82,10 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
       )}
       {store?.banner}
       {surface.stepHints && task && (
-        <p data-part="hint" className="rounded border border-sky-400 bg-sky-50 p-2 text-sm">{s[HINT[task.id]]}</p>
+        <p data-part="hint" className="rounded border border-sky-400 bg-sky-50 p-2 text-sm">
+          {/* The /demo cards have an arrow where the study table has an Open button. */}
+          {s[store && task.id === "findDelayed" ? "hintFindArrow" : HINT[task.id]]}
+        </p>
       )}
       {surface.quickActions.length > 0 && (
         <QuickActions ctx={ctx} selected={selected} onFilter={filter} onRefund={startRefund} />

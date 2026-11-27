@@ -60,7 +60,20 @@
 .store [data-status="shipped"] { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
 .store [data-status="delivered"] { background: #dcfce7; color: #166534; border-color: #22c55e; }
 .store button[data-status] { border-radius: 999px; }
-.store [data-part="open"] { background: #2563eb; color: #fff; font-weight: 600; }
+/* A quiet arrow; after taps on the card itself it turns solid, bold and glows. */
+.store [data-part="open"] { color: #64748b; }
+.store [data-part="open"] svg { stroke-width: 2; }
+.store [data-part="open"][data-hint="true"] {
+  background: #2563eb; color: #fff;
+  box-shadow: 0 0 0 4px rgb(37 99 235 / .22), 0 0 16px 4px rgb(37 99 235 / .5);
+}
+.store [data-part="open"][data-hint="true"] svg { stroke-width: 4; }
+@media (prefers-reduced-motion: no-preference) {
+  .store [data-part="open"][data-hint="true"] { animation: arrow-glow 1.4s ease-in-out infinite; }
+}
+@keyframes arrow-glow {
+  50% { box-shadow: 0 0 0 6px rgb(37 99 235 / .12), 0 0 22px 7px rgb(37 99 235 / .35); }
+}
 
 .store [data-part="detail"] dt { color: #546176; }
 .store [data-part="detail"] dd { font-weight: 600; }
