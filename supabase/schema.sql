@@ -37,3 +37,13 @@ alter table public.events enable row level security;
 revoke all on public.participants, public.events from anon, authenticated;
 grant select, insert, update on public.participants to service_role;
 grant select, insert on public.events to service_role;
+
+-- Live /demo snapshots for the admin page. Short-lived; never study data.
+create table if not exists public.live_sessions (
+  id uuid primary key,
+  updated_at timestamptz not null default now(),
+  snapshot jsonb not null check (jsonb_typeof(snapshot) = 'object' and octet_length(snapshot::text) <= 16000)
+);
+alter table public.live_sessions enable row level security;
+revoke all on public.live_sessions from anon, authenticated;
+grant select, insert, update, delete on public.live_sessions to service_role;

@@ -1,5 +1,20 @@
 # Showcase guide: try it yourself
 
+## Live admin X-Ray (two windows)
+
+1. Add to `.env.local`: `ADMIN_USER=...` and `ADMIN_PASSWORD=...` (long). Restart the app.
+2. Window 1: `/admin`, sign in. Window 2 (side by side): `/demo`.
+3. In the store, click two or three status labels, a couple of seconds apart.
+4. After 3 struggles (rage, dead, miss, long hover, scroll thrash, backtrack) the store adapts by
+   itself, at most once every 8 s, keeping your page and task. The admin shows what was detected,
+   the layout, the probabilities and a log, about a second or two behind.
+5. The sampled layout may be the one already shown. Undo pauses automatic adapting (turn it back
+   on in the store's X-Ray HUD).
+
+**Vercel:** set `ADMIN_USER`, `ADMIN_PASSWORD`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, run
+`supabase/schema.sql` again (new `live_sessions` table), redeploy. Without the table the live view
+is unreliable there. There is no login lockout, so use a long password.
+
 ## Start the app
 
 ```powershell
@@ -22,7 +37,8 @@ Open http://localhost:3000. There are **no accounts or logins**.
 A second run in the same browser is flagged `repeat_device` and left out of the analysis.
 Close all private windows between people.
 
-**`/demo` never saves anything**, so demo clicks do not appear in `/eval`. Only `/study` runs do.
+Demo clicks never appear in `/eval` (only `/study` runs do). The admin view keeps just the latest
+snapshot per visitor, for about an hour at most; it is not study data and holds no typed text.
 
 ## Demo script (Reset Session before each step; gear -> X-Ray HUD shows what was sensed)
 
@@ -45,6 +61,24 @@ exactly what was sensed (a resting mouse counts as hesitation). Read "Why this l
 
 All three tickets done -> "Next batch" does the same as Trigger Adaptation.
 Phone layout: Chrome DevTools (F12) -> device toolbar -> 375 px.
+
+## More pages to test (demo only)
+
+Click in the page, then press Trigger Adaptation in the HUD; you stay on the same page.
+
+| Page | Do this | What is sensed or changes |
+|---|---|---|
+| Products | Click a card twice | Its arrow glows; `dead` rises |
+| Products | Open the Steel kettle, tap the greyed "Add to cart" 3 times | `dead` (and `rage` if fast) |
+| Products | Click "In stock" labels or the cart badge | `dead` |
+| Returns | Aim just beside Approve / Reject | `miss` |
+| Reports | Click the number tiles and bars, scroll up and down fast | `dead`, `thrash` |
+| Help | Open Refund policy, wait 7 s | Larger text, sections and bullets |
+| Help | Type Kannada in the message box, leave it, twice (or once plus a Kannada search) | UI switches to Kannada |
+| Any | Go Orders -> Products -> Orders | `backtrack` |
+
+Layout changes apply fully on Orders. On the other pages mainly the control size (large targets)
+changes; filters, quick actions and step hints belong to Orders.
 
 ## Study -> your own data in the dashboard
 

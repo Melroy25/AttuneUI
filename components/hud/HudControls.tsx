@@ -18,6 +18,10 @@ export function HudControls({ d }: { d: ReturnType<typeof useDemo> }) {
           </button>
         ))}
       </div>
+      <label className="flex min-h-8 items-center gap-2 text-sm font-semibold">
+        <input type="checkbox" checked={d.auto} onChange={(e) => d.setAuto(e.target.checked)} />
+        Adapt automatically after 3 struggles
+      </label>
       <button type="button" onClick={d.endBlock}
         className="min-h-11 w-full rounded-lg bg-emerald-700 px-3 text-sm font-semibold hover:bg-emerald-600">
         Trigger Adaptation (finish block)

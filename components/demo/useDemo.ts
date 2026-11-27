@@ -10,7 +10,9 @@ import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import { describeChanges } from "@/lib/attune-ui/surface/diff";
 import { startCapture, type Capture } from "@/lib/attune-ui/telemetry/capture";
 import { modalityOf } from "@/lib/attune-ui/telemetry/context";
+import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import type { ArmId, InteractionEvent, Modality } from "@/lib/attune-ui/types";
+import { shouldAdapt } from "@/lib/demo/auto";
 import { simulatorPrior } from "@/lib/demo/prior";
 import { fastForward, finishBlock, newSession, previewSurface, togglePin, undo, type DemoMode } from "@/lib/demo/session";
 import { UI_COOKIE, encodeUi, type UiState } from "@/lib/demo/uiState";
@@ -32,6 +34,9 @@ export function useDemo(serverUi: UiState) {
   const [modality, setModality] = useState<Modality>("fine");
   const [portalKey, setPortalKey] = useState(0);
   const [priorPreferences, setPriorPreferences] = useState<Preferences | null>(null);
+  const [auto, setAuto] = useState(true);
+  const [round, setRound] = useState(0); // picks the task set; automatic changes keep it
+  const lastAuto = useRef(-Infinity);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const capture = useRef<Capture | null>(null);
@@ -39,8 +44,14 @@ export function useDemo(serverUi: UiState) {
   const outcomes = useRef<{ success: boolean; timeMs: number }[]>([]);
   const taskStart = useRef(0);
 
+  // Built up front (and cached), or the first adaptation stalls while the prior is computed.
+  useEffect(() => {
+    const timer = setTimeout(simulatorPrior, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   const ui = offlineUi ?? serverUi;
-  const variant: Variant = session.blocks % 2 === 0 ? "A" : "B";
+  const variant: Variant = round % 2 === 0 ? "A" : "B";
   const task = TASKS[variant][taskIndex] ?? null;
 
   /** HUD refresh. It must not drain: ending a hover each second would hide long hovers. */
@@ -84,12 +95,16 @@ export function useDemo(serverUi: UiState) {
     }
   };
 
-  const endBlock = () => {
+  const derive = () =>
+    derivePreferences(ui.preferences, signals.current, READ_THRESHOLD_MS[demoReading ? "demo" : "normal"]);
+
+  /** A decision from what was just sensed. Automatic ones keep the page, tasks and filters. */
+  const adapt = (automatic: boolean) => {
     const blockEvents = capture.current?.drain() ?? [];
     const attempted = [...outcomes.current];
     // An unfinished task counts as failed only if the user actually did something on it.
     const touched = blockEvents.some((e) => e.type === "down" && e.t >= taskStart.current);
-    if (task && touched) {
+    if (task && touched && !automatic) {
       attempted.push({ success: false, timeMs: Math.max(performance.now() - taskStart.current, 1) });
     }
     const next = finishBlock(session, {
@@ -102,9 +117,7 @@ export function useDemo(serverUi: UiState) {
       prior: simulatorPrior(),
       now: () => performance.now(),
     });
-    const derived = session.pinned
-      ? { preferences: ui.preferences, reasons: [] }
-      : derivePreferences(ui.preferences, signals.current, READ_THRESHOLD_MS[demoReading ? "demo" : "normal"]);
+    const derived = session.pinned ? { preferences: ui.preferences, reasons: [] } : derive();
     // A boundary that changes nothing must not discard what Undo would restore.
     if (next.rendered !== session.rendered || derived.reasons.length > 0) setPriorPreferences(ui.preferences);
     // A preference-only change is the "last change": Undo must not also revert an older layout.
@@ -112,18 +125,47 @@ export function useDemo(serverUi: UiState) {
     setSession({ ...next, previous, log: [...derived.reasons.map((r) => `Preference rule: ${r}`), ...next.log].slice(0, 20) });
     setChanges([...describeChanges(SURFACES[ui.arm], SURFACES[next.rendered]), ...derived.reasons]);
     publish({ arm: next.rendered, preferences: derived.preferences });
-    startBlock();
+    if (automatic) clearBlock();
+    else startBlock();
   };
 
-  const startBlock = () => {
+  const clearBlock = () => {
     capture.current?.drain();
     outcomes.current = [];
     signals.current.longestReadMs = 0;
     setEvents([]);
+  };
+
+  const startBlock = () => {
+    clearBlock();
     setTaskIndex(0);
     setPortalKey((k) => k + 1); // fresh filters and selection for the next block
     taskStart.current = performance.now();
   };
+
+  const endBlock = () => {
+    adapt(false);
+    setRound((r) => r + 1);
+  };
+
+  // Runs on each one-second refresh of the sensed events.
+  useEffect(() => {
+    if (!auto || events.length === 0 && signals.current.longestReadMs === 0) return;
+    const now = performance.now();
+    if (shouldAdapt(summarizeFriction(events, modality), now - lastAuto.current)) {
+      lastAuto.current = now;
+      adapt(true);
+      return;
+    }
+    // Preference rules need no struggle: apply them as soon as their evidence is there.
+    const derived = derive();
+    if (session.pinned || derived.reasons.length === 0) return;
+    setPriorPreferences(ui.preferences);
+    setSession((s) => ({ ...s, previous: null, log: [...derived.reasons.map((r) => `Preference rule: ${r}`), ...s.log].slice(0, 20) }));
+    setChanges(derived.reasons);
+    publish({ arm: ui.arm, preferences: derived.preferences });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the closure of this render is the current one
+  }, [events]);
 
   const preview = (arm: ArmId) => {
     if (arm !== ui.arm) setPriorPreferences(ui.preferences);
@@ -138,7 +180,13 @@ export function useDemo(serverUi: UiState) {
     const preferences = priorPreferences ?? ui.preferences;
     // Forget the evidence, or the same rule would fire again at the next boundary.
     signals.current = { ...EMPTY_SIGNALS };
-    setSession({ ...next, overrides: { ...next.overrides, undo: next.overrides.undo + 1 } });
+    // Otherwise the next automatic change would simply redo what was undone.
+    setAuto(false);
+    setSession({
+      ...next,
+      overrides: { ...next.overrides, undo: next.overrides.undo + 1 },
+      log: ["Automatic adapting paused after Undo", ...next.log].slice(0, 20),
+    });
     setPriorPreferences(null);
     setChanges([]);
     publish({ arm: next.rendered, preferences });
@@ -167,7 +215,7 @@ export function useDemo(serverUi: UiState) {
     rootRef, session, ui, mode, setMode, demoReading, setDemoReading, changes, events, modality,
     portalKey, task, taskIndex, canUndo: session.previous !== null || priorPreferences !== null,
     offline: offlineUi !== null, onAction, onSignal, onView: (v: string) => capture.current?.view(v),
-    endBlock, preview, undoLast, chooseLocale, reset,
+    endBlock, preview, undoLast, chooseLocale, reset, auto, setAuto,
     togglePin: () => setSession(togglePin),
     forward: (n: number) => setSession((s) => fastForward(s, n, simulatorPrior().models)),
     showNotice,

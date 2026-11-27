@@ -3,6 +3,8 @@
 import { useState, type ReactNode } from "react";
 import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreOrderList } from "@/components/store/StoreOrderList";
+import { StoreNav, StorePage } from "@/components/store/StorePages";
+import type { Page } from "@/components/store/text";
 import type { PreferenceSignals, Preferences } from "@/lib/attune-ui/preferences/rules";
 import type { SurfaceConfig } from "@/lib/attune-ui/surface/catalog";
 import { ORDERS } from "@/lib/study/data";
@@ -19,7 +21,12 @@ import { STRINGS, taskText } from "./strings";
 const HINT = { findDelayed: "hintFind", filterRefunds: "hintFilter", partialRefund: "hintRefund" } as const;
 
 /** /demo only: storefront styling plus app chrome. The study never passes this. */
-export interface StoreChrome { actions: ReactNode; banner: ReactNode }
+export interface StoreChrome {
+  actions: ReactNode;
+  banner: ReactNode;
+  page: Page; // held by the caller, so a new block stays on the same page
+  onPage: (page: Page) => void;
+}
 
 export function Portal({ surface, preferences, task, onAction, onSignal, onView, store }: {
   surface: SurfaceConfig;
@@ -60,9 +67,17 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
     onView(selected ? `order:${selected}` : "list");
   };
   const refundOrder = ORDERS.find((o) => o.id === refunding);
-  const nav = (
+  const showList = () => { setSelected(null); filter(NO_FILTERS); onView("list"); };
+  const page = store?.page ?? "orders";
+  const nav = store ? (
+    <StoreNav ctx={ctx} page={page} onPage={(next) => {
+      store.onPage(next);
+      if (next === "orders") showList();
+      else onView(`page:${next}`);
+    }} />
+  ) : (
     <nav className="flex gap-3 text-sm">
-      <button type="button" onClick={() => { setSelected(null); filter(NO_FILTERS); onView("list"); }}>{s.orders}</button>
+      <button type="button" onClick={showList}>{s.orders}</button>
       <span data-attune-id="nav-reports">{s.reports}</span>
       <span data-attune-id="nav-help">{s.help}</span>
     </nav>
@@ -81,6 +96,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
         </header>
       )}
       {store?.banner}
+      {page !== "orders" ? <StorePage ctx={ctx} page={page} onView={onView} /> : (<>
       {surface.stepHints && task && (
         <p data-part="hint" className="rounded border border-sky-400 bg-sky-50 p-2 text-sm">
           {/* The /demo cards have an arrow where the study table has an Open button. */}
@@ -109,6 +125,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
           <PolicyCard ctx={ctx} />
         </div>
       </div>
+      </>)}
       {refundOrder && (
         <RefundDialog
           ctx={ctx}

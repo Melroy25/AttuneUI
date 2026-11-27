@@ -3,15 +3,19 @@
 import { useState } from "react";
 import { XRayHud } from "@/components/hud/XRayHud";
 import { Portal } from "@/components/portal/Portal";
+import type { Page } from "@/components/store/text";
 import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import type { UiState } from "@/lib/demo/uiState";
 import { DemoBanner } from "./DemoBanner";
 import { SettingsMenu } from "./SettingsMenu";
 import { useDemo } from "./useDemo";
+import { useLiveReport } from "./useLiveReport";
 
 export function DemoShell({ serverUi, renderedAt }: { serverUi: UiState; renderedAt: string }) {
   const d = useDemo(serverUi);
   const [hud, setHud] = useState(false);
+  const [page, setPage] = useState<Page>("orders");
+  useLiveReport(d, page);
   const surface = SURFACES[d.ui.arm];
   const renderedBy = d.offline
     ? "client (offline fallback)"
@@ -35,8 +39,11 @@ export function DemoShell({ serverUi, renderedAt }: { serverUi: UiState; rendere
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={d.task}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
-          store={{ actions, banner: <DemoBanner d={d} /> }} />
+          store={{ actions, banner: <DemoBanner d={d} />, page, onPage: setPage }} />
       </div>
+      <p className="mx-auto mt-4 max-w-6xl text-xs text-slate-600">
+        Live demo: your clicks and layout changes are visible to the site admin. What you type is not sent.
+      </p>
       {hud && <XRayHud d={d} surface={surface} renderedBy={renderedBy} onClose={() => setHud(false)} />}
     </main>
   );

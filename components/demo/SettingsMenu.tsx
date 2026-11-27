@@ -43,7 +43,10 @@ export function SettingsMenu({ canUndo, pinned, hud, onUndo, onPin, onHud, onRes
         <button type="button" {...close} className={item} aria-pressed={hud} onClick={onHud}>
           <span>X-Ray HUD</span><span className="text-xs font-semibold">{hud ? "ON" : "OFF"}</span>
         </button>
-        <a href="/eval" target="_blank" rel="noopener" className={`${item} border-t border-slate-200`}>
+        <a href="/admin" target="_blank" rel="noopener" className={`${item} border-t border-slate-200`}>
+          <span>Admin: Live X-Ray (/admin)</span><span aria-hidden>↗</span>
+        </a>
+        <a href="/eval" target="_blank" rel="noopener" className={item}>
           <span>Judge Dashboard (/eval)</span><span aria-hidden>↗</span>
         </a>
       </div>

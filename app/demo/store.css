@@ -79,6 +79,16 @@
 .store [data-part="detail"] dd { font-weight: 600; }
 .store [role="dialog"] { border-radius: 1rem; box-shadow: 0 20px 50px rgb(15 23 42 / .35); }
 
+.store [data-part="nav"] button { color: #dbeafe; }
+.store [data-part="nav"] button[aria-current="page"] { background: rgb(255 255 255 / .18); color: #fff; font-weight: 700; }
+.store [data-part="primary"] { background: #2563eb; border-color: #2563eb; color: #fff; font-weight: 600; }
+.store [data-part="preset"][aria-pressed="true"] { background: #1d4ed8; color: #fff; }
+.store [data-part="cart"] { background: #fef3c7; border-radius: 999px; padding: .25rem .75rem; }
+.store [data-stock="inStock"] { color: #166534; }
+.store [data-stock="lowStock"] { color: #854d0e; }
+.store [data-stock="outOfStock"] { color: #b91c1c; }
+.store [data-part="detail"] :is(input, textarea) { border-color: #cbd5e1; }
+
 /* The X-Ray drawer never covers content: reserve its space. */
 @media (width >= 64rem) { .hud-open { padding-right: 25rem; } }
 @media (width < 64rem) { .hud-open { padding-bottom: 55dvh; } }

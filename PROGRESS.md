@@ -3,7 +3,6 @@
 ## Phases 1-3a, pre-pilot code, confirmatory mode: DONE
 - Measured decide() latency: 0.33-0.37 ms median in Node (n=50, two runs); in Chrome 0.85 ms
   median of 20, cold first decisions 1.35-1.5 ms.
-- Pilot: static round + 2 uniform rounds; round 3 repeats round 1's task set; arm "P".
 
 ## Phase 3b + demo polish: DONE 2026-11-27
 - /demo: storefront skin (study look unchanged), gear menu, X-Ray drawer, manual layout
@@ -14,9 +13,10 @@
 - Fixed: /demo never detected long hovers (HUD refresh ended them).
 - Arrow cue (/demo only): 2 taps on a card body -> its arrow glows. Rule-based, changes mid-task
   (exception to invariant 5, requested by the user); card taps count as dead clicks.
-- Study-shared files changed without behaviour change for /study: Portal (optional store skin,
-  data-part attributes), capture.ts (peek(), data-attune-ignore).
-- Showcase script and claim corrections: docs/SHOWCASE.md.
+- Live admin: /admin (ADMIN_USER/ADMIN_PASSWORD) shows each demo visitor's X-Ray; /demo now
+  adapts by itself after 3 struggles (user chose this; /demo exception to invariants 5, 10).
+- /demo pages: Products, Returns, Reports, Help (fictional data, lib/demo/catalog.ts; new
+  Kannada unreviewed). 94/94 tests. Guide and claim corrections: docs/SHOWCASE.md.
 
 ## Setup before phone test / pilot (user)
 1. Run supabase/schema.sql (again if already run: it widens the arm and block checks).
@@ -32,8 +32,7 @@
 - SIMULATED prior rarely picks large targets, even after rage clicks (3-13%).
 - SIMULATED headroom small: oracle .785 vs static .755; learner +.01 to +.015 at 3000.
 - Calm blocks give spread arm probabilities (~.3). Decide v (0.25) before the freeze.
-- /demo learning is not capped. Events API has no rate limit; assignment seed is committed.
-- Kannada strings need a native-speaker review. Stale `.next` can break builds: delete it.
+- /demo learning uncapped; live and events APIs unlimited; Kannada unreviewed.
 
 ## Next
 - Phone test, pilot, freeze. Then replay slider, attribution ladder, falsification (Phase 4).
