@@ -5,6 +5,7 @@ const config: NextConfig = {
   outputFileTracingIncludes: {
     "/study": ["./data/policy.frozen.json"],
     "/api/participants": ["./data/policy.frozen.json"],
+    "/eval": ["./data/policy.frozen.json"],
   },
 };
 

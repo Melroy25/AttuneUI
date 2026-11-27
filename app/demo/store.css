@@ -1,0 +1,72 @@
+/* Storefront skin for /demo only; everything is scoped to .store / .store-page.
+   Unlayered, so it wins over utilities. Control sizes stay with the SurfaceConfig. */
+.store-page { background: #f1f3f6; color: #172033; }
+.store { --card-shadow: 0 1px 2px rgb(15 23 42 / .08), 0 2px 10px rgb(15 23 42 / .06); }
+
+.store [data-part="header"] {
+  background: linear-gradient(105deg, #172f72, #2563eb);
+  border-radius: .875rem;
+  box-shadow: 0 6px 18px rgb(30 58 138 / .22);
+}
+.store [data-part="mark"] {
+  display: grid; place-items: center; width: 2.25rem; height: 2.25rem; flex: none;
+  border-radius: .625rem; background: #fbbf24; color: #172f72; font-weight: 800;
+}
+.store [data-part="brand"] { font-weight: 800; line-height: 1.15; letter-spacing: -.01em; }
+.store [data-part="brand"] span { color: #fde68a; }
+
+.store :is([data-part="filters"], [data-part="detail"], [data-part="policy"]) {
+  background: #fff; border: 0; border-radius: .875rem; box-shadow: var(--card-shadow);
+}
+.store [data-part="filters"] { padding: .75rem; }
+.store input[type="search"] {
+  background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 999px; padding-inline: 1rem;
+}
+.store input[type="search"]:focus-visible { background: #fff; outline: 2px solid #2563eb; }
+.store select { border-color: #cbd5e1; border-radius: .5rem; }
+.store button { border-radius: .5rem; }
+
+.store [data-part="photo"] {
+  border: 1.5px solid #c2410c; border-radius: 999px; color: #9a3412; font-weight: 600;
+}
+.store [data-part="photo"][data-first="true"] { background: #c2410c; color: #fff; }
+.store [data-part="photo-panel"] { background: #fff7ed; border-color: #fed7aa; border-radius: .75rem; }
+.store [data-part="photo-panel"] button { background: #fff; border-color: #fdba74; }
+.store [data-part="photo-panel"] button[aria-pressed="true"] { background: #ffedd5; border: 2px solid #c2410c; }
+.store [data-part="preset"] { background: #eff6ff; border-radius: 999px; }
+.store [data-part="quick"] { background: #eef2ff; border-color: #a5b4fc; border-radius: .875rem; }
+.store [data-part="hint"] { background: #ecfeff; border-color: #22d3ee; border-radius: .75rem; }
+
+.store [data-part="order"] {
+  background: #fff; border: 1.5px solid transparent; border-radius: .875rem; box-shadow: var(--card-shadow);
+}
+.store [data-part="order"][data-selected="true"] { border-color: #2563eb; background: #f5f9ff; }
+.store [data-part="thumb"] {
+  display: grid; place-items: center; flex: none; width: 3.5rem; height: 3.5rem;
+  border-radius: .75rem; background: #f1f5f9; font-size: 1.75rem;
+}
+.store [data-product="shoes"][data-part="thumb"] { background: #f3e8ff; }
+.store [data-product="headphones"][data-part="thumb"] { background: #e0f2fe; }
+.store [data-product="kettle"][data-part="thumb"] { background: #ffe4e6; }
+.store [data-product="backpack"][data-part="thumb"] { background: #dcfce7; }
+.store [data-product="watch"][data-part="thumb"] { background: #e0e7ff; }
+.store [data-product="lamp"][data-part="thumb"] { background: #fef9c3; }
+.store [data-part="price"] { font-weight: 800; white-space: nowrap; }
+.store [data-part="meta"] { color: #546176; font-size: .75rem; }
+.store [data-priority="high"] { color: #b91c1c; font-weight: 600; }
+
+.store [data-status="delayed"] { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
+.store [data-status="refund_requested"] { background: #fef3c7; color: #854d0e; border-color: #f59e0b; }
+.store [data-status="shipped"] { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
+.store [data-status="delivered"] { background: #dcfce7; color: #166534; border-color: #22c55e; }
+.store button[data-status] { border-radius: 999px; }
+.store [data-part="open"] { background: #2563eb; color: #fff; font-weight: 600; }
+
+.store [data-part="detail"] dt { color: #546176; }
+.store [data-part="detail"] dd { font-weight: 600; }
+.store [role="dialog"] { border-radius: 1rem; box-shadow: 0 20px 50px rgb(15 23 42 / .35); }
+
+/* The X-Ray drawer never covers content: reserve its space. */
+@media (width >= 64rem) { .hud-open { padding-right: 25rem; } }
+@media (width < 64rem) { .hud-open { padding-bottom: 55dvh; } }
+@media (width < 40rem) { .hud-open [data-thumb-cta] { bottom: calc(55dvh + .5rem); } }

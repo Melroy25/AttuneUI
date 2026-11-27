@@ -9,7 +9,7 @@ export function QuickActions({ ctx, selected, onFilter, onRefund }: {
 }) {
   const { s, surface, control } = ctx;
   return (
-    <section aria-label={s.quick} className="flex flex-wrap items-center gap-2 rounded border border-indigo-300 bg-indigo-50 p-2">
+    <section data-part="quick" aria-label={s.quick} className="flex flex-wrap items-center gap-2 rounded border border-indigo-300 bg-indigo-50 p-2">
       <strong className="text-sm">{s.quick}</strong>
       {surface.quickActions.map((action) => (
         <button

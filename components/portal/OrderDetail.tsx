@@ -7,9 +7,9 @@ export function OrderDetail({ ctx, order, onRefund }: {
   onRefund: () => void;
 }) {
   const { s, surface, control } = ctx;
-  if (!order) return <p className="rounded border p-3 text-sm">{s.selectOrder}</p>;
+  if (!order) return <p data-part="detail" className="rounded border p-3 text-sm">{s.selectOrder}</p>;
   return (
-    <section className="rounded border p-3 text-sm">
+    <section data-part="detail" className="rounded border p-3 text-sm">
       <div className="flex items-start justify-between">
         <h2 className="font-bold">{order.id}</h2>
         {/* The buried path stays in every surface: adaptations duplicate, never move. */}

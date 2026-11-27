@@ -1,77 +1,67 @@
-import { contributions } from "@/lib/attune-ui/bandit/policy";
+import type { useDemo } from "@/components/demo/useDemo";
 import type { SurfaceConfig } from "@/lib/attune-ui/surface/catalog";
-import { FEATURES } from "@/lib/attune-ui/telemetry/context";
+import { FEATURES, buildContext } from "@/lib/attune-ui/telemetry/context";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
-import { ARM_IDS, type InteractionEvent, type Modality } from "@/lib/attune-ui/types";
-import { median, type DemoSession } from "@/lib/demo/session";
+import { explain } from "@/lib/demo/explain";
+import { DecisionPanel } from "./DecisionPanel";
+import { HudControls } from "./HudControls";
 
-export function XRayHud({ session, surface, events, modality, renderedBy }: {
-  session: DemoSession;
+const SIGNALS = ["rage", "dead", "miss", "dwell", "thrash", "backtrack", "tortuosity"] as const;
+
+/** Non-blocking drawer: bottom sheet below 1024 px, right-hand panel above. */
+export function XRayHud({ d, surface, renderedBy, onClose }: {
+  d: ReturnType<typeof useDemo>;
   surface: SurfaceConfig;
-  events: InteractionEvent[];
-  modality: Modality;
   renderedBy: string;
+  onClose: () => void;
 }) {
+  const { session, events, modality } = d;
   const friction = summarizeFriction(events, modality);
-  const { decision, active, models } = session;
-  const ms = median(session.decisionMs);
-  const why =
-    decision && active && models
-      ? contributions(models[active.modality][decision.action], decision.context)
-      : null;
+  // The drawer only mounts after a click, so window exists here.
+  const context = buildContext({ friction, viewportWidth: window.innerWidth, priorSessions: session.blocks });
   return (
-    <aside className="space-y-3 rounded-lg bg-slate-950 p-3 font-mono text-xs text-slate-100">
-      <h2 className="text-sm font-bold">X-Ray</h2>
-      <p>
-        Layout: {renderedBy}
-        <br />
-        Updates: {session.liveUpdates} live · {session.simulatedUpdates} SIMULATED (prior is SIMULATED)
-        <br />
-        Decision latency on this device:{" "}
-        {ms === null ? "not measured yet" : `${ms.toFixed(2)} ms median of ${session.decisionMs.length}`}
-      </p>
-      <div>
-        <h3 className="font-bold">This block ({modality} model)</h3>
-        rage {friction.rage} · dead {friction.dead} · miss {friction.miss} · dwell {friction.dwell} · thrash{" "}
-        {friction.thrash} · backtrack {friction.backtrack}
+    <aside aria-label="X-Ray HUD" lang="en"
+      className="fixed inset-x-0 bottom-0 z-[25] h-[55dvh] space-y-4 overflow-y-auto overscroll-contain rounded-t-2xl bg-slate-950 p-3 text-xs text-slate-100 shadow-2xl lg:inset-y-0 lg:left-auto lg:h-auto lg:w-96 lg:rounded-none lg:rounded-l-2xl">
+      <div className="sticky -top-3 z-10 -mx-3 -mt-3 flex items-center justify-between bg-slate-950 px-3 py-2">
+        <h2 className="text-sm font-bold">X-Ray HUD · Block {session.blocks + 1}</h2>
+        <button type="button" onClick={onClose} aria-label="Close X-Ray HUD" className="h-10 w-10 rounded-lg text-lg hover:bg-slate-800">✕</button>
       </div>
-      {decision && (
-        <div>
-          <h3 className="font-bold">Arm probabilities (logged exactly)</h3>
-          {ARM_IDS.map((a) => (
-            <div key={a} className="flex items-center gap-2">
-              <span className="w-20">{a}</span>
-              <span className="h-2 flex-1 rounded bg-slate-800">
-                <span
-                  className={`block h-2 rounded ${a === decision.action ? "bg-emerald-400" : "bg-slate-500"}`}
-                  style={{ width: `${decision.probs[a] * 100}%` }}
-                />
-              </span>
-              <span className="w-10 text-right">{(decision.probs[a] * 100).toFixed(0)}%</span>
+
+      <HudControls d={d} />
+
+      <section aria-label="Why this layout" className="space-y-1 rounded-lg border border-slate-700 p-2 text-sm">
+        <h3 className="font-bold">Why this layout</h3>
+        {explain(session).map((line) => <p key={line}>{line}</p>)}
+      </section>
+
+      <section>
+        <h3 className="mb-1 font-bold">Friction this block</h3>
+        <dl className="grid grid-cols-4 gap-1">
+          {SIGNALS.map((k) => (
+            <div key={k} className="rounded bg-slate-900 p-1.5">
+              <dt className="truncate text-slate-400">{k}</dt>
+              <dd className="font-mono text-base">{k === "tortuosity" ? friction[k].toFixed(1) : friction[k]}</dd>
             </div>
           ))}
-        </div>
-      )}
-      {why && decision && (
-        <div>
-          <h3 className="font-bold">Score of {decision.action}: context × weight</h3>
+          <div className="rounded bg-slate-900 p-1.5">
+            <dt className="truncate text-slate-400">undo · pin</dt>
+            <dd className="font-mono text-base">{session.overrides.undo} · {session.overrides.pin}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section>
+        <h3 className="mb-1 font-bold">
+          Model: {modality} ({modality === "coarse" ? "touch" : "mouse / pen"}) · live context
+        </h3>
+        <dl className="grid grid-cols-2 gap-x-3 font-mono">
           {FEATURES.map((f, i) => (
-            <div key={f} className="flex justify-between">
-              <span>{f} = {decision.context[i].toFixed(2)}</span>
-              <span>{why[i] >= 0 ? "+" : ""}{why[i].toFixed(3)}</span>
-            </div>
+            <div key={f} className="flex justify-between"><dt>{f}</dt><dd>{context[i].toFixed(2)}</dd></div>
           ))}
-          {!session.liveUpdates && !session.simulatedUpdates && <p>Weights come from the SIMULATED prior.</p>}
-        </div>
-      )}
-      <div>
-        <h3 className="font-bold">Log</h3>
-        <ol>{session.log.map((line, i) => <li key={`${session.log.length - i}`}>• {line}</li>)}</ol>
-      </div>
-      <details>
-        <summary className="cursor-pointer font-bold">Surface JSON</summary>
-        <pre className="overflow-x-auto">{JSON.stringify(surface, null, 2)}</pre>
-      </details>
+        </dl>
+      </section>
+
+      <DecisionPanel session={session} surface={surface} renderedBy={renderedBy} />
     </aside>
   );
 }

@@ -5,7 +5,7 @@ import {
 import { blockReward, type TaskOutcome } from "../attune-ui/bandit/reward";
 import { buildContext, modalityOf } from "../attune-ui/telemetry/context";
 import { frictionCount, summarizeFriction } from "../attune-ui/telemetry/friction";
-import type { ArmId, InteractionEvent, Modality, PointerKind } from "../attune-ui/types";
+import type { ArmId, FrictionSummary, InteractionEvent, Modality, PointerKind } from "../attune-ui/types";
 import { runLearning } from "../eval/simulator";
 
 export type DemoMode = "static" | "placebo" | "attune";
@@ -18,6 +18,11 @@ export interface DemoSession {
   /** The decision whose surface the current block is exercising. */
   active: { context: number[]; modality: Modality } | null;
   decision: Decision | null;
+  /** Policy mode and friction behind the last boundary, for the X-Ray explanation. */
+  mode: DemoMode | null;
+  friction: FrictionSummary | null;
+  preview: boolean; // the layout was picked by hand, not by the policy
+  overrides: { undo: number; pin: number }; // shown only; never part of context or reward
   blocks: number;
   liveUpdates: number;
   simulatedUpdates: number;
@@ -27,7 +32,7 @@ export interface DemoSession {
 
 export const newSession = (rendered: ArmId = "baseline"): DemoSession => ({
   models: null, rendered, previous: null, pinned: false, active: null, decision: null,
-  blocks: 0, liveUpdates: 0, simulatedUpdates: 0, decisionMs: [], log: [],
+  mode: null, friction: null, preview: false, overrides: { undo: 0, pin: 0 }, blocks: 0, liveUpdates: 0, simulatedUpdates: 0, decisionMs: [], log: [],
 });
 
 export interface BlockInput {
@@ -87,6 +92,9 @@ export function finishBlock(session: DemoSession, input: BlockInput): DemoSessio
     previous: rendered === session.rendered ? session.previous : session.rendered,
     active: { context, modality },
     decision,
+    mode: input.mode,
+    friction,
+    preview: false,
     blocks: session.blocks + 1,
     liveUpdates,
     decisionMs: decision ? [...session.decisionMs, elapsed].slice(-50) : session.decisionMs,
@@ -103,6 +111,23 @@ export function undo(session: DemoSession): DemoSession {
     log: [`Undo: back to ${session.previous}`, ...session.log].slice(0, 20),
   };
 }
+
+/** Manual look at one layout: not a decision, so the block it starts teaches the model nothing. */
+export const previewSurface = (session: DemoSession, arm: ArmId): DemoSession => ({
+  ...session,
+  rendered: arm,
+  previous: arm === session.rendered ? session.previous : session.rendered,
+  active: null,
+  decision: null,
+  preview: true,
+  log: [`Manual preview: ${arm} (not chosen by the model)`, ...session.log].slice(0, 20),
+});
+
+export const togglePin = (session: DemoSession): DemoSession => ({
+  ...session,
+  pinned: !session.pinned,
+  overrides: { ...session.overrides, pin: session.overrides.pin + (session.pinned ? 0 : 1) },
+});
 
 export function fastForward(
   session: DemoSession, sessions: number, prior: Models,

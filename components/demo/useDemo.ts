@@ -10,9 +10,9 @@ import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import { describeChanges } from "@/lib/attune-ui/surface/diff";
 import { startCapture, type Capture } from "@/lib/attune-ui/telemetry/capture";
 import { modalityOf } from "@/lib/attune-ui/telemetry/context";
-import type { InteractionEvent, Modality } from "@/lib/attune-ui/types";
+import type { ArmId, InteractionEvent, Modality } from "@/lib/attune-ui/types";
 import { simulatorPrior } from "@/lib/demo/prior";
-import { fastForward, finishBlock, newSession, undo, type DemoMode } from "@/lib/demo/session";
+import { fastForward, finishBlock, newSession, previewSurface, togglePin, undo, type DemoMode } from "@/lib/demo/session";
 import { UI_COOKIE, encodeUi, type UiState } from "@/lib/demo/uiState";
 import { TASKS, isComplete, type PortalAction, type Variant } from "@/lib/study/tasks";
 
@@ -35,7 +35,6 @@ export function useDemo(serverUi: UiState) {
 
   const rootRef = useRef<HTMLDivElement>(null);
   const capture = useRef<Capture | null>(null);
-  const buffer = useRef<InteractionEvent[]>([]);
   const signals = useRef<PreferenceSignals>({ ...EMPTY_SIGNALS });
   const outcomes = useRef<{ success: boolean; timeMs: number }[]>([]);
   const taskStart = useRef(0);
@@ -44,10 +43,10 @@ export function useDemo(serverUi: UiState) {
   const variant: Variant = session.blocks % 2 === 0 ? "A" : "B";
   const task = TASKS[variant][taskIndex] ?? null;
 
-  const flush = useCallback(() => {
+  /** HUD refresh. It must not drain: ending a hover each second would hide long hovers. */
+  const refresh = useCallback(() => {
     if (!capture.current) return;
-    buffer.current = [...buffer.current, ...capture.current.drain()];
-    setEvents(buffer.current);
+    setEvents(capture.current.peek());
     setModality(modalityOf(capture.current.pointer()));
   }, []);
 
@@ -55,12 +54,12 @@ export function useDemo(serverUi: UiState) {
     if (!rootRef.current) return;
     capture.current = startCapture(rootRef.current);
     taskStart.current = performance.now();
-    const timer = setInterval(flush, 1000); // HUD refresh only
+    const timer = setInterval(refresh, 1000);
     return () => {
       clearInterval(timer);
       capture.current?.stop();
     };
-  }, [flush]);
+  }, [refresh]);
 
   /** Server renders the new layout from the cookie; offline we render it here. */
   const publish = (next: UiState) => {
@@ -86,16 +85,16 @@ export function useDemo(serverUi: UiState) {
   };
 
   const endBlock = () => {
-    flush();
+    const blockEvents = capture.current?.drain() ?? [];
     const attempted = [...outcomes.current];
     // An unfinished task counts as failed only if the user actually did something on it.
-    const touched = buffer.current.some((e) => e.type === "down" && e.t >= taskStart.current);
+    const touched = blockEvents.some((e) => e.type === "down" && e.t >= taskStart.current);
     if (task && touched) {
       attempted.push({ success: false, timeMs: Math.max(performance.now() - taskStart.current, 1) });
     }
     const next = finishBlock(session, {
       mode,
-      events: buffer.current,
+      events: blockEvents,
       outcomes: attempted,
       pointer: capture.current?.pointer() ?? "mouse",
       viewportWidth: window.innerWidth,
@@ -108,10 +107,16 @@ export function useDemo(serverUi: UiState) {
       : derivePreferences(ui.preferences, signals.current, READ_THRESHOLD_MS[demoReading ? "demo" : "normal"]);
     // A boundary that changes nothing must not discard what Undo would restore.
     if (next.rendered !== session.rendered || derived.reasons.length > 0) setPriorPreferences(ui.preferences);
-    setSession({ ...next, log: [...derived.reasons.map((r) => `Preference rule: ${r}`), ...next.log].slice(0, 20) });
+    // A preference-only change is the "last change": Undo must not also revert an older layout.
+    const previous = next.rendered === session.rendered && derived.reasons.length > 0 ? null : next.previous;
+    setSession({ ...next, previous, log: [...derived.reasons.map((r) => `Preference rule: ${r}`), ...next.log].slice(0, 20) });
     setChanges([...describeChanges(SURFACES[ui.arm], SURFACES[next.rendered]), ...derived.reasons]);
     publish({ arm: next.rendered, preferences: derived.preferences });
-    buffer.current = [];
+    startBlock();
+  };
+
+  const startBlock = () => {
+    capture.current?.drain();
     outcomes.current = [];
     signals.current.longestReadMs = 0;
     setEvents([]);
@@ -120,12 +125,20 @@ export function useDemo(serverUi: UiState) {
     taskStart.current = performance.now();
   };
 
+  const preview = (arm: ArmId) => {
+    if (arm !== ui.arm) setPriorPreferences(ui.preferences);
+    setSession((s) => previewSurface(s, arm));
+    setChanges(describeChanges(SURFACES[ui.arm], SURFACES[arm]));
+    publish({ arm, preferences: ui.preferences });
+    startBlock();
+  };
+
   const undoLast = () => {
     const next = undo(session);
     const preferences = priorPreferences ?? ui.preferences;
     // Forget the evidence, or the same rule would fire again at the next boundary.
     signals.current = { ...EMPTY_SIGNALS };
-    setSession(next);
+    setSession({ ...next, overrides: { ...next.overrides, undo: next.overrides.undo + 1 } });
     setPriorPreferences(null);
     setChanges([]);
     publish({ arm: next.rendered, preferences });
@@ -144,13 +157,19 @@ export function useDemo(serverUi: UiState) {
     window.location.reload();
   };
 
+  const { textScale, structure, searchFirst } = ui.preferences;
+  // An explicit language pick alone is not an "adaptation".
+  const showNotice = ui.arm !== "baseline" || session.pinned || changes.length > 0 ||
+    textScale !== DEFAULT_PREFERENCES.textScale || structure !== DEFAULT_PREFERENCES.structure ||
+    searchFirst !== DEFAULT_PREFERENCES.searchFirst;
+
   return {
     rootRef, session, ui, mode, setMode, demoReading, setDemoReading, changes, events, modality,
     portalKey, task, taskIndex, canUndo: session.previous !== null || priorPreferences !== null,
     offline: offlineUi !== null, onAction, onSignal, onView: (v: string) => capture.current?.view(v),
-    endBlock, undoLast, chooseLocale, reset,
-    togglePin: () => setSession((s) => ({ ...s, pinned: !s.pinned })),
+    endBlock, preview, undoLast, chooseLocale, reset,
+    togglePin: () => setSession(togglePin),
     forward: (n: number) => setSession((s) => fastForward(s, n, simulatorPrior().models)),
-    isDefault: JSON.stringify(ui.preferences) === JSON.stringify(DEFAULT_PREFERENCES),
+    showNotice,
   };
 }

@@ -3,7 +3,7 @@ import Link from "next/link";
 const PAGES = [
   { href: "/demo", title: "Live testbed", note: "Adaptive order portal with X-Ray view" },
   { href: "/study", title: "3-arm study", note: "Anonymous usability study; needs an invite link" },
-  { href: "/eval", title: "Evaluation lab", note: "Not built yet" },
+  { href: "/eval", title: "Judge inspector", note: "Causal metrics, off-policy estimates and participant timelines" },
 ];
 
 export default function Home() {

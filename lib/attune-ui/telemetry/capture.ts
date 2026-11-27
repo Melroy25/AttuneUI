@@ -3,6 +3,8 @@ import type { InteractionEvent, PointerKind } from "../types";
 
 const INTERACTIVE = "button:not(:disabled),a[href],input,select,textarea,summary,label";
 const MOVE_EVERY_MS = 50;
+/** App chrome (e.g. the /demo settings menu) that is not part of the measured task. */
+const IGNORE = "[data-attune-ignore]";
 
 export interface Rect { left: number; top: number; right: number; bottom: number }
 
@@ -17,6 +19,8 @@ export interface Capture {
   view(view: string): void;
   /** Returns events since the last drain, in time order. */
   drain(): InteractionEvent[];
+  /** The same events plus any hover still in progress, without ending or removing anything. */
+  peek(): InteractionEvent[];
   stop(): void;
 }
 
@@ -42,6 +46,10 @@ export function startCapture(root: HTMLElement, onEvent?: () => void): Capture {
 
   root.addEventListener("pointerdown", (e) => {
     pointer = e.pointerType === "touch" || e.pointerType === "pen" ? e.pointerType : "mouse";
+    if (e.target instanceof Element && e.target.closest(IGNORE)) {
+      pending = null;
+      return;
+    }
     const interactive = e.target instanceof Element && e.target.closest(INTERACTIVE) !== null;
     let nearTargetPx: number | null = interactive ? 0 : null;
     if (!interactive) {
@@ -83,6 +91,12 @@ export function startCapture(root: HTMLElement, onEvent?: () => void): Capture {
   return {
     pointer: () => pointer,
     view: (view) => push({ type: "view", t: performance.now(), view }),
+    peek() {
+      const open: InteractionEvent[] = hover
+        ? [{ type: "hover", t: hover.t, targetId: hover.id, durationMs: performance.now() - hover.t }]
+        : [];
+      return [...events, ...open].sort((a, b) => a.t - b.t);
+    },
     drain() {
       endHover();
       const out = events.sort((a, b) => a.t - b.t);

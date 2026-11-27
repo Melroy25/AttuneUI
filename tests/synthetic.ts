@@ -5,22 +5,27 @@ import { SURFACES } from "../lib/attune-ui/surface/catalog";
 import { frictionCount } from "../lib/attune-ui/telemetry/friction";
 import type { FrictionSummary } from "../lib/attune-ui/types";
 import { sampleUser, simulateTask } from "../lib/eval/simulator";
-import { assign, blockCount, type Block, type Phase } from "../lib/study/assignment";
+import { assign, blockCount, variantFor, type Block, type Phase } from "../lib/study/assignment";
 import { boundaryDecision } from "../lib/study/boundary";
 import { priorFile } from "../lib/study/freeze";
+import { TASKS } from "../lib/study/tasks";
 
 export function simulatedLog(phase: Phase, count: number, seed = 7): EventLog {
   const rng = makeRng(seed);
   const policy = priorFile();
-  const participants: (EventLog["participants"][number] & { arm: string })[] = [];
+  const participants: (EventLog["participants"][number] &
+    { arm: string; viewport_width: number; variant_order: string })[] = [];
   const events: EventLog["events"] = [];
   const slots = { mouse: 0, touch: 0 };
   for (let i = 0; i < count; i++) {
     const user = sampleUser(rng);
     const pointer = user.modality === "coarse" ? ("touch" as const) : ("mouse" as const);
     const id = `sim-${phase}-${String(i).padStart(4, "0")}`;
-    const { arm } = assign(phase, pointer, slots[pointer]++);
-    participants.push({ id, phase, pointer, arm, offline: false, repeat_device: false });
+    const { arm, order } = assign(phase, pointer, slots[pointer]++);
+    participants.push({
+      id, phase, pointer, arm, viewport_width: user.viewportWidth, variant_order: order,
+      offline: false, repeat_device: false,
+    });
     let seq = 0;
     const add = (block: number, kind: string, payload: unknown) =>
       events.push({ participant_id: id, seq: seq++, block, kind, payload });
@@ -32,7 +37,7 @@ export function simulatedLog(phase: Phase, count: number, seed = 7): EventLog {
           arm, previous, block: block as Block, pointer, viewportWidth: user.viewportWidth,
           participantId: id, policy,
         });
-        add(block, "decision", { ...decision });
+        add(block, "decision", { ...decision, provenance: "SIMULATED prior; not frozen" });
         surface = SURFACES[decision.action];
       }
       previous = [];
@@ -40,7 +45,18 @@ export function simulatedLog(phase: Phase, count: number, seed = 7): EventLog {
         const { outcome, friction } = simulateTask(user, surface, rng);
         if (frictionCount(friction) !== outcome.friction) throw new Error("friction mismatch");
         previous.push(friction);
-        add(block, "task", { taskIndex, success: outcome.success, timeMs: Math.round(outcome.timeMs), friction });
+        const variant = variantFor(order, block as Block);
+        add(block, "task", {
+          taskIndex, taskId: TASKS[variant][taskIndex].id, variant, surface: surface.arm,
+          success: outcome.success, timeMs: Math.round(outcome.timeMs), friction,
+        });
+        // The simulator has no ratings: this is an authored stand-in so the dashboard can show them.
+        const ease = 7 - outcome.friction - (outcome.success ? 0 : 3) - Math.floor(outcome.timeMs / 20_000);
+        // Its own sequence range, so task and decision numbering stays as before.
+        events.push({
+          participant_id: id, seq: 100 + seq - 1, block, kind: "rating",
+          payload: { taskIndex, seq: Math.min(Math.max(ease, 1), 7) },
+        });
       }
     }
   }

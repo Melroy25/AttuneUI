@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { StoreHeader } from "@/components/store/StoreHeader";
+import { StoreOrderList } from "@/components/store/StoreOrderList";
 import type { PreferenceSignals, Preferences } from "@/lib/attune-ui/preferences/rules";
 import type { SurfaceConfig } from "@/lib/attune-ui/surface/catalog";
 import { ORDERS } from "@/lib/study/data";
@@ -16,13 +18,17 @@ import { STRINGS, taskText } from "./strings";
 
 const HINT = { findDelayed: "hintFind", filterRefunds: "hintFilter", partialRefund: "hintRefund" } as const;
 
-export function Portal({ surface, preferences, task, onAction, onSignal, onView }: {
+/** /demo only: storefront styling plus app chrome. The study never passes this. */
+export interface StoreChrome { actions: ReactNode; banner: ReactNode }
+
+export function Portal({ surface, preferences, task, onAction, onSignal, onView, store }: {
   surface: SurfaceConfig;
   preferences: Preferences;
   task: Task | null;
   onAction: (action: PortalAction) => void;
   onSignal: (delta: Partial<PreferenceSignals>) => void;
   onView: (view: string) => void;
+  store?: StoreChrome;
 }) {
   const [filters, setFilters] = useState<FilterState>(NO_FILTERS);
   const [selected, setSelected] = useState<string | null>(null);
@@ -54,20 +60,29 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView 
     onView(selected ? `order:${selected}` : "list");
   };
   const refundOrder = ORDERS.find((o) => o.id === refunding);
+  const nav = (
+    <nav className="flex gap-3 text-sm">
+      <button type="button" onClick={() => { setSelected(null); filter(NO_FILTERS); onView("list"); }}>{s.orders}</button>
+      <span data-attune-id="nav-reports">{s.reports}</span>
+      <span data-attune-id="nav-help">{s.help}</span>
+    </nav>
+  );
+  const List = store ? StoreOrderList : OrderTable;
 
   return (
-    <div lang={preferences.locale} className="space-y-3 pb-20 sm:pb-0">
+    <div lang={preferences.locale} className={`${store ? "store " : ""}space-y-3 pb-20 sm:pb-0`}>
       {/* Locked skeleton: header and navigation never change position. */}
-      <header className="flex flex-wrap items-center justify-between gap-2 rounded bg-slate-900 p-3 text-white">
-        <h1 className="font-bold">{s.title}</h1>
-        <nav className="flex gap-3 text-sm">
-          <button type="button" onClick={() => { setSelected(null); filter(NO_FILTERS); onView("list"); }}>{s.orders}</button>
-          <span data-attune-id="nav-reports">{s.reports}</span>
-          <span data-attune-id="nav-help">{s.help}</span>
-        </nav>
-      </header>
+      {store ? (
+        <StoreHeader title={s.title} nav={nav} actions={store.actions} />
+      ) : (
+        <header className="flex flex-wrap items-center justify-between gap-2 rounded bg-slate-900 p-3 text-white">
+          <h1 className="font-bold">{s.title}</h1>
+          {nav}
+        </header>
+      )}
+      {store?.banner}
       {surface.stepHints && task && (
-        <p className="rounded border border-sky-400 bg-sky-50 p-2 text-sm">{s[HINT[task.id]]}</p>
+        <p data-part="hint" className="rounded border border-sky-400 bg-sky-50 p-2 text-sm">{s[HINT[task.id]]}</p>
       )}
       {surface.quickActions.length > 0 && (
         <QuickActions ctx={ctx} selected={selected} onFilter={filter} onRefund={startRefund} />
@@ -75,7 +90,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView 
       <Filters ctx={ctx} filters={filters} onChange={filter} />
       {notice && <p role="status" className="text-sm text-green-800">{notice}</p>}
       <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
-        <OrderTable
+        <List
           ctx={ctx}
           orders={applyFilters(ORDERS, filters)}
           selected={selected}

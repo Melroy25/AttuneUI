@@ -26,6 +26,7 @@ export function PolicyCard({ ctx }: { ctx: PortalContext }) {
   const size = preferences.textScale === "large" ? "text-lg leading-8" : "text-xs leading-4";
   return (
     <details
+      data-part="policy"
       className="rounded border p-3"
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >

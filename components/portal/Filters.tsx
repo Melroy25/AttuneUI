@@ -59,6 +59,8 @@ export function Filters({ ctx, filters, onChange }: {
   const photoToggle = (
     <button
       type="button"
+      data-part="photo"
+      data-first={photoFirst}
       aria-expanded={photoOpen}
       className={`rounded border px-3 ${control} ${photoFirst ? "order-first bg-indigo-600 text-white" : ""}`}
       onClick={() => setPhotoOpen(!photoOpen)}
@@ -68,10 +70,10 @@ export function Filters({ ctx, filters, onChange }: {
   );
 
   return (
-    <section className="space-y-2">
+    <section data-part="filters" className="space-y-2">
       <div className="flex flex-wrap gap-2">{textSearch}{photoToggle}</div>
       {(photoOpen || photoFirst) && (
-        <div className="rounded border p-2">
+        <div data-part="photo-panel" className="rounded border p-2">
           <div className="flex flex-wrap gap-2">
             {(Object.keys(PRODUCTS) as Product[]).map((p) => (
               <button
@@ -100,6 +102,7 @@ export function Filters({ ctx, filters, onChange }: {
               <button
                 key={label}
                 type="button"
+                data-part="preset"
                 className={`rounded-full border border-indigo-600 px-3 text-indigo-700 ${control}`}
                 onClick={() => onChange({ ...NO_FILTERS, status, priority: "high" })}
               >
