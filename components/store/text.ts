@@ -40,6 +40,10 @@ const en = {
   changeLocation: "Change delivery location?", yes: "Yes", chooseLocation: "Choose a delivery location",
   close: "Close", viewDetails: "View details", details: "Details", addOne: "Add 1",
   biggerOn: "Buttons made bigger after missed taps",
+  searchingFrom: "Are you searching based on {x}?", showSimilar: "Show it and similar items",
+  aboutThis: "No, tell me about {x}", isThis: "Is this what you were searching for?",
+  comparing: "Comparing options in {x}? Show quick picks?", categoriesQ: "Not sure where to look? Show categories?",
+  no: "No", quickPicks: "Quick picks",
 };
 export type PageText = typeof en;
 
@@ -79,6 +83,10 @@ const kn: PageText = {
   changeLocation: "ವಿತರಣಾ ಸ್ಥಳ ಬದಲಿಸಬೇಕೆ?", yes: "ಹೌದು", chooseLocation: "ವಿತರಣಾ ಸ್ಥಳ ಆಯ್ಕೆಮಾಡಿ",
   close: "ಮುಚ್ಚಿ", viewDetails: "ವಿವರ ನೋಡಿ", details: "ವಿವರ", addOne: "1 ಸೇರಿಸಿ",
   biggerOn: "ತಪ್ಪಿದ ಒತ್ತುವಿಕೆಗಳ ನಂತರ ಬಟನ್‌ಗಳನ್ನು ದೊಡ್ಡದು ಮಾಡಲಾಗಿದೆ",
+  searchingFrom: "ನೀವು {x} ಆಧರಿಸಿ ಹುಡುಕುತ್ತಿದ್ದೀರಾ?", showSimilar: "ಅದನ್ನು ಮತ್ತು ಅಂತಹವನ್ನು ತೋರಿಸಿ",
+  aboutThis: "ಇಲ್ಲ, {x} ಬಗ್ಗೆ ತಿಳಿಸಿ", isThis: "ನೀವು ಹುಡುಕುತ್ತಿದ್ದದ್ದು ಇದೇನಾ?",
+  comparing: "{x} ವಿಭಾಗದಲ್ಲಿ ಹೋಲಿಸುತ್ತಿದ್ದೀರಾ? ತ್ವರಿತ ಆಯ್ಕೆಗಳನ್ನು ತೋರಿಸಲೇ?", categoriesQ: "ಎಲ್ಲಿ ಹುಡುಕುವುದೆಂದು ಗೊತ್ತಾಗುತ್ತಿಲ್ಲವೇ? ವಿಭಾಗಗಳನ್ನು ತೋರಿಸಲೇ?",
+  no: "ಇಲ್ಲ", quickPicks: "ತ್ವರಿತ ಆಯ್ಕೆಗಳು",
 };
 
 export const PAGE_TEXT: Record<Locale, PageText> = { en, kn };

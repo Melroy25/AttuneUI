@@ -1,5 +1,5 @@
 // Content for the dead-click shortcuts. Fictional, like the rest of the /demo catalog.
-import { CATALOG, type Product } from "./catalog";
+import { CATALOG, type Cart, type Product } from "./catalog";
 
 export const LOCATIONS = [
   { en: "Bengaluru 560001", kn: "ಬೆಂಗಳೂರು 560001" },
@@ -17,11 +17,30 @@ export const SPECS: Record<string, string> = Object.fromEntries([
   "6 mm, non-slip", "10 books", "Adjustable height", "Holds 30 eggs",
 ].map((spec, i) => [CATALOG[i].id, spec]));
 
-export type Prompt = { kind: "location" } | { kind: "changer" } | { kind: "product"; id: string };
+export const cityKey = (user: string | null) => `attune-city:${user ?? "guest"}`;
+/** A saved index into LOCATIONS; null when never chosen or damaged. */
+export function parseCity(v: unknown): number | null {
+  const i = typeof v === "string" && v !== "" ? Number(v) : v;
+  return typeof i === "number" && LOCATIONS[i] !== undefined ? i : null;
+}
+
+export type Prompt =
+  | { kind: "location" } | { kind: "changer" }
+  | { kind: "product"; id: string }
+  | { kind: "cart"; id: string; latest: string }; // id: the clicked card; latest: newest in the cart
+
+/** The cart item added last, if it is still there. */
+export const latestInCart = (cart: Cart, last: string | null): string | null =>
+  last && cart[last] ? last : Object.keys(cart).at(-1) ?? null;
 
 /** What a dead click on a marked area offers; null for anything unknown. */
-export function promptFor(context: string): { prompt: Prompt; product?: Product } | null {
+export function promptFor(context: string, inCart: string | null = null): { prompt: Prompt; product?: Product; latest?: Product } | null {
   if (context === "location") return { prompt: { kind: "location" } };
   const product = CATALOG.find((p) => `product:${p.id}` === context);
-  return product ? { prompt: { kind: "product", id: product.id }, product } : null;
+  if (!product) return null;
+  // The cart item's own card needs no question about the cart.
+  const latest = CATALOG.find((p) => p.id === inCart && p.id !== product.id);
+  return latest
+    ? { prompt: { kind: "cart", id: product.id, latest: latest.id }, product, latest }
+    : { prompt: { kind: "product", id: product.id }, product };
 }

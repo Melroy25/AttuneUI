@@ -167,3 +167,16 @@
 .store-page[data-comfort="on"] .store [data-compact] {
   font-size: .9375rem; padding: .5rem .75rem; background: #eff6ff; border-radius: .5rem; text-decoration: none;
 }
+
+/* X-Ray only: a short red ring where friction was sensed. */
+.store-page [data-part="pulse"] {
+  position: absolute; width: 2.5rem; height: 2.5rem; margin: -1.25rem 0 0 -1.25rem;
+  border: 3px solid #dc2626; border-radius: 999px; opacity: .9;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .store-page [data-part="pulse"] { animation: friction-pulse .7s ease-out forwards; }
+}
+@keyframes friction-pulse {
+  from { transform: scale(.3); opacity: 1; }
+  to { transform: scale(1.5); opacity: 0; }
+}

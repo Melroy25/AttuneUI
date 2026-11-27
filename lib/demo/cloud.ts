@@ -6,8 +6,10 @@ import type { Activity } from "./activity";
 import { COUNTED } from "./aggregate";
 import { keepCounts, parseComfort, type Comfort } from "./comfort";
 import { NO_HABITS, parseHabits, type Habits } from "./habits";
+import { parseHesitation, type Hesitation } from "./hesitation";
 import { parseLanguage } from "./language";
 import { encodeMemory, parseMemory } from "./memory";
+import { parseCity } from "./quick";
 
 export type Totals = Record<(typeof COUNTED)[number], number>;
 export interface CloudState {
@@ -19,6 +21,8 @@ export interface CloudState {
   friction: Totals; // only ever grows
   comfort: Comfort; // bigger tap targets and their before/after counts
   language: Locale | null; // picked by hand; null when never picked
+  city: number | null; // chosen delivery city, an index into LOCATIONS
+  hesitation: Hesitation; // answers to the Yes/No questions and what they changed
 }
 export interface CloudRecord { id: string; updatedAt: string; state: CloudState }
 
@@ -59,6 +63,8 @@ export function parseState(v: unknown): CloudState | null {
     friction: parseTotals(s.friction),
     comfort: parseComfort(s.comfort),
     language: parseLanguage(s.language),
+    city: parseCity(s.city),
+    hesitation: parseHesitation(s.hesitation),
   };
 }
 

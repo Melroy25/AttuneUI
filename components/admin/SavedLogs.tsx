@@ -7,6 +7,7 @@ import { counts, type CloudRecord } from "@/lib/demo/cloud";
 import type { Tally } from "@/lib/demo/comfort";
 import { SURFACE_NAMES } from "@/lib/demo/explain";
 import { STRUGGLE_LABELS } from "@/lib/demo/labels";
+import { LOCATIONS } from "@/lib/demo/quick";
 import { Box } from "./ui";
 import { useSavedLogs, type LogRow } from "./useSavedLogs";
 
@@ -44,6 +45,10 @@ const rate = (t: Tally) => {
 const comfortRow = ({ id, state: s }: CloudRecord) => [
   id, (s.language ?? s.preferences.locale) === "kn" ? "Kannada" : "English",
   s.comfort.on ? "Bigger" : s.comfort.reverted ? "Normal (undone)" : "Normal", rate(s.comfort.before), rate(s.comfort.after),
+];
+const choiceRow = ({ id, state: s }: CloudRecord) => [
+  id, LOCATIONS[s.city ?? 0].en, `${s.hesitation.yes} / ${s.hesitation.no}`,
+  `${s.hesitation.threshold} points, ${Math.round(s.hesitation.cooldownMs / 60000)} min rest`,
 ];
 
 const logRow = (r: LogRow, all: boolean) => [
@@ -101,6 +106,10 @@ export function SavedLogs() {
           <Box title="Tap targets: before and after, and language"
             info="Problem taps at each size, counted the same way. Descriptive only: not a controlled comparison.">
             <Table head={["User", "Language", "Size now", "At normal size", "At bigger size"]} rows={shown.map(comfortRow)} />
+          </Box>
+          <Box title="Delivery city and hesitation questions"
+            info="Hesitation is a prediction. Yes asks a little sooner next time; No raises the bar and rests longer.">
+            <Table head={["User", "City", "Yes / No", "Asks again after"]} rows={shown.map(choiceRow)} />
           </Box>
           <Box title="UI changes applied (cause → effect)"
             info="Newest first. Confidence is the model's chance of picking that layout or shortcut; rule-based and manual changes have none.">

@@ -15,7 +15,7 @@ const between = (a: Rect, b: Rect) =>
   Math.hypot(Math.max(b.left - a.right, a.left - b.right, 0), Math.max(b.top - a.bottom, a.top - b.bottom, 0));
 
 /** Where a click landed, measured against the real boxes on screen. */
-function measure(root: HTMLElement, e: MouseEvent) {
+export function measure(root: HTMLElement, e: MouseEvent) {
   const boxes = [...root.querySelectorAll(CONTROLS)]
     .map((el) => ({ el, box: el.getBoundingClientRect() }))
     .filter((c) => c.box.width > 0);

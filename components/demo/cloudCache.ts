@@ -6,8 +6,10 @@ import {
 } from "@/lib/demo/cloud";
 import { comfortKey, keepCounts, parseComfort } from "@/lib/demo/comfort";
 import { habitsKey } from "@/lib/demo/habits";
+import { hesitationKey, keepAnswers, parseHesitation } from "@/lib/demo/hesitation";
 import { languageKey } from "@/lib/demo/language";
 import { memoryKey } from "@/lib/demo/memory";
+import { cityKey } from "@/lib/demo/quick";
 import { decodeUi, encodeUi } from "@/lib/demo/uiState";
 import { shortcutsKey, uiKey } from "./storage";
 
@@ -42,6 +44,8 @@ export function readLocal(user: string | null): CloudState | null {
     friction: readJsonItem(frictionKey(user)),
     comfort: readJsonItem(comfortKey(user)),
     language: localStorage.getItem(languageKey(user)),
+    city: localStorage.getItem(cityKey(user)),
+    hesitation: readJsonItem(hesitationKey(user)),
   });
 }
 
@@ -64,4 +68,7 @@ export function writeLocal(user: string | null, s: CloudState) {
   const comfort = keepCounts(parseComfort(readJsonItem(comfortKey(user))), s.comfort);
   localStorage.setItem(comfortKey(user), JSON.stringify(comfort));
   if (s.language) localStorage.setItem(languageKey(user), s.language);
+  if (s.city !== null) localStorage.setItem(cityKey(user), String(s.city));
+  const asked = keepAnswers(parseHesitation(readJsonItem(hesitationKey(user))), s.hesitation);
+  localStorage.setItem(hesitationKey(user), JSON.stringify(asked));
 }
