@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { PortalContext } from "@/components/portal/context";
 import { hasKannada } from "@/lib/attune-ui/preferences/rules";
 import { CATEGORIES, CATEGORY_ICONS, cartSummary } from "@/lib/demo/catalog";
+import { REPEAT } from "@/lib/demo/habits";
 import { PAGE_TEXT, categoryLabel, type Page } from "./text";
 import type { Shop } from "./useShop";
 
@@ -18,6 +19,7 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
   const t = PAGE_TEXT[ctx.preferences.locale];
   const { count } = cartSummary(shop.cart);
   const showResults = () => { shop.setSelected(null); onPage("products"); };
+  const help = () => { ctx.habits?.support(); onPage("help"); };
 
   return (
     <header data-part="header" className="space-y-3 pb-1">
@@ -25,9 +27,15 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
         <button type="button" data-part="brand" className="min-h-11 px-4" onClick={() => onPage("home")}>
           <span data-part="mark" aria-hidden>V</span> VeroxaKart
         </button>
-        <button type="button" data-part="pill" className="min-h-11 px-4 text-sm" onClick={() => onPage("help")}>
+        <button type="button" data-part="pill" className="min-h-11 px-4 text-sm" onClick={help}>
           🎧 {t.support}
         </button>
+        {(ctx.habits?.habits.supportUses ?? 0) >= REPEAT && (
+          <button type="button" data-part="support-quick" data-fresh={ctx.habits?.fresh} className="min-h-11 px-4 text-sm"
+            onClick={help}>
+            ⚡ {t.customerSupport}
+          </button>
+        )}
         <span data-attune-id="location" className="ml-auto text-sm">📍 {t.deliverTo}</span>
       </div>
 

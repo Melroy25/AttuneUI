@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import type { HabitsApi } from "@/components/demo/useHabits";
+import { SimilarCards } from "@/components/store/Habits";
 import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreOrderList } from "@/components/store/StoreOrderList";
 import { Presets, StoreHint } from "@/components/store/SurfaceExtras";
@@ -30,6 +32,7 @@ export interface StoreChrome {
   shop: Shop;
   user: string | null;
   onGoal: () => void;
+  habits: HabitsApi;
 }
 
 export function Portal({ surface, preferences, task, onAction, onSignal, onView, store }: {
@@ -47,7 +50,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
   const [notice, setNotice] = useState("");
   const large = surface.targetSize === "large";
   const ctx: PortalContext = {
-    s: STRINGS[preferences.locale], surface, preferences, large, onSignal, onGoal: store?.onGoal,
+    s: STRINGS[preferences.locale], surface, preferences, large, onSignal, onGoal: store?.onGoal, habits: store?.habits,
     control: large ? "min-h-12 min-w-12 text-base" : "min-h-6",
   };
   const { s } = ctx;
@@ -58,6 +61,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
   };
   const open = (id: string) => {
     setSelected(id);
+    store?.habits.opened(id);
     onView(`order:${id}`);
     onAction({ type: "open", orderId: id });
   };
@@ -100,6 +104,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
         </header>
       )}
       {store && surface.stepHints && <StoreHint ctx={ctx} page={page} />}
+      {store && <SimilarCards ctx={ctx} shop={store.shop} onPick={() => goTo("products")} />}
       {store && surface.smartPresets && (page === "home" || page === "products") && (
         <Presets ctx={ctx} shop={store.shop} onPick={() => goTo("products")} />
       )}

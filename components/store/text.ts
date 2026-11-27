@@ -35,6 +35,7 @@ const en = {
   byStatus: "Orders by status", byRegion: "Orders by region", byPayment: "Orders by payment",
   faq: "Common questions", contactTitle: "Write to support", message: "Your message",
   send: "Send", sent: "Message noted (demo only, nothing is sent)",
+  wishlist: "Wishlist", similarTo: "Search similar to", customerSupport: "Customer Support",
 };
 export type PageText = typeof en;
 
@@ -69,6 +70,7 @@ const kn: PageText = {
   byStatus: "ಸ್ಥಿತಿ ಪ್ರಕಾರ", byRegion: "ಪ್ರದೇಶ ಪ್ರಕಾರ", byPayment: "ಪಾವತಿ ಪ್ರಕಾರ",
   faq: "ಸಾಮಾನ್ಯ ಪ್ರಶ್ನೆಗಳು", contactTitle: "ಬೆಂಬಲಕ್ಕೆ ಬರೆಯಿರಿ", message: "ನಿಮ್ಮ ಸಂದೇಶ",
   send: "ಕಳುಹಿಸಿ", sent: "ಸಂದೇಶ ದಾಖಲಾಗಿದೆ (ಡೆಮೊ ಮಾತ್ರ, ಏನನ್ನೂ ಕಳುಹಿಸುವುದಿಲ್ಲ)",
+  wishlist: "ಇಚ್ಛಾಪಟ್ಟಿ", similarTo: "ಇದರಂತಹವು ಹುಡುಕಿ", customerSupport: "ಗ್ರಾಹಕ ಬೆಂಬಲ",
 };
 
 export const PAGE_TEXT: Record<Locale, PageText> = { en, kn };

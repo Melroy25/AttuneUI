@@ -1,3 +1,4 @@
+import type { HabitsApi } from "@/components/demo/useHabits";
 import type { PreferenceSignals, Preferences } from "@/lib/attune-ui/preferences/rules";
 import type { SurfaceConfig } from "@/lib/attune-ui/surface/catalog";
 import type { Strings } from "./strings";
@@ -13,4 +14,6 @@ export interface PortalContext {
   onSignal: (delta: Partial<PreferenceSignals>) => void;
   /** Store only: an action was finished (the demo model learns from these). */
   onGoal?: () => void;
+  /** Store only: shortcuts earned by repeated use. */
+  habits?: HabitsApi;
 }

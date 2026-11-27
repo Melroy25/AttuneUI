@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { XRayHud } from "@/components/hud/XRayHud";
 import { Portal } from "@/components/portal/Portal";
-import type { Page } from "@/components/store/text";
+import { PAGE_TEXT, type Page } from "@/components/store/text";
 import { useShop } from "@/components/store/useShop";
 import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import type { UiState } from "@/lib/demo/uiState";
 import { SettingsMenu } from "./SettingsMenu";
 import { useDemo } from "./useDemo";
+import { useHabits } from "./useHabits";
 import { useLiveReport } from "./useLiveReport";
 
 export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; renderedAt: string; user: string | null }) {
@@ -16,6 +17,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const [hud, setHud] = useState(false);
   const [page, setPage] = useState<Page>("home");
   const shop = useShop();
+  const habits = useHabits(user);
   useLiveReport(d, page);
   const surface = SURFACES[d.ui.arm];
   const renderedBy = d.offline
@@ -41,9 +43,15 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
-          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal }} />
+          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits }} />
       </div>
-      <p className="mx-auto mt-4 max-w-6xl text-xs text-slate-600">
+      <footer className="mx-auto mt-4 max-w-6xl">
+        <button type="button" className="min-h-11 text-sm font-semibold underline"
+          onClick={() => { habits.support(); setPage("help"); window.scrollTo(0, 0); }}>
+          🎧 {PAGE_TEXT[d.ui.preferences.locale].customerSupport}
+        </button>
+      </footer>
+      <p className="mx-auto mt-2 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.
       </p>
       {hud && <XRayHud d={d} surface={surface} renderedBy={renderedBy} onClose={() => setHud(false)} />}

@@ -134,6 +134,13 @@
   100% { box-shadow: 0 0 0 12px rgb(245 158 11 / 0); }
 }
 
+/* Earned by repeated use: stands out for the few seconds after it first appears. */
+.store [data-part="support-quick"] { background: #f59e0b; color: #111827; border-radius: 999px; font-weight: 700; }
+.store [data-part="support-quick"][data-fresh="true"] { outline: 3px solid #f59e0b; outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .store [data-part="support-quick"][data-fresh="true"] { animation: attune-new 1s ease-out 3; }
+}
+
 /* "Large touch targets": visibly bigger everywhere. */
 .store[data-surface="ergonomic"] { font-size: 1.0625rem; }
 .store[data-surface="ergonomic"] :is(button, select, input[type="search"], summary) { min-height: 3.25rem; }

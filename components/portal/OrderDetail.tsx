@@ -1,3 +1,4 @@
+import { WishlistButton } from "@/components/store/Habits";
 import type { Order } from "@/lib/study/data";
 import type { PortalContext } from "./context";
 
@@ -31,6 +32,7 @@ export function OrderDetail({ ctx, order, onRefund }: {
         <dt>{s.payment}</dt><dd>{order.payment}</dd>
         <dt>{s.amount}</dt><dd>₹{order.amount}</dd>
       </dl>
+      {ctx.habits && <WishlistButton ctx={ctx} id={order.id} />}
       {surface.thumbZoneCta && (
         <button
           type="button"

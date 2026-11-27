@@ -13,6 +13,7 @@ import { modalityOf } from "@/lib/attune-ui/telemetry/context";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import type { ArmId, InteractionEvent, Modality } from "@/lib/attune-ui/types";
 import { shouldAdapt } from "@/lib/demo/auto";
+import { habitsKey } from "@/lib/demo/habits";
 import { encodeMemory, memoryKey, parseMemory } from "@/lib/demo/memory";
 import { simulatorPrior } from "@/lib/demo/prior";
 import {
@@ -223,6 +224,7 @@ export function useDemo(serverUi: UiState, user: string | null) {
     writeCookie("", 0);
     try {
       localStorage.removeItem(store);
+      localStorage.removeItem(habitsKey(user));
     } catch {
       // nothing was saved
     }

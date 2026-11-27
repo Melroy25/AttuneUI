@@ -1,6 +1,8 @@
 import type { PortalContext } from "@/components/portal/context";
+import { REPEAT } from "@/lib/demo/habits";
 import { PRODUCTS, type Order } from "@/lib/study/data";
 import { ArrowButton, useCardHint } from "./cardHint";
+import { WishlistButton } from "./Habits";
 
 /** /demo version of OrderTable: same labels and control sizes, shown as cards with an arrow. */
 export function StoreOrderList({ ctx, orders, selected, onOpen, onBadge }: {
@@ -42,6 +44,7 @@ export function StoreOrderList({ ctx, orders, selected, onOpen, onBadge }: {
               </span>
             )}
           </div>
+          {(ctx.habits?.habits.wishUses ?? 0) >= REPEAT && <WishlistButton ctx={ctx} id={o.id} compact />}
           <ArrowButton ctx={ctx} label={`${s.openOrder} ${o.id}`} hint={hint.hinted(o.id)}
             onClick={() => { hint.clear(o.id); onOpen(o.id); }} />
         </li>
