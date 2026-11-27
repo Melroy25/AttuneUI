@@ -11,12 +11,15 @@ import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import { struggles } from "@/lib/bandit/shortcutBandit";
 import type { UiState } from "@/lib/demo/uiState";
+import { AdaptiveBar } from "./AdaptiveBar";
 import { SettingsMenu } from "./SettingsMenu";
 import { useActivity } from "./useActivity";
+import { useComfort } from "./useComfort";
 import { useDemo } from "./useDemo";
 import { useFrictionLog } from "./useFrictionLog";
 import { useHabits } from "./useHabits";
 import { useLiveReport } from "./useLiveReport";
+import { useQuickPrompt } from "./useQuickPrompt";
 import { useShortcuts } from "./useShortcuts";
 
 export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; renderedAt: string; user: string | null }) {
@@ -31,6 +34,8 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
     kind, next, struggles(d.session.totals, summarizeFriction(d.events, d.modality))));
   useLiveReport(d, page, activity, user);
   useFrictionLog(user, d.session.totals, d.events, d.modality);
+  const comfort = useComfort(user, d.rootRef, d.auto && !d.session.pinned, add);
+  const quick = useQuickPrompt(d.rootRef, add);
   const surface = SURFACES[d.ui.arm];
   const renderedBy = d.offline
     ? "client (offline fallback)"
@@ -52,7 +57,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   );
 
   return (
-    <main className={`store-page min-h-dvh p-2 sm:p-4 ${hud ? "hud-open" : ""}`}>
+    <main data-comfort={comfort.on ? "on" : undefined} className={`store-page min-h-dvh p-2 sm:p-4 ${hud ? "hud-open" : ""}`}>
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
@@ -63,6 +68,8 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <p className="mx-auto mt-2 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.
       </p>
+      <AdaptiveBar locale={d.ui.preferences.locale} {...quick} shop={shop} comfort={comfort} log={add}
+        onAdded={d.onGoal} onView={(id) => { shop.setSelected(id); setPage("products"); d.onGoal(); }} />
       <TooltipLayer />
       {hud && <XRayHud d={d} surface={surface} renderedBy={renderedBy} onClose={() => setHud(false)} />}
     </main>

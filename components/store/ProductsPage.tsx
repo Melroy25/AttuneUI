@@ -24,6 +24,7 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
     ctx.onGoal?.();
   };
 
+  const inCartOf = (id: string) => shop.cart[id] ?? 0;
   const add = (id: string, n: number) => {
     shop.setQuantity(id, (shop.cart[id] ?? 0) + n);
     ctx.onGoal?.();
@@ -42,13 +43,19 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
           {found.length === 0 && <li className="p-3 text-sm">{t.noProducts}</li>}
           {found.map((p) => (
             <li key={p.id} data-part="order" data-selected={shop.selected === p.id} className="flex items-center gap-3 p-3"
-              {...hint.cardProps(p.id)}>
+              data-dead-context={`product:${p.id}`} {...hint.cardProps(p.id)}>
               <span aria-hidden data-part="thumb" data-attune-id={`thumb-${p.id}`}>{p.icon}</span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold">{p.name}</p>
                 <p data-part="price">₹{p.price.toLocaleString("en-IN")}</p>
                 <span data-stock={stockOf(p)} data-attune-id={`stock-${p.id}`} className="text-xs font-semibold">
                   {t[stockOf(p)]}
+                </span>
+                {/* Small on purpose: misses here show the store making targets bigger. */}
+                <span data-compact-row className="flex gap-1">
+                  <button type="button" data-compact data-tip={t.viewDetails} aria-label={`${t.details}: ${p.name}`} onClick={() => open(p.id)}>{t.details}</button>
+                  <button type="button" data-compact data-tip={t.addToCart} aria-label={`${t.addOne}: ${p.name}`} disabled={inCartOf(p.id) >= p.stock}
+                    onClick={() => add(p.id, 1)}>{t.addOne}</button>
                 </span>
               </div>
               {ctx.surface.quickActions.length > 0 && p.stock > 0 && (

@@ -7,7 +7,7 @@ export type Page = (typeof PAGES)[number];
 const en = {
   home: "Home", products: "Products", returns: "Returns", cart: "Cart",
   searchProducts: "Search for products, brands and more", search: "Search",
-  deliverTo: "Deliver to: Bengaluru 560001", guest: "Guest", support: "Support", forYou: "For You",
+  deliverTo: "Deliver to:", guest: "Guest", support: "Support", forYou: "For You",
   fashion: "Fashion", mobiles: "Mobiles", electronics: "Electronics", beauty: "Beauty",
   appliances: "Appliances", toys: "Toys", grocery: "Grocery", sports: "Sports", books: "Books",
   furniture: "Furniture", homeCategory: "Home items",
@@ -37,13 +37,16 @@ const en = {
   send: "Send", sent: "Message noted (demo only, nothing is sent)",
   wishlist: "Wishlist", similarTo: "Search similar to", customerSupport: "Customer Support", hideShortcut: "Hide shortcut",
   hardToRead: "Feeling hard to read?", comfortYes: "Yes, make the text larger", comfortNo: "No, keep the text",
+  changeLocation: "Change delivery location?", yes: "Yes", chooseLocation: "Choose a delivery location",
+  close: "Close", viewDetails: "View details", details: "Details", addOne: "Add 1",
+  biggerOn: "Buttons made bigger after missed taps",
 };
 export type PageText = typeof en;
 
 const kn: PageText = {
   home: "ಮುಖಪುಟ", products: "ಉತ್ಪನ್ನಗಳು", returns: "ಹಿಂತಿರುಗಿಸುವಿಕೆ", cart: "ಕಾರ್ಟ್",
   searchProducts: "ಉತ್ಪನ್ನಗಳು, ಬ್ರ್ಯಾಂಡ್‌ಗಳನ್ನು ಹುಡುಕಿ", search: "ಹುಡುಕಿ",
-  deliverTo: "ವಿತರಣೆ: ಬೆಂಗಳೂರು 560001", guest: "ಅತಿಥಿ", support: "ಬೆಂಬಲ", forYou: "ನಿಮಗಾಗಿ",
+  deliverTo: "ವಿತರಣೆ:", guest: "ಅತಿಥಿ", support: "ಬೆಂಬಲ", forYou: "ನಿಮಗಾಗಿ",
   fashion: "ಫ್ಯಾಷನ್", mobiles: "ಮೊಬೈಲ್‌ಗಳು", electronics: "ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್", beauty: "ಸೌಂದರ್ಯ",
   appliances: "ಉಪಕರಣಗಳು", toys: "ಆಟಿಕೆಗಳು", grocery: "ದಿನಸಿ", sports: "ಕ್ರೀಡೆ", books: "ಪುಸ್ತಕಗಳು",
   furniture: "ಪೀಠೋಪಕರಣ", homeCategory: "ಮನೆ ವಸ್ತುಗಳು",
@@ -73,6 +76,9 @@ const kn: PageText = {
   send: "ಕಳುಹಿಸಿ", sent: "ಸಂದೇಶ ದಾಖಲಾಗಿದೆ (ಡೆಮೊ ಮಾತ್ರ, ಏನನ್ನೂ ಕಳುಹಿಸುವುದಿಲ್ಲ)",
   wishlist: "ಇಚ್ಛಾಪಟ್ಟಿ", similarTo: "ಇದರಂತಹವು ಹುಡುಕಿ", customerSupport: "ಗ್ರಾಹಕ ಬೆಂಬಲ", hideShortcut: "ಶಾರ್ಟ್‌ಕಟ್ ಮರೆಮಾಡಿ",
   hardToRead: "ಓದಲು ಕಷ್ಟವಾಗುತ್ತಿದೆಯೇ?", comfortYes: "ಹೌದು, ಅಕ್ಷರ ದೊಡ್ಡದು ಮಾಡಿ", comfortNo: "ಬೇಡ, ಹೀಗೇ ಇರಲಿ",
+  changeLocation: "ವಿತರಣಾ ಸ್ಥಳ ಬದಲಿಸಬೇಕೆ?", yes: "ಹೌದು", chooseLocation: "ವಿತರಣಾ ಸ್ಥಳ ಆಯ್ಕೆಮಾಡಿ",
+  close: "ಮುಚ್ಚಿ", viewDetails: "ವಿವರ ನೋಡಿ", details: "ವಿವರ", addOne: "1 ಸೇರಿಸಿ",
+  biggerOn: "ತಪ್ಪಿದ ಒತ್ತುವಿಕೆಗಳ ನಂತರ ಬಟನ್‌ಗಳನ್ನು ದೊಡ್ಡದು ಮಾಡಲಾಗಿದೆ",
 };
 
 export const PAGE_TEXT: Record<Locale, PageText> = { en, kn };

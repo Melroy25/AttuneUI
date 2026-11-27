@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SHORTCUTS } from "@/lib/bandit/shortcutBandit";
 import { COUNTED } from "@/lib/demo/aggregate";
 import { counts, type CloudRecord } from "@/lib/demo/cloud";
+import type { Tally } from "@/lib/demo/comfort";
 import { SURFACE_NAMES } from "@/lib/demo/explain";
 import { STRUGGLE_LABELS } from "@/lib/demo/labels";
 import { Box } from "./ui";
@@ -34,6 +35,16 @@ function Table({ head, rows }: { head: string[]; rows: (string | number)[][] }) 
     </div>
   );
 }
+
+const rate = (t: Tally) => {
+  const problems = t.misses + t.rage + t.nearby;
+  return t.taps === 0 ? "—"
+    : `${problems} of ${t.taps} taps (${Math.round((problems / t.taps) * 100)}%): ${t.misses} missed, ${t.rage} rage, ${t.nearby} accidental`;
+};
+const comfortRow = ({ id, state: s }: CloudRecord) => [
+  id, (s.language ?? s.preferences.locale) === "kn" ? "Kannada" : "English",
+  s.comfort.on ? "Bigger" : s.comfort.reverted ? "Normal (undone)" : "Normal", rate(s.comfort.before), rate(s.comfort.after),
+];
 
 const logRow = (r: LogRow, all: boolean) => [
   new Date(r.at).toLocaleString(), ...(all ? [r.user] : []), r.trigger, r.change,
@@ -86,6 +97,10 @@ export function SavedLogs() {
               <Table head={["User", "Layout", "Shortcuts"]}
                 rows={users.map((u) => [u.id, SURFACE_NAMES[u.state.arm], shortcutsOf(u)])} />
             )}
+          </Box>
+          <Box title="Tap targets: before and after, and language"
+            info="Problem taps at each size, counted the same way. Descriptive only: not a controlled comparison.">
+            <Table head={["User", "Language", "Size now", "At normal size", "At bigger size"]} rows={shown.map(comfortRow)} />
           </Box>
           <Box title="UI changes applied (cause → effect)"
             info="Newest first. Confidence is the model's chance of picking that layout or shortcut; rule-based and manual changes have none.">

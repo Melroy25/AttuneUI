@@ -157,3 +157,13 @@
 @media (width >= 64rem) { .hud-open { padding-right: 25rem; } }
 @media (width < 64rem) { .hud-open { padding-bottom: 55dvh; } }
 @media (width < 40rem) { .hud-open [data-thumb-cta] { bottom: calc(55dvh + .5rem); } }
+
+/* Secondary card links are small on purpose, until problem taps make everything bigger. */
+.store [data-compact] { font-size: .625rem; line-height: 1; color: #1d4ed8; text-decoration: underline; }
+.store [data-compact]:disabled { color: #64748b; }
+.store-page[data-comfort="on"] .store :is(button, select, summary, input[type="search"]) { min-height: 2.75rem; }
+.store-page[data-comfort="on"] .store button { min-width: 2.75rem; }
+.store-page[data-comfort="on"] .store [data-compact-row] { gap: .75rem; margin-top: .5rem; }
+.store-page[data-comfort="on"] .store [data-compact] {
+  font-size: .9375rem; padding: .5rem .75rem; background: #eff6ff; border-radius: .5rem; text-decoration: none;
+}

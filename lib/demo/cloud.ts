@@ -1,10 +1,12 @@
 // What /demo keeps per user: demo_users/{userId} in Firestore, cached in the browser. Never study data.
 import { SHORTCUTS, newShortcuts, parseShortcuts, type ShortcutState } from "../bandit/shortcutBandit";
-import { parsePreferences, type Preferences } from "../attune-ui/preferences/rules";
+import { parsePreferences, type Locale, type Preferences } from "../attune-ui/preferences/rules";
 import { ARM_IDS, type ArmId, type FrictionSummary } from "../attune-ui/types";
 import type { Activity } from "./activity";
 import { COUNTED } from "./aggregate";
+import { keepCounts, parseComfort, type Comfort } from "./comfort";
 import { NO_HABITS, parseHabits, type Habits } from "./habits";
+import { parseLanguage } from "./language";
 import { encodeMemory, parseMemory } from "./memory";
 
 export type Totals = Record<(typeof COUNTED)[number], number>;
@@ -15,6 +17,8 @@ export interface CloudState {
   memory: string | null; // the layout bandit's weights, as encodeMemory writes them
   habits: Habits;
   friction: Totals; // only ever grows
+  comfort: Comfort; // bigger tap targets and their before/after counts
+  language: Locale | null; // picked by hand; null when never picked
 }
 export interface CloudRecord { id: string; updatedAt: string; state: CloudState }
 
@@ -53,6 +57,8 @@ export function parseState(v: unknown): CloudState | null {
     memory: memory && encodeMemory(memory),
     habits: s.habits ? parseHabits(JSON.stringify(s.habits)) : NO_HABITS,
     friction: parseTotals(s.friction),
+    comfort: parseComfort(s.comfort),
+    language: parseLanguage(s.language),
   };
 }
 
@@ -82,7 +88,8 @@ export function mergeUsers(remote: CloudRecord[], local: CloudRecord[]): CloudRe
     const ahead = (Object.keys(more) as (keyof typeof more)[]).some((k) => more[k] > less[k]);
     const habits = ahead ? mine.state.habits : saved.state.habits;
     const friction = maxTotals(saved.state.friction, mine.state.friction);
-    byId.set(mine.id, { ...saved, state: { ...saved.state, habits, friction } });
+    const comfort = keepCounts(mine.state.comfort, saved.state.comfort);
+    byId.set(mine.id, { ...saved, state: { ...saved.state, habits, friction, comfort } });
   }
   return [...byId.values()].sort((a, b) => a.id.localeCompare(b.id));
 }

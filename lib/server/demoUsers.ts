@@ -3,6 +3,7 @@ import { hashString } from "../attune-ui/rng";
 import { SHORTCUTS } from "../bandit/shortcutBandit";
 import { parseActivity, type Activity } from "../demo/activity";
 import { maxTotals, parseState, type CloudRecord, type CloudState } from "../demo/cloud";
+import { keepCounts } from "../demo/comfort";
 import { memoryDb, type Db, type Doc } from "./db";
 import type { Storage } from "./live";
 
@@ -21,6 +22,9 @@ const toDoc = (s: CloudState, updatedAt: string): Doc => ({
   banditWeights: JSON.stringify({ layout: s.memory, shortcuts: s.shortcuts }),
   habits: JSON.stringify(s.habits),
   frictionTotals: JSON.stringify(s.friction),
+  comfort: JSON.stringify(s.comfort),
+  language: s.language ?? s.preferences.locale,
+  languageChosen: s.language !== null,
   updatedAt,
 });
 
@@ -31,6 +35,8 @@ function fromDoc(id: string, doc: Doc): CloudRecord | null {
     const state = parseState({
       arm: doc.activeLayout, preferences: json("preferences"), shortcuts: weights.shortcuts,
       memory: weights.layout, habits: json("habits"), friction: json("frictionTotals"),
+      comfort: doc.comfort ? json("comfort") : null, // absent from older documents
+      language: doc.languageChosen ? doc.language : null,
     });
     return state && { id, updatedAt: String(doc.updatedAt), state };
   } catch {
@@ -51,6 +57,8 @@ export async function saveUser(configured: Db | null, id: string, state: CloudSt
   await db.set(COLLECTION, id, toDoc({
     ...state,
     memory: state.memory ?? before?.memory ?? null,
+    language: state.language ?? before?.language ?? null,
+    comfort: before ? keepCounts(before.comfort, state.comfort) : state.comfort,
     friction: before ? maxTotals(before.friction, state.friction) : state.friction,
   }, updatedAt));
   return { updatedAt, storage };

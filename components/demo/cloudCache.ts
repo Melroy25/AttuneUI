@@ -4,7 +4,9 @@ import { MAX_ACTIVITY, activityKey, parseActivity, type Activity } from "@/lib/d
 import {
   SENT_ACTIVITY, cursorKey, frictionKey, maxTotals, parseState, parseTotals, type CloudState,
 } from "@/lib/demo/cloud";
+import { comfortKey, keepCounts, parseComfort } from "@/lib/demo/comfort";
 import { habitsKey } from "@/lib/demo/habits";
+import { languageKey } from "@/lib/demo/language";
 import { memoryKey } from "@/lib/demo/memory";
 import { decodeUi, encodeUi } from "@/lib/demo/uiState";
 import { shortcutsKey, uiKey } from "./storage";
@@ -38,6 +40,8 @@ export function readLocal(user: string | null): CloudState | null {
     memory: localStorage.getItem(memoryKey(user)),
     habits: readJsonItem(habitsKey(user)),
     friction: readJsonItem(frictionKey(user)),
+    comfort: readJsonItem(comfortKey(user)),
+    language: localStorage.getItem(languageKey(user)),
   });
 }
 
@@ -57,4 +61,7 @@ export function writeLocal(user: string | null, s: CloudState) {
   if (s.memory) localStorage.setItem(memoryKey(user), s.memory);
   const friction = maxTotals(parseTotals(readJsonItem(frictionKey(user))), s.friction);
   localStorage.setItem(frictionKey(user), JSON.stringify(friction));
+  const comfort = keepCounts(parseComfort(readJsonItem(comfortKey(user))), s.comfort);
+  localStorage.setItem(comfortKey(user), JSON.stringify(comfort));
+  if (s.language) localStorage.setItem(languageKey(user), s.language);
 }

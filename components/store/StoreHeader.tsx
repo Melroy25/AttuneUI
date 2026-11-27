@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { PortalContext } from "@/components/portal/context";
 import { hasKannada } from "@/lib/attune-ui/preferences/rules";
 import { CATEGORIES, CATEGORY_ICONS, cartSummary } from "@/lib/demo/catalog";
+import { LOCATIONS } from "@/lib/demo/quick";
 import { DismissShortcut } from "./Habits";
 import { PAGE_TEXT, categoryLabel, type Page } from "./text";
 import type { Shop } from "./useShop";
@@ -41,7 +42,9 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
             🎧 {t.support}
           </button>
         )}
-        <span data-attune-id="location" className="ml-auto text-sm">📍 {t.deliverTo}</span>
+        <span data-attune-id="location" data-dead-context="location" className="ml-auto text-sm">
+          📍 {t.deliverTo} {LOCATIONS[shop.location][ctx.preferences.locale]}
+        </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

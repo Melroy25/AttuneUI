@@ -11,8 +11,9 @@ export function useShop() {
   const [cart, setCart] = useState<Cart>({});
   const [placed, setPlaced] = useState(false);
   const [preset, setPreset] = useState<Preset>("");
+  const [location, setLocation] = useState(0); // index into LOCATIONS
   return {
-    query, setQuery, category, setCategory, selected, setSelected, cart, placed, preset, setPreset,
+    query, setQuery, category, setCategory, selected, setSelected, cart, placed, preset, setPreset, location, setLocation,
     setQuantity: (id: string, quantity: number) => {
       setPlaced(false);
       setCart((c) => withQuantity(c, id, quantity));

@@ -20,9 +20,10 @@ import {
   GOALS_PER_LESSON, fastForward, finishBlock, goalOutcome, learn, newSession, previewSurface, togglePin, undo,
   type DemoMode, type Outcome,
 } from "@/lib/demo/session";
-import type { UiState } from "@/lib/demo/uiState";
+import { holdLanguage } from "@/lib/demo/language";
+import { encodeUi, type UiState } from "@/lib/demo/uiState";
 import type { PortalAction } from "@/lib/study/tasks";
-import { resetDemo } from "./storage";
+import { readLanguage, resetDemo, saveLanguage } from "./storage";
 import { useModelMemory } from "./useModelMemory";
 import { usePublish, writeUiCookie } from "./usePublish";
 import { useReading } from "./useReading";
@@ -102,8 +103,8 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
   };
 
   // A long read never changes the text by itself: the reading bubble asks first.
-  const derive = () =>
-    derivePreferences(ui.preferences, { ...signals.current, longestReadMs: 0 }, readingLimit());
+  const derive = () => holdLanguage(
+    derivePreferences(ui.preferences, { ...signals.current, longestReadMs: 0 }, readingLimit()), readLanguage(user));
 
   const readingPrompt = reading.seconds > 0 && ui.preferences.textScale !== "large" ? {
     confirm: () => {
@@ -191,7 +192,7 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
 
   const undoLast = () => {
     const next = undo(session);
-    const preferences = priorPreferences ?? ui.preferences;
+    const { preferences } = holdLanguage({ preferences: priorPreferences ?? ui.preferences, reasons: [] }, readLanguage(user));
     // Forget the evidence, or the same rule would fire again at the next boundary.
     signals.current = { ...EMPTY_SIGNALS };
     // Otherwise the next automatic change would simply redo what was undone.
@@ -209,7 +210,8 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
 
   const chooseLocale = (locale: Locale) => {
     onSignal(locale === "kn" ? { kannada: 1 } : { english: 1 });
-    // An explicit choice applies at once and outranks the rule.
+    // An explicit choice applies at once, is saved, and outranks the rule.
+    saveLanguage(user, locale);
     if (locale === "en") signals.current.kannada = 0;
     setPriorPreferences((p) => p && { ...p, locale }); // Undo must not revert it
     record({ trigger: "Chose a language in the menu", change: `Switched language to ${locale === "kn" ? "Kannada" : "English"}` });
@@ -217,8 +219,7 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
   };
 
   const reset = () => {
-    writeUiCookie("", 0);
-    resetDemo(user, ui.arm);
+    writeUiCookie(encodeUi(resetDemo(user, ui)), 30 * 24 * 60 * 60);
     window.location.reload();
   };
 

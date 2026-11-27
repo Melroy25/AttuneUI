@@ -1,12 +1,9 @@
 # Progress
-
-## Phases 1-3a, pre-pilot code, confirmatory mode: DONE (dark footer added to /demo)
+## Phases 1-3a, pre-pilot code, confirmatory mode: DONE
 - decide() measured: Node 0.33-0.37 ms median (n=50), Chrome 0.85 ms (n=20), cold 1.35-1.5 ms.
 ## Phase 3b + demo polish: DONE 2026-11-27
-- /demo (fictional data; guide: docs/SHOWCASE.md): storefront skin (study look unchanged), gear menu, X-Ray drawer, manual layout
-  preview (not a model decision). /eval: sample, upload, live fetch, metrics, OPE, timelines.
-- Arrow cue (/demo only): 2 taps on a card body -> its arrow glows. Rule-based, changes mid-task
-  (exception to invariant 5, requested by the user); card taps count as dead clicks.
+- /demo (fictional data; guide: docs/SHOWCASE.md): storefront skin, gear menu, X-Ray, manual
+  preview, arrow cue (2 card taps; exception to invariant 5). /eval: upload, metrics, OPE.
 - Firebase only: Auth (Google, username), Firestore study + live; study saving not yet tried.
 - /admin is public by the owner's choice (names, masked emails, activity). /demo adapts
   by itself after 3 struggles (user chose this; /demo exception to invariants 5, 10).
@@ -14,13 +11,16 @@
   saved per account in the browser, kept on Reset (exception to invariant 11 "in-memory").
 - /demo shortcuts (Wishlist on cards, Search similar, Customer Support replacing the header
   Support; invariant 9 exception): a 2-arm Thompson bandit each (lib/bandit/shortcutBandit.ts,
-  hand-set prior), +1 on use, -1 on ✕ or Undo. Wishlist and Support are considered only from
-  3 uses (2 mouse hovers on a footer support link = 1 use).
+  hand-set prior), +1 on use, -1 on ✕ or Undo; Wishlist and Support only from 3 uses.
 - Saved per user in Firestore demo_users/{userId} + activity (server REST, /api/demo-user;
   browser cache first, newer saved copy applied on load). Reset changes the screen only: logs,
   totals, counts and weights stay. Admin "Saved logs" tab: user selector, cause -> effect.
 - A long policy read asks with a bubble before enlarging text. Hover/focus tooltips (data-tip,
-  components/ui/Tooltip.tsx, English except two translated labels). 124/124 tests.
+  components/ui/Tooltip.tsx, mostly English). 129/129 tests.
+- Rules, not the bandit: dead click on delivery location / product card -> floating shortcut;
+  2 problem taps on small targets in 30 s -> bigger targets with Undo (no prompt; exception to
+  invariant 5; off while Pin or auto-off), before/after counts saved (descriptive only).
+  Hand-picked language is per user and survives rules, Undo and Reset.
 
 ## Setup before phone test / pilot (user)
 1. Vercel and .env.local: FIREBASE_* values, EXPORT_TOKEN, STUDY_CODE, STUDY_PHASE (empty =
@@ -31,7 +31,7 @@
    STUDY_PHASE=confirmatory.
 
 ## Open findings
-- Not tested: Firestore saved logs, shortcuts, footer, tooltips (browser), phone, study writes, freeze, screen reader.
+- Not tested: Firestore saved logs, shortcuts, dead-click/size rules, tooltips (browser), phone, study writes, freeze, screen reader.
 - /demo counts any finished action as success. SIMULATED prior rarely picks large targets
   (3-13%); headroom small: oracle .785 vs static .755, learner +.01 to +.015 at 3000.
 - Calm blocks spread arm probabilities (~.3): decide v (0.25) before the freeze.
