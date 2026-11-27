@@ -20,6 +20,7 @@ function apply(page: Element, scales: Scales) {
 export function useTextSize(user: string | null, locked: boolean, log: (change: Change) => void) {
   const key = textKey(user);
   const [scales, setScales] = useState<Scales>({});
+  const [changedAt, setChangedAt] = useState(0);
   const current = useRef<Scales>({});
   const latest = useRef({ locked, log });
   useEffect(() => { latest.current = { locked, log }; });
@@ -54,6 +55,7 @@ export function useTextSize(user: string | null, locked: boolean, log: (change: 
       const next = enlarge(current.current, id);
       if (!next) return;
       commit(next);
+      setChangedAt(Date.now());
       latest.current.log({ trigger: `Clicked the text "${id}" repeatedly`, change: `Font size of "${id}" raised to ${next[id]}%` });
     };
     document.addEventListener("click", onClick, true);
@@ -70,7 +72,7 @@ export function useTextSize(user: string | null, locked: boolean, log: (change: 
     const watcher = new MutationObserver(run);
     watcher.observe(page, {
       childList: true, subtree: true, attributes: true,
-      attributeFilter: ["class", "data-surface", "data-comfort", "data-text-id"],
+      attributeFilter: ["class", "data-surface", "data-roomy", "data-text-id"],
     });
     return () => {
       watcher.disconnect();
@@ -81,6 +83,7 @@ export function useTextSize(user: string | null, locked: boolean, log: (change: 
   const last = Object.keys(scales).at(-1);
   return {
     percent: last ? scales[last] : 100,
+    changedAt,
     undo: () => {
       const back = undoLast(current.current);
       if (!back) return;

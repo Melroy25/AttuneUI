@@ -13,12 +13,12 @@
 - Saved per user in Firestore demo_users/{userId} + activity (server REST, /api/demo-user;
   browser cache first, newer saved copy applied on load). Reset changes the screen only: logs,
   totals, counts and weights stay. Admin "Saved logs" tab: user selector, cause -> effect.
-- Long policy read asks first. Tooltips (data-tip). 148/148 tests.
+- QA 2026-11-28: nothing scales the page; one floating prompt at a time (Undo also in ⚙);
+  single dead click waits 0.6 s so double clicks only grow text; sign-out -> English. 149 tests.
 - Rules, not the bandit: dead click on delivery location / product card -> floating shortcut;
-  2 problem taps on small targets in 30 s -> bigger targets with Undo (no prompt; exception to
-  invariant 5; off while Pin or auto-off), before/after counts saved (descriptive only).
-  Picked language and city are per user and survive Reset.
-  Popover under "Deliver to"; product dead click asks about the newest cart item first. X-Ray on: red click pulse. Predicted hesitation (repeats, back-and-forth, scroll
+  2 problem taps on small targets in 30 s -> bigger hit area on those controls only (no prompt;
+  exception to invariant 5; off while Pin or auto-off), before/after counts (descriptive).
+  Picked language and city are per user, survive Reset. Popover under "Deliver to"; product dead click asks about the newest cart item first. X-Ray on: red click pulse. Predicted hesitation (repeats, back-and-forth, scroll
   shaking) -> Yes/No card; answers move threshold/cooldown and category order, never the layout
   bandit; navigation only. All /demo rules.
 - Articles page (5, English). Muscle memory: cue (never moves) on needed features, fades with

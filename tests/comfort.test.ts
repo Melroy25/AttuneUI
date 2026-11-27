@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_PREFERENCES } from "../lib/attune-ui/preferences/rules";
 import { CATALOG } from "../lib/demo/catalog";
 import { parseState } from "../lib/demo/cloud";
-import { NO_COMFORT, NO_RECENT, isSmall, keepCounts, recordTap, revert, type Tap } from "../lib/demo/comfort";
+import { NO_COMFORT, NO_RECENT, isSmall, keepCounts, parseComfort, recordTap, revert, type Tap } from "../lib/demo/comfort";
 import { holdLanguage } from "../lib/demo/language";
 import { SPECS, promptFor } from "../lib/demo/quick";
 
@@ -35,6 +35,21 @@ describe("bigger tap targets", () => {
     const undone = revert(run([miss(0), miss(2000)]).state);
     expect(run([miss(9000), miss(11000), miss(13000)], undone).state.on).toBe(false);
     expect(keepCounts(undone, NO_COMFORT).before.misses).toBe(2);
+  });
+});
+
+describe("bigger hit areas only where taps missed", () => {
+  it("enlarges only the missed controls and adds new ones on new misses", () => {
+    const at = (t: number, target: string) => miss(t, { target, x: t });
+    const first = run([at(0, "details:a"), at(2000, "add:a")]);
+    expect(first.state.targets).toEqual(["details:a", "add:a"]);
+    expect(first.reason).not.toBeNull();
+    const more = [at(40_000, "approve:b"), at(42_000, "approve:b")].reduce(
+      (s, tap) => recordTap(s.state, s.recent, tap, true), first);
+    expect(more.state.targets).toEqual(["details:a", "add:a", "approve:b"]);
+    expect(revert(more.state).targets).toEqual([]);
+    expect(parseComfort({ targets: ["ok", 5, "x".repeat(81)] }).targets).toEqual(["ok"]);
+    expect(parseComfort({ on: true }).on).toBe(false); // the old page-wide switch is gone
   });
 });
 

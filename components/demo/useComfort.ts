@@ -14,6 +14,13 @@ export const CONTROLS = "button:not(:disabled),a[href],input,select,textarea,sum
 const between = (a: Rect, b: Rect) =>
   Math.hypot(Math.max(b.left - a.right, a.left - b.right, 0), Math.max(b.top - a.bottom, a.top - b.bottom, 0));
 
+/** A name for one control that survives re-renders: its own id, else its label. */
+export const targetKey = (el: Element): string | null => {
+  const html = el as HTMLElement;
+  const key = html.dataset.targetId ?? el.getAttribute("aria-label") ?? html.dataset.tip ?? el.textContent?.trim();
+  return key ? key.slice(0, 80) : null;
+};
+
 /** Where a click landed, measured against the real boxes on screen. */
 export function measure(root: HTMLElement, e: MouseEvent) {
   const boxes = [...root.querySelectorAll(CONTROLS)]
@@ -36,8 +43,17 @@ export function measure(root: HTMLElement, e: MouseEvent) {
   return {
     t: performance.now(), x: e.clientX, y: e.clientY, distance,
     control: hit && aimed ? `${Math.round(aimed.box.left)},${Math.round(aimed.box.top)}` : null,
+    target: aimed ? targetKey(aimed.el) : null,
     small: !!aimed && isSmall(aimed.box.width, aimed.box.height, gap),
   };
+}
+
+/** Marks exactly the enlarged controls; the stylesheet gives only those a bigger hit area. */
+function mark(page: Element, targets: string[]) {
+  for (const el of page.querySelectorAll(CONTROLS)) {
+    const want = targets.length > 0 && targets.includes(targetKey(el) ?? "");
+    if (want !== el.hasAttribute("data-roomy")) el.toggleAttribute("data-roomy", want);
+  }
 }
 
 export function useComfort(
@@ -45,6 +61,7 @@ export function useComfort(
 ) {
   const key = comfortKey(user);
   const [state, setState] = useState(NO_COMFORT);
+  const [changedAt, setChangedAt] = useState(0);
   const current = useRef(state);
   const latest = useRef({ canAdapt, log });
   useEffect(() => { latest.current = { canAdapt, log }; });
@@ -71,15 +88,34 @@ export function useComfort(
       const next = recordTap(current.current, recent, measure(root, e), latest.current.canAdapt);
       recent = next.recent;
       commit(next.state);
-      if (next.reason) latest.current.log({ trigger: next.reason, change: "Made buttons, links and text bigger (Undo shown)" });
+      if (!next.reason) return;
+      setChangedAt(Date.now());
+      latest.current.log({ trigger: next.reason, change: `Bigger hit area on these controls only: ${next.added.join(", ")}` });
     };
     root.addEventListener("click", onClick, true);
     return () => root.removeEventListener("click", onClick, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per account
   }, [key, rootRef]);
 
+  const { targets } = state;
+  useEffect(() => {
+    const page = document.querySelector(".store-page");
+    if (!page) return;
+    const run = () => mark(page, targets);
+    run();
+    // Only added and removed nodes are watched, so marking cannot set this off again.
+    const watcher = new MutationObserver(run);
+    watcher.observe(page, { childList: true, subtree: true });
+    return () => {
+      watcher.disconnect();
+      mark(page, []);
+    };
+  }, [targets]);
+
   return {
     on: state.on,
+    count: targets.length,
+    changedAt,
     undo: () => {
       commit(revert(current.current));
       log({ trigger: "Pressed Undo on the bigger buttons", change: "Back to normal size; stays off until Reset" });

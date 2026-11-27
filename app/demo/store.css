@@ -1,6 +1,7 @@
 /* Storefront skin for /demo only; everything is scoped to .store / .store-page.
    Unlayered, so it wins over utilities. Control sizes stay with the SurfaceConfig. */
-.store-page { background: #fff; color: #172033; }
+/* No double-tap zoom: a double tap on text belongs to the per-text size rule. */
+.store-page { background: #fff; color: #172033; touch-action: manipulation; }
 .store { --card-shadow: 0 1px 2px rgb(15 23 42 / .08), 0 2px 10px rgb(15 23 42 / .06); }
 
 .store [data-part="header"] { border-bottom: 1px solid #e2e8f0; }
@@ -142,16 +143,13 @@
 }
 
 /* "Large touch targets": visibly bigger everywhere. */
-.store[data-surface="ergonomic"] { font-size: 1.0625rem; }
 .store[data-surface="ergonomic"] :is(button, select, input[type="search"], summary) { min-height: 3.25rem; }
 .store[data-surface="ergonomic"] button { min-width: 3.25rem; }
 .store[data-surface="ergonomic"] [data-part="nav"] button {
-  border: 2px solid #1d4ed8; padding-inline: 1.25rem; font-size: 1.0625rem; font-weight: 700;
+  border: 2px solid #1d4ed8; padding-inline: 1.25rem; font-weight: 700;
 }
-.store[data-surface="ergonomic"] [data-part="categories"] button { font-size: .95rem; font-weight: 700; min-width: 6.5rem; }
-.store[data-surface="ergonomic"] [data-part="categories"] button > span { font-size: 2.5rem; line-height: 1.1; }
+.store[data-surface="ergonomic"] [data-part="categories"] button { font-weight: 700; min-width: 6.5rem; }
 .store[data-surface="ergonomic"] [data-part="searchbar"] { border-width: 3px; }
-.store[data-surface="ergonomic"] :is([data-part="price"], [data-part="tile"]) { font-size: 1.15rem; }
 
 /* The X-Ray drawer never covers content: reserve its space. */
 @media (width >= 64rem) { .hud-open { padding-right: 25rem; } }
@@ -161,12 +159,12 @@
 /* Secondary card links are small on purpose, until problem taps make everything bigger. */
 .store [data-compact] { font-size: .625rem; line-height: 1; color: #1d4ed8; text-decoration: underline; }
 .store [data-compact]:disabled { color: #64748b; }
-.store-page[data-comfort="on"] .store :is(button, select, summary, input[type="search"]) { min-height: 2.75rem; }
-.store-page[data-comfort="on"] .store button { min-width: 2.75rem; }
-.store-page[data-comfort="on"] .store [data-compact-row] { gap: .75rem; margin-top: .5rem; }
-.store-page[data-comfort="on"] .store [data-compact] {
-  font-size: .9375rem; padding: .5rem .75rem; background: #eff6ff; border-radius: .5rem; text-decoration: none;
+/* Only the controls that were missed get a bigger hit area; nothing else changes size. */
+.store [data-roomy] { min-height: 2.75rem; min-width: 2.75rem; padding: .5rem .75rem; }
+.store [data-compact][data-roomy] {
+  font-size: .8125rem; background: #eff6ff; border-radius: .5rem; text-decoration: none;
 }
+.store [data-compact-row]:has([data-roomy]) { gap: .75rem; margin-top: .5rem; }
 
 /* X-Ray only: a short red ring where friction was sensed. */
 .store-page [data-part="pulse"] {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { Change } from "@/lib/demo/activity";
 import { promptFor, type Prompt } from "@/lib/demo/quick";
+import { BURST } from "@/lib/demo/textSize";
 import { CONTROLS } from "./useComfort";
 
 /** A click that does nothing on a marked area offers the shortcut that fits that area. */
@@ -17,13 +18,24 @@ export function useQuickPrompt(
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
+    let waiting: { context: string; t: number; timer: ReturnType<typeof setTimeout> } | null = null;
     const onClick = (e: MouseEvent) => {
       const target = e.target as Element;
-      // detail > 1 is the second half of a double click, already answered by the first.
-      if (e.detail > 1 || target.closest(CONTROLS)) return;
+      if (target.closest(CONTROLS)) return;
       const context = target.closest("[data-dead-context]")?.getAttribute("data-dead-context") ?? "";
+      const t = performance.now();
+      // A second click on the same spot makes it a double click, which belongs to the text size.
+      if (waiting && waiting.context === context && t - waiting.t <= BURST.ms) {
+        clearTimeout(waiting.timer);
+        waiting = null;
+        return;
+      }
       const found = promptFor(context, noCartQuestion.current ? null : now.current.latestInCart);
       if (!found) return;
+      if (waiting) clearTimeout(waiting.timer);
+      waiting = { context, t, timer: setTimeout(() => { waiting = null; show(found); }, BURST.ms) };
+    };
+    const show = (found: NonNullable<ReturnType<typeof promptFor>>) => {
       setPrompt(found.prompt);
       now.current.log({
         trigger: found.product ? `Dead click on the ${found.product.name} card` : "Dead click on the delivery location",
@@ -33,7 +45,10 @@ export function useQuickPrompt(
       });
     };
     root.addEventListener("click", onClick);
-    return () => root.removeEventListener("click", onClick);
+    return () => {
+      root.removeEventListener("click", onClick);
+      if (waiting) clearTimeout(waiting.timer);
+    };
   }, [rootRef]);
 
   /** From the cart question to the card that was clicked. */

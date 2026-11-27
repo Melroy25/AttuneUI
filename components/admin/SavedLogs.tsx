@@ -32,7 +32,7 @@ const rate = (t: Tally) => {
 };
 const comfortRow = ({ id, state: s }: CloudRecord) => [
   id, (s.language ?? s.preferences.locale) === "kn" ? "Kannada" : "English",
-  s.comfort.on ? "Bigger" : s.comfort.reverted ? "Normal (undone)" : "Normal", rate(s.comfort.before), rate(s.comfort.after),
+  s.comfort.on ? `Bigger: ${s.comfort.targets.length} control(s)` : s.comfort.reverted ? "Normal (undone)" : "Normal", rate(s.comfort.before), rate(s.comfort.after),
 ];
 const choiceRow = ({ id, state: s }: CloudRecord) => [
   id, LOCATIONS[s.city ?? 0].en, `${s.hesitation.yes} / ${s.hesitation.no}`,

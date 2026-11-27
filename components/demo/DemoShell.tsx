@@ -44,7 +44,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   useFrictionLog(user, d.session.totals, d.events, d.modality);
   const comfort = useComfort(user, d.rootRef, d.auto && !d.session.pinned, add);
   const quick = useQuickPrompt(d.rootRef, shop.latest, add);
-  const hesitation = useHesitation(user, page, shop, add);
+  const hesitation = useHesitation(user, page, shop, quick.prompt !== null, add);
   const behaviour = useBehaviour(user, page, shop, add);
   const text = useTextSize(user, d.session.pinned, add);
   const openGuide = (product: Product) => {
@@ -68,7 +68,10 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
         <option value="en">English</option>
         <option value="kn">ಕನ್ನಡ</option>
       </select>
-      <SettingsMenu canUndo={d.canUndo || shortcuts.latest !== null} pinned={d.session.pinned} hud={hud}
+      <SettingsMenu canUndo={d.canUndo || shortcuts.latest !== null} fixes={[
+        ...(text.percent > 100 ? [{ label: `Undo bigger text (${text.percent}%)`, run: text.undo }] : []),
+        ...(comfort.on ? [{ label: "Normal button size", run: comfort.undo }] : []),
+      ]} pinned={d.session.pinned} hud={hud}
         onUndo={() => shortcuts.latest ? shortcuts.dismiss(shortcuts.latest, "Pressed Undo") : d.undoLast()}
         onPin={d.togglePin} onHud={() => setHud(!hud)} onReset={d.reset} user={user}
         auto={d.auto} onAuto={() => d.setAuto(!d.auto)} />
@@ -76,7 +79,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   );
 
   return (
-    <main data-comfort={comfort.on ? "on" : undefined} className={`store-page min-h-dvh p-2 sm:p-4 ${hud ? "hud-open" : ""}`}>
+    <main className={`store-page min-h-dvh p-2 sm:p-4 ${hud ? "hud-open" : ""}`}>
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}

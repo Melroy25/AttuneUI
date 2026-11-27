@@ -19,13 +19,13 @@ const REASONS: Record<SignalKind, string> = {
 export interface Offer { category: Category | null; stage: "ask" | "picks" }
 
 /** Watches browsing, asks at most one question at a time, and learns from the answer. */
-export function useHesitation(user: string | null, page: Page, shop: Shop, log: (change: Change) => void) {
+export function useHesitation(user: string | null, page: Page, shop: Shop, busy: boolean, log: (change: Change) => void) {
   const key = hesitationKey(user);
   const [state, setState] = useState(NO_HESITATION);
   const [offer, setOffer] = useState<Offer | null>(null);
   const seen = useRef<{ visits: Visit[]; signals: Signal[] }>({ visits: [], signals: [] });
-  const latest = useRef({ state, offer, page, log });
-  useEffect(() => { latest.current = { state, offer, page, log }; });
+  const latest = useRef({ state, offer, page, busy, log });
+  useEffect(() => { latest.current = { state, offer, page, busy, log }; });
 
   const commit = useCallback((next: Hesitation) => {
     latest.current.state = next;
@@ -48,8 +48,8 @@ export function useHesitation(user: string | null, page: Page, shop: Shop, log: 
     if (now.page === "articles") return; // rereading is not hesitating over products
     const signals = [...seen.current.signals.filter((s) => signal.t - s.t <= H.windowMs), signal];
     seen.current.signals = signals;
-    // Never interrupt the cart, or a question already on screen.
-    if (now.offer || now.page === "cart") return;
+    // Never interrupt the cart, another prompt, or a question already on screen.
+    if (now.offer || now.busy || now.page === "cart") return;
     const ask = shouldAsk(now.state, signals, signal.t);
     if (!ask) return;
     seen.current = { visits: [], signals: [] };

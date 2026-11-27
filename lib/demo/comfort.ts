@@ -1,26 +1,30 @@
-// /demo only: bigger tap targets after problem taps on small ones, with before/after counts.
+// /demo only: bigger hit areas on the very controls that were missed, with before/after counts.
+// Nothing else on the page changes size.
 
 export interface Tally { taps: number; misses: number; rage: number; nearby: number }
 export interface Comfort {
-  on: boolean;
+  on: boolean; // true while any control is enlarged
   reverted: boolean; // the user said no: never switched on again until Reset
-  before: Tally; // taps at normal size
-  after: Tally; // taps at the bigger size
+  targets: string[]; // the enlarged controls, by targetKey
+  before: Tally; // taps while nothing was enlarged
+  after: Tally; // taps while something was
 }
 export interface Tap {
   t: number; x: number; y: number;
   control: string | null; // which control was hit; null for none
+  target?: string | null; // key of the control hit or, for a miss, the nearest one
   distance: number; // px to the nearest control
   small: boolean; // that control is under 44 px or crowded
 }
 type Kind = "misses" | "rage" | "nearby";
-export interface Recent { taps: Tap[]; problems: { t: number; kind: Kind }[] }
+export interface Recent { taps: Tap[]; problems: { t: number; kind: Kind; target: string }[] }
 
 export const RULES = {
   needed: 2, windowMs: 30_000, rageCount: 3, rageMs: 1000, radius: 40, halo: 24, correctionMs: 1500, size: 44, gap: 8,
 };
+export const MAX_TARGETS = 30;
 const NONE: Tally = { taps: 0, misses: 0, rage: 0, nearby: 0 };
-export const NO_COMFORT: Comfort = { on: false, reverted: false, before: NONE, after: NONE };
+export const NO_COMFORT: Comfort = { on: false, reverted: false, targets: [], before: NONE, after: NONE };
 export const NO_RECENT: Recent = { taps: [], problems: [] };
 export const comfortKey = (user: string | null) => `attune-comfort:${user ?? "guest"}`;
 
@@ -42,21 +46,25 @@ export function recordTap(state: Comfort, recent: Recent, tap: Tap, canAdapt: bo
   const side = state.on ? "after" : "before";
   const tally = { ...state[side], taps: state[side].taps + 1 };
   if (kind) tally[kind]++;
+  const target = tap.target ?? "unknown";
   const problems = [...recent.problems.filter((p) => tap.t - p.t <= RULES.windowMs),
-    ...(kind && tap.small ? [{ t: tap.t, kind }] : [])];
-  const adapt = canAdapt && !state.on && !state.reverted && problems.length >= RULES.needed;
+    ...(kind && tap.small ? [{ t: tap.t, kind, target }] : [])];
+  const fresh = [...new Set(problems.map((p) => p.target))].filter((k) => !state.targets.includes(k));
+  const adapt = canAdapt && !state.reverted && problems.length >= RULES.needed && fresh.length > 0;
+  const targets = adapt ? [...state.targets, ...fresh].slice(-MAX_TARGETS) : state.targets;
   const count = (k: Kind) => problems.filter((p) => p.kind === k).length;
   return {
-    state: { ...state, [side]: tally, on: state.on || adapt },
+    state: { ...state, [side]: tally, targets, on: targets.length > 0 },
     // A counted rage cluster, or a change of size, starts afresh.
     recent: adapt ? NO_RECENT : { taps: kind === "rage" ? [] : [...recent.taps, tap].slice(-5), problems },
     reason: adapt
       ? `Small targets: ${count("misses")} missed, ${count("rage")} rage, ${count("nearby")} accidental taps`
       : null,
+    added: adapt ? fresh : [],
   };
 }
 
-export const revert = (state: Comfort): Comfort => ({ ...state, on: false, reverted: true });
+export const revert = (state: Comfort): Comfort => ({ ...state, on: false, reverted: true, targets: [] });
 
 const tally = (v: unknown): Tally => {
   const from = (v ?? {}) as Partial<Record<keyof Tally, unknown>>;
@@ -67,7 +75,13 @@ const tally = (v: unknown): Tally => {
 /** Storage, uploads and documents are untrusted: anything that does not fit reads as nothing. */
 export function parseComfort(v: unknown): Comfort {
   const c = (v ?? {}) as Partial<Comfort>;
-  return { on: c.on === true, reverted: c.reverted === true, before: tally(c.before), after: tally(c.after) };
+  const targets = Array.isArray(c.targets)
+    ? [...new Set(c.targets.filter((k): k is string => typeof k === "string" && k.length > 0 && k.length <= 80))]
+      .slice(-MAX_TARGETS)
+    : [];
+  return {
+    on: targets.length > 0, reverted: c.reverted === true, targets, before: tally(c.before), after: tally(c.after),
+  };
 }
 
 const larger = (a: Tally, b: Tally): Tally => ({

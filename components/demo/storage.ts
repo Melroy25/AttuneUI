@@ -46,7 +46,7 @@ export function resetDemo(user: string | null, ui: UiState): UiState {
     localStorage.setItem(shortcutsKey(user), JSON.stringify({ ...bandit, promoted: {} }));
     localStorage.setItem(uiKey(user), encodeUi(next));
     const comfort = parseComfort(read(comfortKey(user)));
-    localStorage.setItem(comfortKey(user), JSON.stringify({ ...comfort, on: false, reverted: false }));
+    localStorage.setItem(comfortKey(user), JSON.stringify({ ...comfort, on: false, reverted: false, targets: [] }));
     const behaviour = parseBehaviour(read(behaviourKey(user)));
     localStorage.setItem(behaviourKey(user), JSON.stringify({ ...behaviour, pinned: null }));
     localStorage.removeItem(textKey(user)); // every text back to normal

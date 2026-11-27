@@ -54,8 +54,8 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
                 </span>
                 {/* Small on purpose: misses here show the store making targets bigger. */}
                 <span data-compact-row className="flex gap-1">
-                  <button type="button" data-compact data-tip={t.viewDetails} aria-label={`${t.details}: ${p.name}`} onClick={() => open(p.id)}>{t.details}</button>
-                  <button type="button" data-compact data-tip={t.addToCart} aria-label={`${t.addOne}: ${p.name}`} disabled={inCartOf(p.id) >= p.stock}
+                  <button type="button" data-compact data-target-id={`details:${p.id}`} data-tip={t.viewDetails} aria-label={`${t.details}: ${p.name}`} onClick={() => open(p.id)}>{t.details}</button>
+                  <button type="button" data-compact data-target-id={`add:${p.id}`} data-tip={t.addToCart} aria-label={`${t.addOne}: ${p.name}`} disabled={inCartOf(p.id) >= p.stock}
                     onClick={() => add(p.id, 1)}>{t.addOne}</button>
                 </span>
                 <span className="block"><GuideLink locale={ctx.preferences.locale} product={p} onOpen={ctx.onGuide} /></span>

@@ -1,11 +1,18 @@
 "use client";
 
+import { DEFAULT_PREFERENCES } from "@/lib/attune-ui/preferences/rules";
+import { languageKey } from "@/lib/demo/language";
+import { encodeUi } from "@/lib/demo/uiState";
+import { uiKey } from "./storage";
+import { writeUiCookie } from "./usePublish";
+
 const ID = "attune-settings";
 const item =
   "flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent";
 
 /** Native popover: Escape and outside taps close it. */
-export function SettingsMenu({ canUndo, pinned, hud, auto, onUndo, onPin, onHud, onReset, onAuto, user }: {
+export function SettingsMenu({ canUndo, fixes, pinned, hud, auto, onUndo, onPin, onHud, onReset, onAuto, user }: {
+  fixes: { label: string; run: () => void }[]; // Undo for adaptations whose notice has gone
   canUndo: boolean;
   pinned: boolean;
   hud: boolean;
@@ -18,6 +25,19 @@ export function SettingsMenu({ canUndo, pinned, hud, auto, onUndo, onPin, onHud,
   user: string | null;
 }) {
   const close = { popoverTarget: ID, popoverTargetAction: "hide" } as const;
+  // The next screen is the guest's (or the sign-in page): English and the default layout.
+  const signOut = async () => {
+    await fetch("/api/user", { method: "DELETE" });
+    const english = encodeUi({ arm: "baseline", preferences: DEFAULT_PREFERENCES });
+    writeUiCookie(english, 30 * 24 * 60 * 60);
+    try {
+      localStorage.setItem(uiKey(null), english);
+      localStorage.removeItem(languageKey(null));
+    } catch {
+      // storage blocked: the cookie still decides the first screen
+    }
+    window.location.reload();
+  };
   return (
     <>
       <button type="button" aria-label="Settings" data-tip="Adjust display & reset" popoverTarget={ID}
@@ -37,6 +57,11 @@ export function SettingsMenu({ canUndo, pinned, hud, auto, onUndo, onPin, onHud,
         <button type="button" {...close} className={item} data-tip="Undo last change" disabled={!canUndo} onClick={onUndo}>
           <span>Revert Last Change (Undo)</span><span aria-hidden>↩︎</span>
         </button>
+        {fixes.map((fix) => (
+          <button key={fix.label} type="button" {...close} className={item} onClick={fix.run}>
+            <span>{fix.label}</span><span aria-hidden>↩︎</span>
+          </button>
+        ))}
         <button type="button" {...close} className={item} aria-pressed={pinned} onClick={onPin}
           data-tip={pinned ? "Unpin current layout" : "Pin current layout"}>
           <span>Lock / Pin Current Layout</span><span className="text-xs font-semibold">{pinned ? "ON" : "OFF"}</span>
@@ -53,7 +78,7 @@ export function SettingsMenu({ canUndo, pinned, hud, auto, onUndo, onPin, onHud,
         </button>
         {user && (
           <button type="button" className={`${item} border-t border-slate-200`} data-tip="Switch user"
-            onClick={async () => { await fetch("/api/user", { method: "DELETE" }); window.location.reload(); }}>
+            onClick={() => void signOut()}>
             <span>Sign out ({user})</span><span aria-hidden>⎋</span>
           </button>
         )}

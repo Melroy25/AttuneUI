@@ -43,8 +43,8 @@ export function ReturnsPage({ ctx, onView }: { ctx: PortalContext; onView: (view
             ) : (
               // Deliberately close together and small in the compact layout.
               <span className="flex gap-1">
-                <button type="button" data-part="primary" className={small} onClick={() => decide(o.id, "approved")}>{t.approve}</button>
-                <button type="button" className={small} onClick={() => decide(o.id, "rejected")}>{t.reject}</button>
+                <button type="button" data-part="primary" data-target-id={`approve:${o.id}`} className={small} onClick={() => decide(o.id, "approved")}>{t.approve}</button>
+                <button type="button" data-target-id={`reject:${o.id}`} className={small} onClick={() => decide(o.id, "rejected")}>{t.reject}</button>
               </span>
             )}
           </li>
