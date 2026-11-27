@@ -1,8 +1,8 @@
+import type { Metadata } from "next";
+import { StudyShell } from "@/components/study/StudyShell";
+
+export const metadata: Metadata = { title: "AttuneUI study" };
+
 export default function StudyPage() {
-  return (
-    <main className="mx-auto max-w-2xl p-6">
-      <h1 className="text-2xl font-bold">Study</h1>
-      <p className="mt-2">Not open yet. No data is collected on this page.</p>
-    </main>
-  );
+  return <StudyShell />;
 }

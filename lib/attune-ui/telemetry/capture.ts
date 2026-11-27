@@ -69,7 +69,7 @@ export function startCapture(root: HTMLElement, onEvent?: () => void): Capture {
     events.push({ type: "move", t, x: e.clientX, y: e.clientY });
   }, options);
   root.addEventListener("pointerover", (e) => {
-    if (e.pointerType === "touch") return;
+    if (e.pointerType !== "mouse") return;
     const id = labelled(e.target);
     if (id === hover?.id) return;
     endHover();
