@@ -28,7 +28,7 @@ export function useQuickPrompt(
       now.current.log({
         trigger: found.product ? `Dead click on the ${found.product.name} card` : "Dead click on the delivery location",
         change: found.latest ? `Showed "Are you searching based on ${found.latest.name}?"`
-          : found.product ? `Showed "Is this what you were searching for?" for ${found.product.name}`
+          : found.product ? `Showed "Is this what you were searching for?" for ${found.product.name}, with its guide link`
           : "Showed the shortcut \"Change delivery location?\"",
       });
     };

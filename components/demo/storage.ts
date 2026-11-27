@@ -5,6 +5,7 @@ import { syncKey } from "@/lib/demo/cloud";
 import { archive, historyKey, parsePast, type PastSession } from "@/lib/demo/history";
 import { comfortKey, parseComfort } from "@/lib/demo/comfort";
 import { languageKey, parseLanguage } from "@/lib/demo/language";
+import { textKey } from "@/lib/demo/textSize";
 import { encodeUi, type UiState } from "@/lib/demo/uiState";
 import { DEFAULT_PREFERENCES, type Locale } from "@/lib/attune-ui/preferences/rules";
 import { readingKey } from "./useReading";
@@ -48,6 +49,7 @@ export function resetDemo(user: string | null, ui: UiState): UiState {
     localStorage.setItem(comfortKey(user), JSON.stringify({ ...comfort, on: false, reverted: false }));
     const behaviour = parseBehaviour(read(behaviourKey(user)));
     localStorage.setItem(behaviourKey(user), JSON.stringify({ ...behaviour, pinned: null }));
+    localStorage.setItem(textKey(user), "0");
     localStorage.setItem(syncKey(user), "local"); // the saved copy must not undo this
     sessionStorage.removeItem(readingKey);
   } catch {

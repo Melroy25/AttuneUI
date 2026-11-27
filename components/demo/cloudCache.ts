@@ -11,6 +11,7 @@ import { hesitationKey, keepAnswers, parseHesitation } from "@/lib/demo/hesitati
 import { languageKey } from "@/lib/demo/language";
 import { memoryKey } from "@/lib/demo/memory";
 import { cityKey } from "@/lib/demo/quick";
+import { textKey } from "@/lib/demo/textSize";
 import { decodeUi, encodeUi } from "@/lib/demo/uiState";
 import { shortcutsKey, uiKey } from "./storage";
 
@@ -48,6 +49,7 @@ export function readLocal(user: string | null): CloudState | null {
     city: localStorage.getItem(cityKey(user)),
     hesitation: readJsonItem(hesitationKey(user)),
     behaviour: readJsonItem(behaviourKey(user)),
+    textStep: localStorage.getItem(textKey(user)),
   });
 }
 
@@ -75,4 +77,5 @@ export function writeLocal(user: string | null, s: CloudState) {
   localStorage.setItem(hesitationKey(user), JSON.stringify(asked));
   const behaviour = keepBehaviour(parseBehaviour(readJsonItem(behaviourKey(user))), s.behaviour);
   localStorage.setItem(behaviourKey(user), JSON.stringify(behaviour));
+  localStorage.setItem(textKey(user), String(s.textStep));
 }

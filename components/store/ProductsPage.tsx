@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { PortalContext } from "@/components/portal/context";
 import { CATALOG, searchCatalog, type Product } from "@/lib/demo/catalog";
 import { ArrowButton, useCardHint } from "./cardHint";
+import { GuideLink } from "./GuideLink";
 import { DismissShortcut, WishlistButton } from "./Habits";
 import { PAGE_TEXT, categoryLabel } from "./text";
 import type { Shop } from "./useShop";
@@ -57,6 +58,7 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
                   <button type="button" data-compact data-tip={t.addToCart} aria-label={`${t.addOne}: ${p.name}`} disabled={inCartOf(p.id) >= p.stock}
                     onClick={() => add(p.id, 1)}>{t.addOne}</button>
                 </span>
+                <span className="block"><GuideLink locale={ctx.preferences.locale} product={p} onOpen={ctx.onGuide} /></span>
               </div>
               {ctx.surface.quickActions.length > 0 && p.stock > 0 && (
                 <button type="button" data-part="quick-add" aria-label={`${t.addToCart}: ${p.name}`} data-tip="Add to cart"
@@ -96,6 +98,7 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
             </button>
           </span>
           {ctx.habits && <WishlistButton ctx={ctx} id={product.id} />}
+          <p><GuideLink locale={ctx.preferences.locale} product={product} onOpen={ctx.onGuide} /></p>
           {inCart > 0 && <p role="status">🛒 {t.cart}: {inCart}</p>}
           {product.stock === 0 && <p>{t.outOfStock} · {t.notify}</p>}
         </section>

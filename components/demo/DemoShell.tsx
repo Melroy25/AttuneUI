@@ -8,7 +8,9 @@ import type { Page } from "@/components/store/text";
 import { TooltipLayer } from "@/components/ui/Tooltip";
 import { useShop } from "@/components/store/useShop";
 import { SURFACES } from "@/lib/attune-ui/surface/catalog";
-import { CATALOG } from "@/lib/demo/catalog";
+import { ARTICLES } from "@/lib/demo/articles";
+import { CATALOG, type Product } from "@/lib/demo/catalog";
+import { guideFor } from "@/lib/demo/guides";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import { struggles } from "@/lib/bandit/shortcutBandit";
 import type { UiState } from "@/lib/demo/uiState";
@@ -26,6 +28,7 @@ import { useHesitation } from "./useHesitation";
 import { useLiveReport } from "./useLiveReport";
 import { useQuickPrompt } from "./useQuickPrompt";
 import { useShortcuts } from "./useShortcuts";
+import { useTextSize } from "./useTextSize";
 
 export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; renderedAt: string; user: string | null }) {
   const { activity, add } = useActivity(user);
@@ -43,6 +46,15 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const quick = useQuickPrompt(d.rootRef, shop.latest, add);
   const hesitation = useHesitation(user, page, shop, add);
   const behaviour = useBehaviour(user, page, shop, add);
+  const text = useTextSize(user, d.session.pinned, add);
+  const openGuide = (product: Product) => {
+    const article = guideFor(product)?.article ?? null; // null: the list of all guides
+    shop.openArticle(article);
+    setPage("articles");
+    window.scrollTo(0, 0);
+    const title = ARTICLES.find((a) => a.id === article)?.title;
+    add({ trigger: `Followed the guide link for ${product.name}`, change: title ? `Opened "${title}"` : "Opened the list of articles" });
+  };
   const surface = SURFACES[d.ui.arm];
   const renderedBy = d.offline
     ? "client (offline fallback)"
@@ -68,7 +80,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
-          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt, behaviour }} />
+          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt, behaviour, onGuide: openGuide }} />
       </div>
       <StoreFooter locale={d.ui.preferences.locale} onSupport={habits.support} onSupportHover={habits.supportHover}
         onPage={setPage} />
@@ -78,7 +90,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <AdaptiveBar pill={<ReadingPill locale={d.ui.preferences.locale} behaviour={behaviour}
           onResume={(article, paragraph) => { shop.openArticle(article, paragraph); setPage("articles"); }} />}
         locale={d.ui.preferences.locale} quick={quick} shop={shop} comfort={comfort} hesitation={hesitation}
-        log={add} onAdded={d.onGoal}
+        log={add} onGuide={openGuide} text={text}
         onView={(id) => {
           shop.setCategory(CATALOG.find((p) => p.id === id)?.category ?? "");
           shop.setQuery(""); shop.setPreset(""); shop.setSelected(id); setPage("products"); d.onGoal();

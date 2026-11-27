@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
+import { GuideLink } from "@/components/store/GuideLink";
 import { PAGE_TEXT } from "@/components/store/text";
 import type { Shop } from "@/components/store/useShop";
 import type { Locale } from "@/lib/attune-ui/preferences/rules";
 import type { Change } from "@/lib/demo/activity";
-import { CATALOG } from "@/lib/demo/catalog";
+import { CATALOG, type Product } from "@/lib/demo/catalog";
 import { SPECS, type Prompt } from "@/lib/demo/quick";
 import { HesitationCard } from "./HesitationCard";
 import { LocationPopover } from "./LocationPopover";
@@ -15,7 +16,7 @@ const main = "min-h-11 rounded-lg bg-blue-700 px-4 font-semibold text-white disa
 const other = "min-h-11 rounded-lg border border-slate-300 px-3 font-semibold";
 
 /** Floats above the page, so nothing in the store moves when it appears. */
-export function AdaptiveBar({ pill, locale, quick, shop, comfort, hesitation, onView, onCategory, onAdded, log }: {
+export function AdaptiveBar({ pill, locale, quick, shop, comfort, text, hesitation, onView, onCategory, onGuide, log }: {
   pill: ReactNode;
   locale: Locale;
   quick: ReturnType<typeof useQuickPrompt>;
@@ -24,7 +25,8 @@ export function AdaptiveBar({ pill, locale, quick, shop, comfort, hesitation, on
   hesitation: ReturnType<typeof useHesitation>;
   onView: (id: string) => void;
   onCategory: Parameters<typeof HesitationCard>[0]["onCategory"];
-  onAdded: () => void;
+  onGuide: (product: Product) => void;
+  text: { percent: number; undo: () => void };
   log: (change: Change) => void;
 }) {
   const t = PAGE_TEXT[locale];
@@ -32,6 +34,9 @@ export function AdaptiveBar({ pill, locale, quick, shop, comfort, hesitation, on
   const find = (id?: string) => CATALOG.find((p) => p.id === id);
   const product = prompt?.kind === "product" ? find(prompt.id) : undefined;
   const cart = prompt?.kind === "cart" ? { latest: find(prompt.latest), clicked: find(prompt.id) } : undefined;
+  const guide = (p: Product, className: string) => (
+    <GuideLink locale={locale} product={p} className={className} onOpen={() => { onGuide(p); setPrompt(null); }} />
+  );
   const close = (
     <button type="button" aria-label={t.close} data-tip={t.close} className={`${other} ml-auto min-w-11`}
       onClick={() => quick.dismiss()}>✕</button>
@@ -58,6 +63,7 @@ export function AdaptiveBar({ pill, locale, quick, shop, comfort, hesitation, on
             <button type="button" className={`${other} w-full`} onClick={aboutClicked}>
               {t.aboutThis.replace("{x}", cart.clicked.name)}
             </button>
+            {guide(cart.clicked, `${other} w-full`)}
           </section>
         )}
         {product && (
@@ -69,14 +75,14 @@ export function AdaptiveBar({ pill, locale, quick, shop, comfort, hesitation, on
               <p><strong>₹{product.price.toLocaleString("en-IN")}</strong> · {SPECS[product.id]}</p>
             </div>
             {close}
-            <button type="button" className={`${main} flex-1`} disabled={(shop.cart[product.id] ?? 0) >= product.stock}
-              onClick={() => {
-                shop.setQuantity(product.id, (shop.cart[product.id] ?? 0) + 1);
-                onAdded();
-                setPrompt(null);
-                log({ trigger: "Used the quick summary", change: `Added ${product.name} to the cart` });
-              }}>{product.stock === 0 ? t.outOfStock : t.addToCart}</button>
+            {guide(product, `${main} flex-1`)}
             <button type="button" className={other} onClick={() => { onView(product.id); setPrompt(null); }}>{t.viewDetails}</button>
+          </section>
+        )}
+        {text.percent > 100 && (
+          <section role="status" className="pointer-events-auto flex items-center gap-2 self-end rounded-full border bg-white py-1 pl-3 pr-1 text-sm shadow-lg">
+            <p>{t.textBigger} · {text.percent}%</p>
+            <button type="button" className={`${other} rounded-full`} onClick={text.undo}>↩︎ {t.undoAction}</button>
           </section>
         )}
         {comfort.on && (

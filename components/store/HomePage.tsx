@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { PortalContext } from "@/components/portal/context";
 import { CATALOG, type Category, type Product } from "@/lib/demo/catalog";
+import { GuideLink } from "./GuideLink";
 import { PAGE_TEXT, type PageText } from "./text";
 import type { Shop } from "./useShop";
 
@@ -44,6 +45,7 @@ function Rail({ title, items, dark, ctx, onOpen, onAdd }: {
               <span className="mt-1 block truncate text-sm">{p.name}</span>
               <span className="block font-bold">₹{p.price.toLocaleString("en-IN")}</span>
             </button>
+            <GuideLink locale={ctx.preferences.locale} product={p} onOpen={ctx.onGuide} />
             {ctx.surface.quickActions.length > 0 && p.stock > 0 && (
               <button type="button" data-part="quick-add" aria-label={`${t.addToCart}: ${p.name}`} data-tip="Add to cart"
                 className={`mt-1 w-full text-sm ${ctx.control}`} onClick={() => onAdd(p.id)}>

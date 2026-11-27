@@ -11,6 +11,7 @@ import { parseHesitation, type Hesitation } from "./hesitation";
 import { parseLanguage } from "./language";
 import { encodeMemory, parseMemory } from "./memory";
 import { parseCity } from "./quick";
+import { parseStep } from "./textSize";
 
 export type Totals = Record<(typeof COUNTED)[number], number>;
 export interface CloudState {
@@ -25,6 +26,7 @@ export interface CloudState {
   city: number | null; // chosen delivery city, an index into LOCATIONS
   hesitation: Hesitation; // answers to the Yes/No questions and what they changed
   behaviour: Behaviour; // muscle memory, reading counts and the pinned article
+  textStep: number; // index into the text sizes; 0 is normal
 }
 export interface CloudRecord { id: string; updatedAt: string; state: CloudState }
 
@@ -68,6 +70,7 @@ export function parseState(v: unknown): CloudState | null {
     city: parseCity(s.city),
     hesitation: parseHesitation(s.hesitation),
     behaviour: parseBehaviour(s.behaviour),
+    textStep: parseStep(s.textStep),
   };
 }
 

@@ -47,6 +47,8 @@ const en = {
   articles: "Articles", hintArticles: "Tip: tap an article to read it.", allArticles: "All articles", minRead: "min read",
   simpler: "Simpler explanation", summaryLabel: "Summary", exampleLabel: "Example",
   currentlyReading: "Currently Reading", continueReading: "Continue reading", unpin: "Unpin",
+  readGuide: "Read {x} Guide", browseGuides: "Browse all guides", textBigger: "Text made bigger",
+  topicSmartwatch: "Smartwatch", topicHeadphone: "Headphone", topicSmartphone: "Smartphone", topicGadget: "Home Gadget",
 };
 export type PageText = typeof en;
 
@@ -93,6 +95,8 @@ const kn: PageText = {
   articles: "ಲೇಖನಗಳು", hintArticles: "ಸುಳಿವು: ಓದಲು ಲೇಖನವನ್ನು ಒತ್ತಿ.", allArticles: "ಎಲ್ಲಾ ಲೇಖನಗಳು", minRead: "ನಿಮಿಷದ ಓದು",
   simpler: "ಸರಳ ವಿವರಣೆ", summaryLabel: "ಸಾರಾಂಶ", exampleLabel: "ಉದಾಹರಣೆ",
   currentlyReading: "ಈಗ ಓದುತ್ತಿರುವುದು", continueReading: "ಓದು ಮುಂದುವರಿಸಿ", unpin: "ಪಿನ್ ತೆಗೆಯಿರಿ",
+  readGuide: "{x} ಮಾರ್ಗದರ್ಶಿ ಓದಿ", browseGuides: "ಎಲ್ಲಾ ಮಾರ್ಗದರ್ಶಿಗಳನ್ನು ನೋಡಿ", textBigger: "ಅಕ್ಷರ ದೊಡ್ಡದು ಮಾಡಲಾಗಿದೆ",
+  topicSmartwatch: "ಸ್ಮಾರ್ಟ್‌ವಾಚ್", topicHeadphone: "ಹೆಡ್‌ಫೋನ್", topicSmartphone: "ಸ್ಮಾರ್ಟ್‌ಫೋನ್", topicGadget: "ಗೃಹ ಉಪಕರಣ",
 };
 
 export const PAGE_TEXT: Record<Locale, PageText> = { en, kn };
