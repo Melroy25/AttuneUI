@@ -12,7 +12,7 @@ import { useDemo } from "./useDemo";
 import { useLiveReport } from "./useLiveReport";
 
 export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; renderedAt: string; user: string | null }) {
-  const d = useDemo(serverUi);
+  const d = useDemo(serverUi, user);
   const [hud, setHud] = useState(false);
   const [page, setPage] = useState<Page>("home");
   const shop = useShop();
@@ -39,9 +39,9 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   return (
     <main className={`store-page min-h-dvh p-2 sm:p-4 ${hud ? "hud-open" : ""}`}>
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
-        <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={d.task}
+        <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
-          store={{ actions, page, onPage: setPage, shop, user }} />
+          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal }} />
       </div>
       <p className="mx-auto mt-4 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.

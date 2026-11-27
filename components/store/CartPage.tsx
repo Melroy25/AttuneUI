@@ -40,7 +40,7 @@ export function CartPage({ ctx, shop, onView }: { ctx: PortalContext; shop: Shop
           <span>{t.total}</span><span>₹{total.toLocaleString("en-IN")}</span>
         </p>
         <button type="button" data-part="primary" className={`w-full px-3 ${ctx.control}`}
-          onClick={() => { shop.placeOrder(); onView("order-placed"); }}>
+          onClick={() => { shop.placeOrder(); onView("order-placed"); ctx.onGoal?.(); }}>
           {t.placeOrder}
         </button>
       </section>

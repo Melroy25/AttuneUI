@@ -2,7 +2,7 @@
 import {
   decide, decidePlacebo, update, type Decision, type Models, type Probs,
 } from "../attune-ui/bandit/policy";
-import { blockReward, type TaskOutcome } from "../attune-ui/bandit/reward";
+import { TASK_CAP_MS, blockReward, type TaskOutcome } from "../attune-ui/bandit/reward";
 import { buildContext, modalityOf } from "../attune-ui/telemetry/context";
 import { frictionCount, summarizeFriction } from "../attune-ui/telemetry/friction";
 import type { ArmId, FrictionSummary, InteractionEvent, Modality, PointerKind } from "../attune-ui/types";
@@ -42,10 +42,38 @@ export const newSession = (rendered: ArmId = "baseline"): DemoSession => ({
   mode: null, friction: null, preview: false, overrides: { undo: 0, pin: 0 }, blocks: 0, liveUpdates: 0, simulatedUpdates: 0, decisionMs: [], log: [],
 });
 
+export type Outcome = Omit<TaskOutcome, "friction">;
+
+/** The store sets no tasks: a finished action (open, add, order, return, message) counts as one. */
+export const GOALS_PER_LESSON = 3;
+export const goalOutcome = (sinceMs: number): Outcome =>
+  ({ success: true, timeMs: Math.min(Math.max(sinceMs, 1), TASK_CAP_MS) });
+// Struggling without finishing anything is the one way to fail.
+const GAVE_UP: Outcome = { success: false, timeMs: TASK_CAP_MS };
+
+/** One update for the layout on screen. The decision is then spent, so it teaches only once. */
+export function learn(
+  session: DemoSession, friction: FrictionSummary, outcomes: Outcome[], prior: Models,
+): DemoSession {
+  if (!session.active || outcomes.length === 0) return session;
+  // Friction is spread over the attempts; reward averages them.
+  const each = frictionCount(friction) / outcomes.length;
+  const reward = blockReward(outcomes.map((o) => ({ ...o, friction: each })), session.rendered !== "baseline");
+  const { context, modality } = session.active;
+  const models = session.models ?? prior;
+  return {
+    ...session,
+    models: { ...models, [modality]: update(models[modality], session.rendered, context, reward) },
+    active: null,
+    liveUpdates: session.liveUpdates + 1,
+    log: [`Learned: ${session.rendered} scored ${reward.toFixed(2)} (${modality} model)`, ...session.log].slice(0, 20),
+  };
+}
+
 export interface BlockInput {
   mode: DemoMode;
   events: InteractionEvent[];
-  outcomes: Omit<TaskOutcome, "friction">[];
+  outcomes: Outcome[]; // actions finished since the last decision
   pointer: PointerKind;
   viewportWidth: number;
   seed: number;
@@ -62,22 +90,9 @@ const addFriction = (a: FrictionSummary, b: FrictionSummary): FrictionSummary =>
 export function finishBlock(session: DemoSession, input: BlockInput): DemoSession {
   const modality = modalityOf(input.pointer);
   const friction = summarizeFriction(input.events, modality);
-  const log: string[] = [];
-  let models = session.models ?? input.prior.models;
-  let liveUpdates = session.liveUpdates;
-
-  if (session.active && input.outcomes.length > 0) {
-    // Friction is spread over the attempted tasks; reward averages them.
-    const each = frictionCount(friction) / input.outcomes.length;
-    const reward = blockReward(
-      input.outcomes.map((o) => ({ ...o, friction: each })),
-      session.rendered !== "baseline",
-    );
-    const m = session.active.modality;
-    models = { ...models, [m]: update(models[m], session.rendered, session.active.context, reward) };
-    liveUpdates++;
-    log.push(`Learned: ${session.rendered} scored ${reward.toFixed(2)} (${m} model)`);
-  }
+  const judged = input.outcomes.length > 0 ? input.outcomes : frictionCount(friction) > 0 ? [GAVE_UP] : [];
+  const learned = learn(session, friction, judged, input.prior.models);
+  const models = learned.models ?? input.prior.models;
 
   const context = buildContext({
     friction, viewportWidth: input.viewportWidth, priorSessions: session.blocks,
@@ -92,13 +107,12 @@ export function finishBlock(session: DemoSession, input: BlockInput): DemoSessio
   const wanted = decision?.action ?? "baseline";
   const rendered = session.pinned ? session.rendered : wanted;
   const seen = `rage ${friction.rage}, dead ${friction.dead}, miss ${friction.miss}, dwell ${friction.dwell}`;
-  log.push(
+  const line =
     !decision ? `Static mode: layout unchanged (${seen})`
     : session.pinned ? `Pinned: wanted ${wanted}, kept ${rendered} (${seen})`
-    : `${seen} -> ${wanted} (p = ${decision.propensity.toFixed(2)}, ${input.mode})`,
-  );
+    : `${seen} -> ${wanted} (p = ${decision.propensity.toFixed(2)}, ${input.mode})`;
   return {
-    ...session,
+    ...learned,
     models,
     rendered,
     previous: rendered === session.rendered ? session.previous : session.rendered,
@@ -110,9 +124,8 @@ export function finishBlock(session: DemoSession, input: BlockInput): DemoSessio
     totals: addFriction(session.totals, friction),
     history: [...session.history, { block: session.blocks + 1, arm: rendered }].slice(-HISTORY),
     blocks: session.blocks + 1,
-    liveUpdates,
     decisionMs: decision ? [...session.decisionMs, elapsed].slice(-50) : session.decisionMs,
-    log: [...log.reverse(), ...session.log].slice(0, 20),
+    log: [line, ...learned.log].slice(0, 20),
   };
 }
 
@@ -122,6 +135,7 @@ export function undo(session: DemoSession): DemoSession {
     ...session,
     rendered: session.previous,
     previous: null,
+    active: null,
     log: [`Undo: back to ${session.previous}`, ...session.log].slice(0, 20),
   };
 }

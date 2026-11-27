@@ -10,14 +10,14 @@
 - Fixed: /demo never detected long hovers (HUD refresh ended them).
 - Arrow cue (/demo only): 2 taps on a card body -> its arrow glows. Rule-based, changes mid-task
   (exception to invariant 5, requested by the user); card taps count as dead clicks.
-- Store look: own-brand marketplace layout (search, categories, banners, rails, demo cart).
-- Firebase only (Supabase removed): Auth (Google, username) and Firestore for study + live.
+- Own-brand marketplace look. Firebase only: Auth (Google, username), Firestore study + live.
   Live database connected 2026-11-27; study saving on it not yet tried.
-- Layouts change every store page; no "Adapted" banner (user's choice). 101/101 tests.
 - /admin is public by the owner's choice (names, masked emails, activity). /demo adapts
   by itself after 3 struggles (user chose this; /demo exception to invariants 5, 10).
 - /demo pages: Products, Returns, Reports, Help (fictional data, lib/demo/catalog.ts; new
   Kannada unreviewed). Guide and claim corrections: docs/SHOWCASE.md.
+- /demo learns again: a score after 3 finished actions (or a failure after struggle only),
+  saved per browser, cleared by Reset (exception to invariant 11 "in-memory"). 105/105 tests.
 
 ## Setup before phone test / pilot (user)
 1. Vercel and .env.local: FIREBASE_* values, EXPORT_TOKEN, STUDY_CODE, STUDY_PHASE (empty =
@@ -29,11 +29,11 @@
 
 ## Open findings
 - Not tested: real phone/touch, study writes to Firestore, freeze on human data, screen reader.
-- /demo hides its tasks, so it rarely learns; a manual trigger records a failed task.
+- /demo counts any finished action as success (even opening a product): a heuristic only.
 - SIMULATED prior rarely picks large targets, even after rage clicks (3-13%).
 - SIMULATED headroom small: oracle .785 vs static .755; learner +.01 to +.015 at 3000.
 - Calm blocks give spread arm probabilities (~.3). Decide v (0.25) before the freeze.
 - /demo learning uncapped; live and events APIs unlimited; Kannada unreviewed.
 
 ## Next
-- Phone test, pilot, freeze. Then replay slider, attribution ladder, falsification (Phase 4).
+- Phone test, pilot, freeze, then replay slider, attribution ladder, falsification (Phase 4).

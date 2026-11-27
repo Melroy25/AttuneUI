@@ -18,7 +18,8 @@ export function plainLog(line: string): string {
   const preview = /^Manual preview: (\w+)/.exec(line);
   if (preview) return `Previewed ${layout(preview[1])} by hand`;
   if (line.startsWith("Automatic adapting paused")) return "Auto-change turned off after Undo";
-  if (line.startsWith("Learned:")) return "Learned from the last result";
+  const learned = /^Learned: (\w+) scored ([\d.]+)/.exec(line);
+  if (learned) return `Learned: ${layout(learned[1])} scored ${Math.round(Number(learned[2]) * 100)} out of 100`;
   if (line.startsWith("Pinned:")) return "Layout locked: no change";
   if (line.startsWith("Static mode")) return "Static mode: no change";
   if (line.startsWith("SIMULATED")) return "Learned from simulated users";

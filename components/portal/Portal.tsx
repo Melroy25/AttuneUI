@@ -29,6 +29,7 @@ export interface StoreChrome {
   onPage: (page: Page) => void;
   shop: Shop;
   user: string | null;
+  onGoal: () => void;
 }
 
 export function Portal({ surface, preferences, task, onAction, onSignal, onView, store }: {
@@ -46,7 +47,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
   const [notice, setNotice] = useState("");
   const large = surface.targetSize === "large";
   const ctx: PortalContext = {
-    s: STRINGS[preferences.locale], surface, preferences, large, onSignal,
+    s: STRINGS[preferences.locale], surface, preferences, large, onSignal, onGoal: store?.onGoal,
     control: large ? "min-h-12 min-w-12 text-base" : "min-h-6",
   };
   const { s } = ctx;

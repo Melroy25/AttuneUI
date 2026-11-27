@@ -66,10 +66,12 @@ export function HomePage({ ctx, shop, onPage }: { ctx: PortalContext; shop: Shop
     return () => clearInterval(timer);
   }, []);
 
-  const open = (id: string) => { shop.setCategory(""); shop.setQuery(""); shop.setSelected(id); onPage("products"); };
+  const open = (id: string) => {
+    shop.setCategory(""); shop.setQuery(""); shop.setSelected(id); onPage("products"); ctx.onGoal?.();
+  };
   const browse = (category: Category) => { shop.setCategory(category); shop.setQuery(""); shop.setSelected(null); onPage("products"); };
   const deals = [...CATALOG].sort((a, b) => b.off - a.off);
-  const add = (id: string) => shop.setQuantity(id, (shop.cart[id] ?? 0) + 1);
+  const add = (id: string) => { shop.setQuantity(id, (shop.cart[id] ?? 0) + 1); ctx.onGoal?.(); };
   const extra = (
     <>
       <Rail title={t.topDeals} ctx={ctx} onOpen={open} onAdd={add} items={deals.slice(0, 10)} />

@@ -11,4 +11,6 @@ export interface PortalContext {
   control: string;
   /** Counts to add. longestReadMs is a maximum, not a sum. */
   onSignal: (delta: Partial<PreferenceSignals>) => void;
+  /** Store only: an action was finished (the demo model learns from these). */
+  onGoal?: () => void;
 }

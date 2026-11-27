@@ -20,6 +20,12 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
     shop.setSelected(id);
     setQuantity(1);
     onView(`product:${id}`);
+    ctx.onGoal?.();
+  };
+
+  const add = (id: string, n: number) => {
+    shop.setQuantity(id, (shop.cart[id] ?? 0) + n);
+    ctx.onGoal?.();
   };
 
   return (
@@ -44,7 +50,7 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
               {ctx.surface.quickActions.length > 0 && p.stock > 0 && (
                 <button type="button" data-part="quick-add" aria-label={`${t.addToCart}: ${p.name}`}
                   className={`flex-none px-3 text-xs ${ctx.control}`}
-                  onClick={() => shop.setQuantity(p.id, (shop.cart[p.id] ?? 0) + 1)}>
+                  onClick={() => add(p.id, 1)}>
                   {t.quickAdd}
                 </button>
               )}
@@ -73,7 +79,7 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
           <span className="block" data-attune-tap={`buy-${product.id}`}>
             <button type="button" data-part="primary" disabled={product.stock === 0 || inCart >= product.stock}
               className={`w-full px-3 disabled:pointer-events-none disabled:opacity-50 ${ctx.control}`}
-              onClick={() => shop.setQuantity(product.id, inCart + quantity)}>
+              onClick={() => add(product.id, quantity)}>
               {t.addToCart}
             </button>
           </span>

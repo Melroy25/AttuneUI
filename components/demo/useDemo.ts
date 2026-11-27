@@ -13,36 +13,39 @@ import { modalityOf } from "@/lib/attune-ui/telemetry/context";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import type { ArmId, InteractionEvent, Modality } from "@/lib/attune-ui/types";
 import { shouldAdapt } from "@/lib/demo/auto";
+import { encodeMemory, memoryKey, parseMemory } from "@/lib/demo/memory";
 import { simulatorPrior } from "@/lib/demo/prior";
-import { fastForward, finishBlock, newSession, previewSurface, togglePin, undo, type DemoMode } from "@/lib/demo/session";
+import {
+  GOALS_PER_LESSON, fastForward, finishBlock, goalOutcome, learn, newSession, previewSurface, togglePin, undo,
+  type DemoMode, type Outcome,
+} from "@/lib/demo/session";
 import { UI_COOKIE, encodeUi, type UiState } from "@/lib/demo/uiState";
-import { TASKS, isComplete, type PortalAction, type Variant } from "@/lib/study/tasks";
+import type { PortalAction } from "@/lib/study/tasks";
 
 const writeCookie = (value: string, maxAge: number) => {
   document.cookie = `${UI_COOKIE}=${value}; path=/; max-age=${maxAge}; samesite=lax`;
 };
 
-export function useDemo(serverUi: UiState) {
+export function useDemo(serverUi: UiState, user: string | null) {
   const router = useRouter();
   const [session, setSession] = useState(() => newSession(serverUi.arm));
   const [offlineUi, setOfflineUi] = useState<UiState | null>(null);
   const [mode, setMode] = useState<DemoMode>("attune");
   const [demoReading, setDemoReading] = useState(true);
   const [changes, setChanges] = useState<string[]>([]);
-  const [taskIndex, setTaskIndex] = useState(0);
   const [events, setEvents] = useState<InteractionEvent[]>([]);
   const [modality, setModality] = useState<Modality>("fine");
   const [portalKey, setPortalKey] = useState(0);
   const [priorPreferences, setPriorPreferences] = useState<Preferences | null>(null);
   const [auto, setAuto] = useState(true);
-  const [round, setRound] = useState(0); // picks the task set; automatic changes keep it
   const lastAuto = useRef(-Infinity);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const capture = useRef<Capture | null>(null);
   const signals = useRef<PreferenceSignals>({ ...EMPTY_SIGNALS });
-  const outcomes = useRef<{ success: boolean; timeMs: number }[]>([]);
-  const taskStart = useRef(0);
+  const goals = useRef<Outcome[]>([]);
+  const goalStart = useRef(0);
+  const store = memoryKey(user);
 
   // Built up front (and cached), or the first adaptation stalls while the prior is computed.
   useEffect(() => {
@@ -50,9 +53,27 @@ export function useDemo(serverUi: UiState) {
     return () => clearTimeout(timer);
   }, []);
 
+  // What was learned stays in this browser, one memory per account.
+  useEffect(() => {
+    try {
+      const memory = parseMemory(localStorage.getItem(store));
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- storage exists only after mount
+      if (memory) setSession((s) => ({ ...s, ...memory }));
+    } catch {
+      // storage blocked: this tab starts from the prior
+    }
+  }, [store]);
+  const { models, liveUpdates, simulatedUpdates } = session;
+  useEffect(() => {
+    if (!models || liveUpdates + simulatedUpdates === 0) return;
+    try {
+      localStorage.setItem(store, encodeMemory({ models, liveUpdates, simulatedUpdates }));
+    } catch {
+      // storage full or blocked: learning lasts as long as the tab
+    }
+  }, [store, models, liveUpdates, simulatedUpdates]);
+
   const ui = offlineUi ?? serverUi;
-  const variant: Variant = round % 2 === 0 ? "A" : "B";
-  const task = TASKS[variant][taskIndex] ?? null;
 
   /** HUD refresh. It must not drain: ending a hover each second would hide long hovers. */
   const refresh = useCallback(() => {
@@ -64,7 +85,7 @@ export function useDemo(serverUi: UiState) {
   useEffect(() => {
     if (!rootRef.current) return;
     capture.current = startCapture(rootRef.current);
-    taskStart.current = performance.now();
+    goalStart.current = performance.now();
     const timer = setInterval(refresh, 1000);
     return () => {
       clearInterval(timer);
@@ -81,11 +102,21 @@ export function useDemo(serverUi: UiState) {
     } else setOfflineUi(next);
   };
 
+  /** A finished action in the store. After a few, the layout on screen is scored; nothing moves. */
+  const onGoal = () => {
+    const now = performance.now();
+    goals.current.push(goalOutcome(now - goalStart.current));
+    goalStart.current = now;
+    if (goals.current.length < GOALS_PER_LESSON) return;
+    const done = goals.current;
+    goals.current = [];
+    // peek, not drain: these events are still the context of the next decision.
+    const friction = summarizeFriction(capture.current?.peek() ?? [], modalityOf(capture.current?.pointer() ?? "mouse"));
+    setSession((s) => learn(s, friction, done, simulatorPrior().models));
+  };
+
   const onAction = (action: PortalAction) => {
-    if (!task || !isComplete(task, action)) return;
-    outcomes.current.push({ success: true, timeMs: Math.max(performance.now() - taskStart.current, 1) });
-    taskStart.current = performance.now();
-    setTaskIndex((i) => i + 1);
+    if (action.type !== "filter") onGoal();
   };
 
   const onSignal = (delta: Partial<PreferenceSignals>) => {
@@ -101,16 +132,10 @@ export function useDemo(serverUi: UiState) {
   /** A decision from what was just sensed. Automatic ones keep the page, tasks and filters. */
   const adapt = (automatic: boolean) => {
     const blockEvents = capture.current?.drain() ?? [];
-    const attempted = [...outcomes.current];
-    // An unfinished task counts as failed only if the user actually did something on it.
-    const touched = blockEvents.some((e) => e.type === "down" && e.t >= taskStart.current);
-    if (task && touched && !automatic) {
-      attempted.push({ success: false, timeMs: Math.max(performance.now() - taskStart.current, 1) });
-    }
     const next = finishBlock(session, {
       mode,
       events: blockEvents,
-      outcomes: attempted,
+      outcomes: goals.current,
       pointer: capture.current?.pointer() ?? "mouse",
       viewportWidth: window.innerWidth,
       seed: 2026 + session.blocks,
@@ -131,21 +156,15 @@ export function useDemo(serverUi: UiState) {
 
   const clearBlock = () => {
     capture.current?.drain();
-    outcomes.current = [];
+    goals.current = [];
+    goalStart.current = performance.now();
     signals.current.longestReadMs = 0;
     setEvents([]);
   };
 
   const startBlock = () => {
     clearBlock();
-    setTaskIndex(0);
     setPortalKey((k) => k + 1); // fresh filters and selection for the next block
-    taskStart.current = performance.now();
-  };
-
-  const endBlock = () => {
-    adapt(false);
-    setRound((r) => r + 1);
   };
 
   // Runs on each one-second refresh of the sensed events.
@@ -202,14 +221,19 @@ export function useDemo(serverUi: UiState) {
 
   const reset = () => {
     writeCookie("", 0);
+    try {
+      localStorage.removeItem(store);
+    } catch {
+      // nothing was saved
+    }
     window.location.reload();
   };
 
   return {
     rootRef, session, ui, mode, setMode, demoReading, setDemoReading, changes, events, modality,
-    portalKey, task, taskIndex, canUndo: session.previous !== null || priorPreferences !== null,
-    offline: offlineUi !== null, onAction, onSignal, onView: (v: string) => capture.current?.view(v),
-    endBlock, preview, undoLast, chooseLocale, reset, auto, setAuto,
+    portalKey, canUndo: session.previous !== null || priorPreferences !== null,
+    offline: offlineUi !== null, onAction, onGoal, onSignal, onView: (v: string) => capture.current?.view(v),
+    endBlock: () => adapt(false), preview, undoLast, chooseLocale, reset, auto, setAuto,
     togglePin: () => setSession(togglePin),
     forward: (n: number) => setSession((s) => fastForward(s, n, simulatorPrior().models)),
   };

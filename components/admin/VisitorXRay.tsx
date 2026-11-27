@@ -13,7 +13,7 @@ export function VisitorXRay({ u }: { u: UserView }) {
   return (
     <div className="grid min-w-0 gap-3 md:grid-cols-2">
       <div className="min-w-0 md:col-span-2">
-        <Box title={u.name} info="Who this is and what they are doing. Visits counts browser tabs in the last 24 hours.">
+        <Box title={u.name} info="Who this is and what they are doing. Visits counts browser tabs in the last 24 hours. Learned counts how often their browser scored a layout from real use.">
           <div className="flex flex-wrap gap-1.5">
             <span className={chip}>{u.online ? "● Online" : "○ Away"}</span>
             {s.email && <span className={chip}>{s.email}</span>}
@@ -21,6 +21,7 @@ export function VisitorXRay({ u }: { u: UserView }) {
             <span className={chip}>{s.viewportWidth < 768 ? "Phone" : "Computer"} · {s.viewportWidth}px</span>
             <span className={chip}>Changes: {u.adaptations}</span>
             <span className={chip}>Visits: {u.sessions}</span>
+            <span className={chip}>Learned: {s.learned ?? 0}</span>
           </div>
         </Box>
       </div>

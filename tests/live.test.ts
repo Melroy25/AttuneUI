@@ -16,7 +16,7 @@ const env = {
 const calm = { rage: 0, dead: 0, miss: 0, dwell: 0, thrash: 0, backtrack: 0, tortuosity: 1 };
 const snapshot: LiveSnapshot = {
   id: "affe31bc-a81f-4885-a880-1eb1ae9676d0", user: null, email: null, emailHash: null, totals: calm, history: [],
-  page: "orders", arm: "baseline", mode: "attune", block: 1, auto: true, pinned: false, locale: "en",
+  page: "orders", arm: "baseline", mode: "attune", block: 1, learned: 2, auto: true, pinned: false, locale: "en",
   viewportWidth: 375, modality: "coarse", friction: calm, context: [1, 1, 0, 0, 0, 0, 0], decision: null,
   why: ["x"], changes: [], log: [],
 };
@@ -37,6 +37,7 @@ describe("automatic adapting", () => {
 describe("live snapshot", () => {
   it("keeps known fields only and rejects bad shapes", () => {
     expect(parseSnapshot({ ...snapshot, typed: "secret", email: "x@y.z" })).toEqual(snapshot);
+    expect(parseSnapshot({ ...snapshot, learned: "9" })!.learned).toBe(0); // older or hostile client
     for (const bad of [
       null, { ...snapshot, id: "x" }, { ...snapshot, arm: "<b>" }, { ...snapshot, context: [1] },
       { ...snapshot, why: ["a".repeat(301)] }, { ...snapshot, friction: { rage: 1 } },
@@ -154,6 +155,7 @@ describe("plain admin wording", () => {
       .toBe("Switched to Simplified filters (23% chance)");
     expect(plainLog("Undo: back to baseline")).toBe("Undone: back to Static layout");
     expect(plainLog("Preference rule: 7 s on a text block -> larger text")).toBe("Preference: 7 s on a text block → larger text");
+    expect(plainLog("Learned: shortcut scored 0.82 (coarse model)")).toBe("Learned: Quick actions scored 82 out of 100");
     expect(plainLog("something new")).toBe("something new");
   });
 });

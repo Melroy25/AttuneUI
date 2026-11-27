@@ -18,6 +18,7 @@ export function ReturnsPage({ ctx, onView }: { ctx: PortalContext; onView: (view
       return next;
     });
     onView(`return:${id}`);
+    if (verdict) ctx.onGoal?.();
   };
   const small = `border px-2 text-xs ${ctx.control}`;
 

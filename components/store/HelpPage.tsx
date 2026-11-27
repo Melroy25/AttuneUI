@@ -29,7 +29,7 @@ export function HelpPage({ ctx }: { ctx: PortalContext }) {
       <form data-part="detail" className="space-y-2 p-3 text-sm"
         onSubmit={(e) => {
           e.preventDefault();
-          if (message.trim()) { setSent(true); setMessage(""); }
+          if (message.trim()) { setSent(true); setMessage(""); ctx.onGoal?.(); }
         }}>
         <h2 className="font-bold">{t.contactTitle}</h2>
         <label className="block">

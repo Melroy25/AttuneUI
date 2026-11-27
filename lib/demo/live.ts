@@ -18,6 +18,8 @@ export interface LiveSnapshot {
   arm: ArmId;
   mode: string;
   block: number;
+  /** Times the model on this visitor's browser has learned from real use. */
+  learned: number;
   auto: boolean;
   pinned: boolean;
   locale: string;
@@ -69,7 +71,7 @@ export function parseSnapshot(v: unknown): LiveSnapshot | null {
     !lines(v.why, 6) || !lines(v.changes, 12) || !lines(v.log, 8)
   ) return null;
   return {
-    id: v.id, user: null, email: null, emailHash: null, page: v.page, arm: arm(v.arm)!, mode: v.mode, block: v.block, auto: v.auto, pinned: v.pinned,
+    id: v.id, user: null, email: null, emailHash: null, page: v.page, arm: arm(v.arm)!, mode: v.mode, block: v.block, learned: num(v.learned) ? v.learned : 0, auto: v.auto, pinned: v.pinned,
     locale: v.locale, viewportWidth: v.viewportWidth, modality: v.modality,
     friction: friction(f), totals: friction(totals),
     history: history.map((h) => ({ block: h.block as number, arm: h.arm as ArmId })),
