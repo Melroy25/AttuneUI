@@ -59,7 +59,7 @@ exactly what was sensed (a resting mouse counts as hesitation). Read "Why this l
 | 9 | HUD -> Static or Random placebo | Trigger | The two comparison policies |
 | 10 | HUD -> +50 users | | Learning from SIMULATED users |
 
-All three tickets done -> "Next batch" does the same as Trigger Adaptation.
+The store shows no task list. Trigger Adaptation (in the X-Ray HUD) or the automatic rule adapts it.
 Phone layout: Chrome DevTools (F12) -> device toolbar -> 375 px.
 
 ## More pages to test (demo only)
