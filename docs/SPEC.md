@@ -97,7 +97,7 @@ needed from the pilot on). Latency shown is measured on the device. Changed elem
 listed and outlined after each boundary. The policy may keep the static layout; never rig it.
 
 ## 9. Data
-Supabase tables participants and events via plain fetch from API routes (service key
+Firestore collections participants and events via plain fetch from API routes (service account
 server-side, input validated and size-limited). localStorage queue + retry + JSON export.
 No shared weights stored. No pre-seeded fake human data.
 
@@ -123,7 +123,7 @@ us; arms exclusive; one session; hackathon-attendee sample.
 
 ## 12. Roadmap (4 x 5 h)
 P1 engine+tests (h0-3). P2a portal+surfaces+empty deploy (h3-5). P2b capture, study,
-Supabase, export (h5-8); pilot h8-9; freeze h10. P3 stats, OPE, replay, Python, /eval, HUD
+database, export (h5-8); pilot h8-9; freeze h10. P3 stats, OPE, replay, Python, /eval, HUD
 (h10-15, humans collecting). P4 ladder, falsification, stress, overview (h15-17.5; close
 study h17). P5 analysis, README, demo rehearsal, backup video (h17.5-20).
 Cut order if late: replay slider, insights, third stress test, JSON viewer.

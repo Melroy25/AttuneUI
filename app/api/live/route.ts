@@ -1,11 +1,10 @@
 import { MAX_SNAPSHOT_BYTES, parseSnapshot } from "@/lib/demo/live";
-import { ADMIN_COOKIE, cookieValue, validToken } from "@/lib/server/admin";
-import { fail, readJson } from "@/lib/server/http";
+import { database } from "@/lib/server/db";
+import { cookieValue, fail, readJson } from "@/lib/server/http";
 import { listLive, saveLive } from "@/lib/server/live";
-import { supabaseRest } from "@/lib/server/supabase";
 import { USER_COOKIE, loginRequired, userFromToken } from "@/lib/server/users";
 
-/** Posted by signed-in /demo users; validated and size-limited. The name comes from the cookie. */
+/** Posted by signed-in store users; validated and size-limited. Identity comes from the cookie. */
 export async function POST(request: Request) {
   const user = userFromToken(cookieValue(request.headers.get("cookie"), USER_COOKIE));
   if (loginRequired() && !user) return fail(401, "sign in first");
@@ -13,11 +12,22 @@ export async function POST(request: Request) {
   if (read instanceof Response) return read;
   const snapshot = parseSnapshot(read.body);
   if (!snapshot) return fail(400, "invalid request");
-  return Response.json({ storage: await saveLive(supabaseRest(), { ...snapshot, user }) });
+  try {
+    const known = { user: user?.name ?? null, email: user?.email ?? null, emailHash: user?.emailHash ?? null };
+    return Response.json({ storage: await saveLive(database(), { ...snapshot, ...known }) });
+  } catch (error) {
+    console.error("live:", error);
+    return fail(502, "storage unavailable");
+  }
 }
 
-/** Read by the signed-in admin only. */
+/** The admin page has no sign-in (the owner's choice), so this is public. */
 export async function GET(request: Request) {
-  if (!validToken(cookieValue(request.headers.get("cookie"), ADMIN_COOKIE))) return fail(401, "unauthorised");
-  return Response.json(await listLive(supabaseRest()), { headers: { "Cache-Control": "no-store" } });
+  const since = new URL(request.url).searchParams.get("since") ?? undefined;
+  try {
+    return Response.json(await listLive(database(), since?.slice(0, 30)), { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    console.error("live:", error);
+    return fail(502, "storage unavailable: check the Firestore database and FIREBASE_SERVICE_ACCOUNT");
+  }
 }

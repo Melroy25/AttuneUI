@@ -9,6 +9,9 @@ export interface LiveSnapshot {
   id: string;
   /** Set by the server from the sign-in cookie; whatever the browser sends is ignored. */
   user: string | null;
+  /** Masked address and a hash of the full one (Google sign-in only), both set by the server. */
+  email: string | null;
+  emailHash: string | null;
   totals: FrictionSummary;
   history: { block: number; arm: ArmId }[];
   page: string;
@@ -66,7 +69,7 @@ export function parseSnapshot(v: unknown): LiveSnapshot | null {
     !lines(v.why, 6) || !lines(v.changes, 12) || !lines(v.log, 8)
   ) return null;
   return {
-    id: v.id, user: null, page: v.page, arm: arm(v.arm)!, mode: v.mode, block: v.block, auto: v.auto, pinned: v.pinned,
+    id: v.id, user: null, email: null, emailHash: null, page: v.page, arm: arm(v.arm)!, mode: v.mode, block: v.block, auto: v.auto, pinned: v.pinned,
     locale: v.locale, viewportWidth: v.viewportWidth, modality: v.modality,
     friction: friction(f), totals: friction(totals),
     history: history.map((h) => ({ block: h.block as number, arm: h.arm as ArmId })),

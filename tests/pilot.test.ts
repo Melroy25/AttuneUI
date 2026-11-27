@@ -139,7 +139,7 @@ describe("study code and phase gate", () => {
   });
 
   it("checks the code, requires one in production, and checks the phase", async () => {
-    vi.stubEnv("SUPABASE_URL", "");
+    vi.stubEnv("FIREBASE_SERVICE_ACCOUNT", "");
     vi.stubEnv("STUDY_PHASE", "pilot");
     vi.stubEnv("STUDY_CODE", "veroxa");
     expect(await send({})).toBe(403);

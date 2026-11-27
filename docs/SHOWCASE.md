@@ -1,27 +1,33 @@
 # Showcase guide: try it yourself
 
-## Store users and the admin (live)
+## Links
 
 | Who | Address |
 |---|---|
-| Shopper (phone or laptop) | https://attune-ui-smoky.vercel.app/demo |
-| Admin | https://attune-ui-smoky.vercel.app/admin |
+| Home (two buttons) | https://attune-ui-smoky.vercel.app |
+| User (phone or laptop) | https://attune-ui-smoky.vercel.app/demo |
+| Admin (no sign-in, public) | https://attune-ui-smoky.vercel.app/admin |
 
-**One-time database step:** run all of `supabase/schema.sql` in Supabase's SQL editor (tables
-`demo_users` and `live_sessions`). Without it, creating a store account fails.
+## One-time Firebase database setup
 
-1. Store: "New here? Create an account" with a made-up name (3-20 letters, numbers, _) and a
-   password used nowhere else. Each person needs their own account. On one computer use a private
-   window for the second user.
-2. Admin: sign in. **All users** = totals, where users struggle, layouts shown and chosen, a table
-   and recent activity. **One user** = that user's totals, layout history and live X-Ray.
-3. In the store, click two or three status labels on Orders, a couple of seconds apart. After 3
-   struggles the store adapts by itself (at most every 8 s). The admin follows about 1-2 s behind.
+1. Firebase console -> Build -> Firestore Database -> Create database -> **production mode**
+   (the default rules block all browsers; only the server writes).
+2. Project settings -> Service accounts -> **Generate new private key** (a .json file; secret).
+3. In the project folder, with the downloaded file's path:
+   `Get-Content -Raw "$HOME\Downloads\<file>.json" | vercel env add FIREBASE_SERVICE_ACCOUNT production`
+4. Redeploy. Never commit or share the key file.
+
+## Using it
+
+1. User: sign in once with Google or a username and password (stays signed in 30 days).
+2. Admin: **All users** = totals, struggles, layouts, a table and recent activity.
+   **Find a user** = search by username or full email, then totals, history and live X-Ray.
+3. In the store, Orders -> click two or three status labels, a couple of seconds apart. After 3
+   struggles the store adapts by itself (at most every 8 s). The admin follows a few seconds behind.
 4. The sampled layout may be the one already shown. Undo pauses automatic adapting.
 
-Totals add up a user's browser tabs from the last 24 hours; reloading a tab starts that tab's
-counts again. Locally, put `ADMIN_USER` and `ADMIN_PASSWORD` in `.env.local` (without them the
-store has no sign-in). Anyone can create a store account and there is no rate limit.
+The free Firebase plan limits daily reads and writes, so close admin tabs after a demo. Anyone with
+the link can open the admin and create accounts.
 
 ## Start the app
 
@@ -33,13 +39,13 @@ npm run build
 npm start
 ```
 
-Open http://localhost:3000. There are **no accounts or logins**.
+Open http://localhost:3000. 
 
 | Page | Who it is for | Needs |
 |---|---|---|
 | `/demo` | Live show-and-tell | Nothing |
 | `/study?code=<STUDY_CODE>` | A real participant | `STUDY_CODE` in `.env.local` (without one, `npm start` runs the study offline) |
-| `/eval` | Judge dashboard | Nothing for the sample; `EXPORT_TOKEN` and Supabase for live data |
+| `/eval` | Judge dashboard | Nothing for the sample; `EXPORT_TOKEN` and the Firebase database for live data |
 
 **Be a new user.** Demo: gear (top right) -> Reset Session. Study: open a new private window.
 A second run in the same browser is flagged `repeat_device` and left out of the analysis.
@@ -99,7 +105,7 @@ A pilot or confirmatory run of your own would pollute the real data.
    (chosen layout, probabilities, context) and Block 2 with the change.
 
 Your arm is random: A keeps the static layout, B is the placebo, C is AttuneUI.
-With Supabase configured you can instead paste `EXPORT_TOKEN` -> Fetch Live Data. Without it the
+With the database configured you can instead paste `EXPORT_TOKEN` -> Fetch Live Data. Without it the
 study runs offline; the download still works and the run is flagged `offline`.
 
 ## Judge dashboard in 30 seconds
@@ -121,5 +127,5 @@ and run it: it reproduces the numbers.
 | LLMs take 3-6 s; zero broken UI or lag | We measured no LLM. Say: only validated configs from a fixed catalogue, no generated HTML (A2UI-inspired, not compliant) |
 | 3-arm test with causal estimators and p-values | Built and verified on simulated data. **No human results yet** |
 
-Not yet tested: a real phone, a real Supabase round trip, the Vercel deployment.
+Not yet tested: a real phone, a real Firestore round trip, the Vercel deployment.
 Kannada text needs a native-speaker check.

@@ -1,50 +1,48 @@
 import { assign, type Assignment, type StudyArm, type VariantOrder } from "../study/assignment";
 import type { Registration } from "../study/validate";
-import { rows, type Rest } from "./supabase";
+import type { Db, Doc } from "./db";
 
 export type Registered = Assignment & { offline: boolean; phase: string };
-interface Row { arm: StudyArm; variant_order: VariantOrder; offline: boolean; phase: string }
 
-/** The route has checked r.phase against the server's phase. Idempotent per participant id. The unique (phase, pointer, seq) index settles races. */
-export async function register(rest: Rest, r: Registration): Promise<Registered> {
+const MAX_SLOTS = 2000; // per phase and pointer type; the study targets tens of people
+
+const stored = (d: Doc): Registered => ({
+  arm: d.arm as StudyArm, order: d.variant_order as VariantOrder, offline: d.offline as boolean, phase: d.phase as string,
+});
+
+/**
+ * The route has checked r.phase against the server's phase. Idempotent per participant id.
+ * A slot document is created together with the participant, so two people cannot take one slot.
+ */
+export async function register(db: Db, r: Registration, now = new Date()): Promise<Registered> {
   for (let attempt = 0; attempt < 10; attempt++) {
-    const [existing] = await rows<Row>(
-      rest, `participants?id=eq.${r.id}&select=arm,variant_order,offline,phase`,
-    );
+    const existing = await db.get("participants", r.id);
     if (existing) {
-      if (!r.offline || existing.offline) {
-        return { arm: existing.arm, order: existing.variant_order, offline: existing.offline, phase: existing.phase };
-      }
+      if (!r.offline || existing.offline) return stored(existing);
       // The server assigned a slot but the reply was lost: record what the person actually saw.
-      const patched = await rest(`participants?id=eq.${r.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ arm: r.offline.arm, variant_order: r.offline.order, offline: true }),
-      });
-      if (!patched.ok) throw new Error(`database update failed (${patched.status})`);
-      return { ...r.offline, offline: true, phase: existing.phase };
+      const seen = { ...existing, arm: r.offline.arm, variant_order: r.offline.order, offline: true };
+      await db.set("participants", r.id, seen);
+      return stored(seen);
     }
 
+    const stratum = `${r.phase}_${r.pointer}`;
     let seq: number | null = null;
     let assignment = r.offline;
     if (!assignment) {
-      const [last] = await rows<{ seq: number }>(
-        rest,
-        `participants?phase=eq.${r.phase}&pointer=eq.${r.pointer}&seq=not.is.null&select=seq&order=seq.desc&limit=1`,
-      );
-      seq = last ? last.seq + 1 : 0;
+      const taken = await db.where("slots", "stratum", "==", stratum, MAX_SLOTS);
+      seq = taken.reduce((next, s) => Math.max(next, (s.data.seq as number) + 1), 0);
       assignment = assign(r.phase, r.pointer, seq);
     }
-    const inserted = await rest("participants", {
-      method: "POST",
-      headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({
-        id: r.id, phase: r.phase, pointer: r.pointer, viewport_width: r.viewportWidth,
-        arm: assignment.arm, variant_order: assignment.order, seq,
-        offline: r.offline !== null, repeat_device: r.repeatDevice,
-      }),
-    });
-    if (inserted.ok) return { ...assignment, offline: r.offline !== null, phase: r.phase };
-    if (inserted.status !== 409) throw new Error(`database insert failed (${inserted.status})`);
+    const participant: Doc = {
+      id: r.id, phase: r.phase, pointer: r.pointer, viewport_width: r.viewportWidth,
+      arm: assignment.arm, variant_order: assignment.order, seq,
+      offline: r.offline !== null, repeat_device: r.repeatDevice, created_at: now.toISOString(),
+    };
+    const created = await db.create([
+      { collection: "participants", id: r.id, data: participant },
+      ...(seq === null ? [] : [{ collection: "slots", id: `${stratum}_${seq}`, data: { stratum, seq } }]),
+    ]);
+    if (created) return stored(participant);
   }
   throw new Error("assignment contention");
 }

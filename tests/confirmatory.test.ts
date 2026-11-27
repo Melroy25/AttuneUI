@@ -57,7 +57,7 @@ describe("frozen policy loading", () => {
     vi.spyOn(process, "cwd").mockReturnValue(dir);
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.stubEnv("STUDY_PHASE", "confirmatory");
-    vi.stubEnv("SUPABASE_URL", "");
+    vi.stubEnv("FIREBASE_SERVICE_ACCOUNT", "");
     vi.stubEnv("STUDY_CODE", "");
 
     expect(loadFrozenPolicy().error).toMatch(/does not exist.*policy:freeze/);

@@ -1,19 +1,23 @@
+import { generateKeyPairSync } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DELETE, POST as login } from "../app/api/admin/route";
 import { GET, POST } from "../app/api/live/route";
-import { POST as signIn } from "../app/api/user/route";
-import { groupUsers, summariseAll } from "../lib/demo/aggregate";
-import { userFromToken, userToken } from "../lib/server/users";
+import { DELETE as signOut, POST as signIn } from "../app/api/user/route";
+import { findUsers, groupUsers, summariseAll } from "../lib/demo/aggregate";
 import { shouldAdapt } from "../lib/demo/auto";
 import { parseSnapshot, type LiveSnapshot } from "../lib/demo/live";
-import { checkLogin, issueToken, validToken } from "../lib/server/admin";
+import { firestore } from "../lib/server/db";
+import { canSignIn, loginRequired, storeUser, userFromToken, userToken } from "../lib/server/users";
 
-const env = { ADMIN_USER: "tester", ADMIN_PASSWORD: "test-only-password" };
+const env = {
+  FIREBASE_API_KEY: "k", FIREBASE_AUTH_DOMAIN: "d", FIREBASE_PROJECT_ID: "p", FIREBASE_APP_ID: "a",
+  SESSION_SECRET: "test-only-secret",
+};
 const calm = { rage: 0, dead: 0, miss: 0, dwell: 0, thrash: 0, backtrack: 0, tortuosity: 1 };
 const snapshot: LiveSnapshot = {
-  id: "affe31bc-a81f-4885-a880-1eb1ae9676d0", user: null, totals: calm, history: [], page: "orders", arm: "baseline", mode: "attune", block: 1,
-  auto: true, pinned: false, locale: "en", viewportWidth: 375, modality: "coarse", friction: calm,
-  context: [1, 1, 0, 0, 0, 0, 0], decision: null, why: ["x"], changes: [], log: [],
+  id: "affe31bc-a81f-4885-a880-1eb1ae9676d0", user: null, email: null, emailHash: null, totals: calm, history: [],
+  page: "orders", arm: "baseline", mode: "attune", block: 1, auto: true, pinned: false, locale: "en",
+  viewportWidth: 375, modality: "coarse", friction: calm, context: [1, 1, 0, 0, 0, 0, 0], decision: null,
+  why: ["x"], changes: [], log: [],
 };
 const request = (url: string, body?: unknown, cookie?: string) => new Request(`http://app.test${url}`, {
   method: body === undefined ? "GET" : "POST", body: body === undefined ? undefined : JSON.stringify(body),
@@ -31,7 +35,7 @@ describe("automatic adapting", () => {
 
 describe("live snapshot", () => {
   it("keeps known fields only and rejects bad shapes", () => {
-    expect(parseSnapshot({ ...snapshot, typed: "secret" })).toEqual(snapshot);
+    expect(parseSnapshot({ ...snapshot, typed: "secret", email: "x@y.z" })).toEqual(snapshot);
     for (const bad of [
       null, { ...snapshot, id: "x" }, { ...snapshot, arm: "<b>" }, { ...snapshot, context: [1] },
       { ...snapshot, why: ["a".repeat(301)] }, { ...snapshot, friction: { rage: 1 } },
@@ -40,71 +44,105 @@ describe("live snapshot", () => {
   });
 });
 
-describe("per-user and global views", () => {
-  const row = (user: string, id: string, at: string, dead: number) => ({
-    updatedAt: at,
-    snapshot: { ...snapshot, id, user, friction: { ...calm, dead }, history: [{ block: 1, arm: "shortcut" as const }] },
+describe("store sign-in", () => {
+  beforeEach(() => {
+    for (const [k, v] of Object.entries(env)) vi.stubEnv(k, v);
+    vi.stubEnv("FIREBASE_SERVICE_ACCOUNT", "");
+  });
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+
+  it("never exposes a full email address", () => {
+    const google = storeUser({ uid: "AbC123xyz", email: "Asha.Rao@gmail.com", name: "Asha Rao" });
+    expect(google).toMatchObject({ name: "asha_abc1", email: "a***@gmail.com" });
+    expect(google.emailHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(JSON.stringify(google)).not.toContain("asha.rao");
+    expect(storeUser({ uid: "u", email: "ravi_1@users.example.com", name: "" }))
+      .toEqual({ name: "ravi_1", email: null, emailHash: null });
   });
 
+  it("issues a cookie only for a token Firebase accepts, and takes identity from it", async () => {
+    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) =>
+      JSON.parse(init.body as string).idToken === "good-token-0123456789"
+        ? Response.json({ users: [{ localId: "u1", email: "ravi@users.example.com" }] })
+        : new Response("{}", { status: 400 }));
+    expect((await signIn(request("/api/user", { idToken: "forged-token-0123456789" }))).status).toBe(401);
+    expect((await signIn(request("/api/user", {}))).status).toBe(400);
+    const ok = await signIn(request("/api/user", { idToken: "good-token-0123456789" }));
+    const cookie = ok.headers.get("set-cookie")!;
+    expect(cookie).toMatch(/HttpOnly; SameSite=Lax; Max-Age=2592000/);
+    const mine = cookie.split(";")[0];
+
+    expect((await POST(request("/api/live", snapshot))).status).toBe(401);
+    expect((await POST(request("/api/live", { ...snapshot, user: "someone_else" }, mine))).status).toBe(200);
+    expect((await POST(request("/api/live", { id: 1 }, mine))).status).toBe(400);
+    // The admin list is public.
+    const seen = await (await GET(request("/api/live"))).json();
+    expect(seen.storage).toBe("memory");
+    expect(seen.sessions[0].snapshot).toEqual({ ...snapshot, user: "ravi" });
+    const later = await (await GET(request(`/api/live?since=${new Date(Date.now() + 1000).toISOString()}`))).json();
+    expect(later.sessions).toEqual([]);
+    expect(signOut(request("/api/user")).headers.get("set-cookie")).toMatch(/Max-Age=0/);
+  });
+
+  it("stays closed when there is no secret to sign cookies with", () => {
+    const bare = { ...env, SESSION_SECRET: "" };
+    expect([loginRequired(bare), canSignIn(bare), loginRequired({})]).toEqual([true, false, false]);
+  });
+
+  it("rejects a forged or expired cookie", () => {
+    const user = { name: "asha", email: null, emailHash: null };
+    const token = userToken(user, 1000, env);
+    expect(userFromToken(token, 2000, env)).toEqual(user);
+    expect(userFromToken(`x${token}`, 2000, env)).toBeNull();
+    expect(userFromToken(token, 2000, { ...env, SESSION_SECRET: "other" })).toBeNull();
+    expect(userFromToken(token, 1000 + 31 * 86_400_000, env)).toBeNull();
+  });
+});
+
+describe("Firestore client", () => {
+  it("signs in as the service account and creates documents only if new", async () => {
+    const { privateKey } = generateKeyPairSync("rsa", {
+      modulusLength: 2048, privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" },
+    });
+    const calls: { url: string; init: RequestInit }[] = [];
+    const db = firestore({ project_id: "p", client_email: "svc@p.test", private_key: privateKey }, (async (url: string, init: RequestInit) => {
+      calls.push({ url, init });
+      if (url.includes("oauth2")) return Response.json({ access_token: "T", expires_in: 3600 });
+      if (url.endsWith(":commit")) return new Response("{}", { status: 409 });
+      return Response.json([{ document: { name: "x/slots/touch_1", fields: { seq: { integerValue: "1" }, ok: { booleanValue: true } } } }]);
+    }) as typeof fetch);
+
+    expect(await db.create([{ collection: "slots", id: "touch_1", data: { seq: 1, note: null } }])).toBe(false);
+    const commit = JSON.parse(calls[1].init.body as string);
+    expect(commit.writes[0].currentDocument).toEqual({ exists: false });
+    expect(commit.writes[0].update.fields).toEqual({ seq: { integerValue: "1" }, note: { nullValue: null } });
+    expect(calls[1].init.headers).toMatchObject({ Authorization: "Bearer T" });
+    expect(await db.where("slots", "stratum", "==", "touch", 5)).toEqual([{ id: "touch_1", data: { seq: 1, ok: true } }]);
+    expect(calls.filter((c) => c.url.includes("oauth2"))).toHaveLength(1); // token reused
+  });
+});
+
+describe("per-user and global views", () => {
+  const row = (user: string, id: string, at: string, dead: number, emailHash: string | null = null) => ({
+    updatedAt: at,
+    snapshot: { ...snapshot, id, user, emailHash, friction: { ...calm, dead }, history: [{ block: 1, arm: "shortcut" as const }] },
+  });
+  const now = Date.parse("2026-11-27T12:00:00Z");
+  const users = groupUsers([
+    row("asha", "1", "2026-11-27T11:00:00Z", 2), row("asha", "2", "2026-11-27T11:59:55Z", 1),
+    row("ravi", "3", "2026-11-27T11:00:00Z", 4, "abc"),
+  ], now);
+
   it("adds up each user's sessions and then everyone", () => {
-    const now = Date.parse("2026-11-27T12:00:00Z");
-    const users = groupUsers([
-      row("asha", "1", "2026-11-27T11:00:00Z", 2), row("asha", "2", "2026-11-27T11:59:55Z", 1),
-      row("ravi", "3", "2026-11-27T11:00:00Z", 4),
-    ], now);
     expect(users.map((u) => [u.name, u.online, u.totals.dead, u.sessions])).toEqual([["asha", true, 3, 2], ["ravi", false, 4, 1]]);
     const all = summariseAll(users);
     expect([all.users, all.online, all.adaptations, all.struggles.dead, all.chosen.shortcut]).toEqual([2, 1, 3, 7, 2]);
   });
 
-  it("rejects a forged or expired user cookie", () => {
-    const token = userToken("asha", 1000, env);
-    expect(userFromToken(token, 2000, env)).toBe("asha");
-    expect(userFromToken(token.replace("asha", "ravi"), 2000, env)).toBeNull();
-    expect(userFromToken(token, 1000 + 8 * 86_400_000, env)).toBeNull();
-  });
-});
-
-describe("admin access", () => {
-  beforeEach(() => {
-    vi.stubEnv("ADMIN_USER", env.ADMIN_USER);
-    vi.stubEnv("ADMIN_PASSWORD", env.ADMIN_PASSWORD);
-    vi.stubEnv("SUPABASE_URL", "");
-  });
-  afterEach(() => vi.unstubAllEnvs());
-
-  it("accepts only the right login and an untampered, unexpired cookie", () => {
-    expect(checkLogin("tester", env.ADMIN_PASSWORD, env)).toBe(true);
-    expect(checkLogin("tester", "wrong", env)).toBe(false);
-    expect(checkLogin("", "", {})).toBe(false);
-    const token = issueToken(1000, env);
-    expect(validToken(token, 2000, env)).toBe(true);
-    expect(validToken(token, 1000 + 9 * 3_600_000, env)).toBe(false);
-    expect(validToken(`9${token}`, 2000, env)).toBe(false);
-    expect(validToken(token, 2000, { ...env, ADMIN_PASSWORD: "changed" })).toBe(false);
-  });
-
-  it("shows visitors to a signed-in admin only", async () => {
-    expect((await POST(request("/api/live", snapshot))).status).toBe(401); // not signed in
-    const account = { user: "Asha_1", password: "test-only-123" };
-    const made = await signIn(request("/api/user", { ...account, create: true }));
-    expect(made.status).toBe(200);
-    expect((await signIn(request("/api/user", { ...account, create: true }))).status).toBe(409);
-    expect((await signIn(request("/api/user", { ...account, password: "wrong-pass" }))).status).toBe(401);
-    expect((await signIn(request("/api/user", { user: "a b", password: "test-only-123" }))).status).toBe(400);
-    expect((await signIn(request("/api/user", account))).status).toBe(200);
-    const mine = made.headers.get("set-cookie")!.split(";")[0];
-    // The name always comes from the cookie, never from the body.
-    expect((await POST(request("/api/live", { ...snapshot, user: "someone_else" }, mine))).status).toBe(200);
-    expect((await POST(request("/api/live", { id: 1 }, mine))).status).toBe(400);
-    expect((await GET(request("/api/live"))).status).toBe(401);
-    expect((await login(request("/api/admin", { user: "tester", password: "no" }))).status).toBe(401);
-    const ok = await login(request("/api/admin", { user: "tester", password: env.ADMIN_PASSWORD }));
-    const cookie = ok.headers.get("set-cookie")!;
-    expect(cookie).toMatch(/HttpOnly; SameSite=Strict/);
-    const seen = await (await GET(request("/api/live", undefined, cookie.split(";")[0]))).json();
-    expect(seen.storage).toBe("memory");
-    expect(seen.sessions[0].snapshot).toEqual({ ...snapshot, user: "asha_1" });
-    expect(DELETE(request("/api/admin")).headers.get("set-cookie")).toMatch(/Max-Age=0/);
+  it("finds a user by part of the name or by the hash of a full email", () => {
+    expect(findUsers(users, "ASH", "").map((u) => u.name)).toEqual(["asha"]);
+    expect(findUsers(users, "r@x.com", "abc").map((u) => u.name)).toEqual(["ravi"]);
+    expect(findUsers(users, "r@x.com", "")).toEqual([]);
+    expect(findUsers(users, "  ", "")).toHaveLength(2);
   });
 });

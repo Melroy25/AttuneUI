@@ -1,7 +1,7 @@
+import { database } from "@/lib/server/db";
 import { loadFrozenPolicy } from "@/lib/server/frozen";
 import { fail, readJson, sameSecret } from "@/lib/server/http";
 import { register } from "@/lib/server/register";
-import { supabaseRest } from "@/lib/server/supabase";
 import { parsePhase } from "@/lib/study/assignment";
 import { MAX_REGISTRATION_BYTES, parseRegistration } from "@/lib/study/validate";
 
@@ -24,10 +24,10 @@ export async function POST(request: Request) {
       return fail(503, error);
     }
   }
-  const rest = supabaseRest();
-  if (!rest) return fail(503, "storage not configured");
+  const db = database();
+  if (!db) return fail(503, "storage not configured");
   try {
-    return Response.json(await register(rest, parsed));
+    return Response.json(await register(db, parsed));
   } catch (error) {
     console.error("participants:", error);
     return fail(502, "storage unavailable");

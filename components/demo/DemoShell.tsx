@@ -44,7 +44,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
           store={{ actions, banner: <DemoBanner d={d} />, page, onPage: setPage, shop, user }} />
       </div>
       <p className="mx-auto mt-4 max-w-6xl text-xs text-slate-600">
-        {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible to the site admin. What you type is not sent.
+        {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.
       </p>
       {hud && <XRayHud d={d} surface={surface} renderedBy={renderedBy} onClose={() => setHud(false)} />}
     </main>

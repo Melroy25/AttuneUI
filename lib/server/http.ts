@@ -18,3 +18,6 @@ export async function readJson(request: Request, maxBytes: number): Promise<{ bo
     return fail(400, "invalid JSON");
   }
 }
+
+export const cookieValue = (header: string | null, name: string): string | undefined =>
+  header?.split(";").map((c) => c.trim()).find((c) => c.startsWith(`${name}=`))?.slice(name.length + 1);

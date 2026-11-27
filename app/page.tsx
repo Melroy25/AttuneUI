@@ -1,30 +1,30 @@
 import Link from "next/link";
 
 const PAGES = [
-  { href: "/demo", title: "Live testbed", note: "Adaptive order portal with X-Ray view" },
-  { href: "/study", title: "3-arm study", note: "Anonymous usability study; needs an invite link" },
-  { href: "/eval", title: "Judge inspector", note: "Causal metrics, off-policy estimates and participant timelines" },
+  { href: "/demo", icon: "🛍️", title: "User", note: "Sign in and shop at VeroxaKart" },
+  { href: "/admin", icon: "📊", title: "Admin", note: "All users, and each user's live X-Ray" },
 ];
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-2xl space-y-4 p-6">
-      <h1 className="text-3xl font-bold">AttuneUI</h1>
-      <p>
-        Team Veroxa. An interface that senses friction, adapts between block boundaries using a
-        contextual bandit over validated layouts, and is built to be tested against static and
-        random-change controls. No results are reported yet.
-      </p>
-      <ul className="space-y-2">
-        {PAGES.map((p) => (
-          <li key={p.href}>
-            <Link href={p.href} className="block rounded border p-3 hover:bg-slate-50">
-              <strong>{p.title}</strong>
-              <span className="block text-sm text-gray-600">{p.note}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <main className="flex min-h-dvh items-center bg-blue-50 p-4 text-slate-900">
+      <div className="mx-auto w-full max-w-xl space-y-5">
+        <div className="space-y-1 text-center">
+          <h1 className="text-3xl font-extrabold">AttuneUI</h1>
+          <p className="text-slate-600">A store that notices where people struggle and adapts. Team Veroxa.</p>
+        </div>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {PAGES.map((p) => (
+            <li key={p.href}>
+              <Link href={p.href} className="block h-full rounded-2xl bg-white p-6 text-center shadow hover:shadow-lg">
+                <span aria-hidden className="text-4xl">{p.icon}</span>
+                <strong className="mt-2 block text-xl">{p.title}</strong>
+                <span className="block text-sm text-slate-600">{p.note}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </main>
   );
 }

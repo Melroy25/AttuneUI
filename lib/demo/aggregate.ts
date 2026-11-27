@@ -2,7 +2,7 @@
 import { ARM_IDS, type ArmId, type FrictionSummary } from "../attune-ui/types";
 import type { LiveSnapshot } from "./live";
 
-export const ONLINE_MS = 15_000;
+export const ONLINE_MS = 75_000; // longer than the store's heartbeat
 export const COUNTED = ["rage", "dead", "miss", "dwell", "thrash", "backtrack"] as const;
 
 export interface Row { snapshot: LiveSnapshot; updatedAt: string }
@@ -40,6 +40,14 @@ export function groupUsers(rows: Row[], now: number): UserView[] {
     adaptations: own.reduce((s, r) => s + r.snapshot.history.length, 0),
     sessions: own.length,
   }));
+}
+
+/** Part of a username, or a full email address (matched by its hash). */
+export function findUsers(users: UserView[], query: string, emailHash: string): UserView[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return users;
+  if (q.includes("@")) return users.filter((u) => emailHash !== "" && u.latest.snapshot.emailHash === emailHash);
+  return users.filter((u) => u.name.toLowerCase().includes(q));
 }
 
 export function summariseAll(users: UserView[]) {

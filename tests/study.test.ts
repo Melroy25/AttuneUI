@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createModels } from "../lib/attune-ui/bandit/policy";
 import { register } from "../lib/server/register";
-import { authHeaders, supabaseRest, type Rest } from "../lib/server/supabase";
+import { memoryDb, type Db } from "../lib/server/db";
 import { STUDY_ARMS, assign, offlineAssignment, variantFor } from "../lib/study/assignment";
 import { boundaryDecision, sumFriction } from "../lib/study/boundary";
 import { createQueue, type QueueItem } from "../lib/study/queue";
@@ -123,55 +123,30 @@ describe("upload queue", () => {
   });
 });
 
-describe("Supabase helper", () => {
-  it("sends Bearer only for legacy keys", () => {
-    expect(authHeaders("sb_secret_x")).toEqual({ apikey: "sb_secret_x" });
-    expect(authHeaders("eyJx")).toEqual({ apikey: "eyJx", Authorization: "Bearer eyJx" });
-    expect(supabaseRest({})).toBeNull();
-  });
-});
-
 describe("registration", () => {
-  type Row = Record<string, unknown>;
-  /** Minimal PostgREST stand-in; `stale` makes the first max-seq read return nothing. */
-  function fakeDb(table: Row[], stale = false): Rest {
-    return async (path, init) => {
-      const body = init?.body ? (JSON.parse(init.body as string) as Row) : {};
-      const id = /id=eq\.([^&]+)/.exec(path)?.[1];
-      if (init?.method === "POST") {
-        const clash = table.some((r) => r.id === body.id ||
-          (body.seq !== null && r.pointer === body.pointer && r.seq === body.seq));
-        if (!clash) table.push(body);
-        return new Response(null, { status: clash ? 409 : 201 });
-      }
-      if (init?.method === "PATCH") {
-        Object.assign(table.find((r) => r.id === id)!, body);
-        return new Response(null, { status: 204 });
-      }
-      if (id) return Response.json(table.filter((r) => r.id === id));
-      if (stale) { stale = false; return Response.json([]); }
-      const seqs = table.filter((r) => r.seq !== null && path.includes(`pointer=eq.${r.pointer}`));
-      return Response.json(seqs.sort((a, b) => Number(b.seq) - Number(a.seq)).slice(0, 1));
-    };
-  }
   const person = (id: string): Registration =>
     ({ id, pointer: "touch", viewportWidth: 375, repeatDevice: false, phase: "test", code: "", offline: null });
+  const all = async (db: Db) => (await db.page("participants")).docs.map((d) => d.data);
 
   it("allocates consecutive slots, retries a taken slot and is idempotent", async () => {
-    const table: Row[] = [];
-    const first = await register(fakeDb(table), person("a"));
-    await register(fakeDb(table, true), person("b"));
-    expect(table.map((r) => r.seq)).toEqual([0, 1]);
-    expect(await register(fakeDb(table), person("a"))).toEqual(first);
-    expect(table).toHaveLength(2);
+    const db = memoryDb();
+    const first = await register(db, person("a"));
+    // The next person first sees a stale slot list and must retry.
+    let stale = true;
+    const racing: Db = { ...db, where: async (...args) => (stale ? ((stale = false), []) : db.where(...args)) };
+    await register(racing, person("b"));
+    expect((await all(db)).map((r) => r.seq)).toEqual([0, 1]);
+    expect(await register(db, person("a"))).toEqual(first);
+    expect(await all(db)).toHaveLength(2);
   });
 
   it("gives offline participants no slot and records the arm they saw", async () => {
-    const table: Row[] = [];
-    await register(fakeDb(table), person("a"));
+    const db = memoryDb();
+    await register(db, person("a"));
     const seen = { arm: "C", order: "BA" } as const;
-    expect(await register(fakeDb(table), { ...person("a"), offline: seen })).toMatchObject({ ...seen, offline: true });
-    await register(fakeDb(table), { ...person("b"), offline: seen });
+    expect(await register(db, { ...person("a"), offline: seen })).toMatchObject({ ...seen, offline: true });
+    await register(db, { ...person("b"), offline: seen });
+    const table = await all(db);
     expect(table[0]).toMatchObject({ arm: "C", offline: true });
     expect(table[1]).toMatchObject({ seq: null, offline: true });
   });

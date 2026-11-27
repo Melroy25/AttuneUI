@@ -1,13 +1,13 @@
+import { database } from "@/lib/server/db";
+import { exportRow } from "@/lib/server/events";
 import { fail, sameSecret } from "@/lib/server/http";
-import { rows, supabaseRest } from "@/lib/server/supabase";
 
-const PAGE = 200;
-const TABLES = [["participants", "id"], ["events", "participant_id,seq"]] as const;
+const TABLES = ["participants", "events"] as const;
 
 export async function GET(request: Request) {
   const token = process.env.EXPORT_TOKEN;
-  const rest = supabaseRest();
-  if (!token || !rest) return fail(503, "export not configured");
+  const db = database();
+  if (!token || !db) return fail(503, "export not configured");
   const given = request.headers.get("authorization") ?? "";
   if (!sameSecret(given, `Bearer ${token}`)) return fail(401, "unauthorised");
 
@@ -15,17 +15,18 @@ export async function GET(request: Request) {
   const encoder = new TextEncoder();
   async function* json() {
     yield `{"exportedAt":${JSON.stringify(new Date().toISOString())}`;
-    for (const [table, order] of TABLES) {
+    for (const table of TABLES) {
       yield `,"${table}":[`;
       let separator = "";
-      for (let offset = 0; ; offset += PAGE) {
-        const page = await rows<unknown>(rest!, `${table}?select=*&order=${order}&limit=${PAGE}&offset=${offset}`);
-        for (const row of page) {
-          yield separator + JSON.stringify(row);
+      let next: string | undefined;
+      do {
+        const page = await db!.page(table, next);
+        for (const doc of page.docs) {
+          yield separator + JSON.stringify(exportRow(table, doc));
           separator = ",";
         }
-        if (page.length < PAGE) break;
-      }
+        next = page.next;
+      } while (next);
       yield "]";
     }
     yield "}";

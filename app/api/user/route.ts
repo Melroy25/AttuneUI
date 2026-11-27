@@ -1,41 +1,32 @@
+import { verifyIdToken, webConfig } from "@/lib/server/firebase";
 import { fail, readJson } from "@/lib/server/http";
-import { supabaseRest } from "@/lib/server/supabase";
-import {
-  USERNAME, USER_COOKIE, USER_TTL_S, loginRequired, register, userToken, validPassword, verify,
-} from "@/lib/server/users";
-
-const WRONG_DELAY_MS = 600;
+import { USER_COOKIE, USER_TTL_S, canSignIn, storeUser, userToken } from "@/lib/server/users";
 
 const withCookie = (request: Request, value: string, maxAge: number) => {
   const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
   return Response.json({ ok: true }, {
-    headers: { "Set-Cookie": `${USER_COOKIE}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}` },
+    headers: { "Set-Cookie": `${USER_COOKIE}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}` },
   });
 };
 
-/** Sign in, or create a demo account ({ create: true }). */
+/** Exchanges a Firebase ID token for the store's own session cookie. */
 export async function POST(request: Request) {
-  if (!loginRequired()) return fail(503, "sign-in not configured");
-  const read = await readJson(request, 600);
-  if (read instanceof Response) return read;
-  const { user, password, create } = (read.body ?? {}) as { user?: unknown; password?: unknown; create?: unknown };
-  const name = typeof user === "string" ? user.trim().toLowerCase() : "";
-  if (!USERNAME.test(name) || typeof password !== "string" || !validPassword(password)) {
-    return fail(400, "use 3-20 letters, numbers or _ for the name, and 6-72 characters for the password");
+  const config = webConfig();
+  if (!config || !canSignIn()) {
+    return fail(503, "sign-in is not fully set up: add FIREBASE_SERVICE_ACCOUNT on the server");
   }
+  const read = await readJson(request, 6000);
+  if (read instanceof Response) return read;
+  const idToken = (read.body as { idToken?: unknown } | null)?.idToken;
+  if (typeof idToken !== "string" || idToken.length < 20) return fail(400, "invalid request");
   try {
-    const rest = supabaseRest();
-    if (create === true) {
-      if ((await register(rest, name, password)) === "taken") return fail(409, "that name is taken");
-    } else if (!(await verify(rest, name, password))) {
-      await new Promise((resolve) => setTimeout(resolve, WRONG_DELAY_MS));
-      return fail(401, "wrong username or password");
-    }
+    const account = await verifyIdToken(idToken, config);
+    if (!account) return fail(401, "sign-in was not accepted");
+    return withCookie(request, userToken(storeUser(account)), USER_TTL_S);
   } catch (error) {
     console.error("user:", error);
-    return fail(502, "accounts are unavailable: run supabase/schema.sql");
+    return fail(502, "cannot check the sign-in right now");
   }
-  return withCookie(request, userToken(name), USER_TTL_S);
 }
 
 export function DELETE(request: Request) {

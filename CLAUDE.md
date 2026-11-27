@@ -4,7 +4,7 @@ Full spec: docs/SPEC.md (read only the section you need). Status: PROGRESS.md.
 
 ## Stack
 Next.js 16 App Router, TypeScript 5 strict, Tailwind 4, Recharts (Phase 3), Vitest,
-Supabase REST via plain fetch, Vercel. Python (numpy, scipy) only in evaluation/.
+Firebase Auth (web SDK) and Firestore REST via plain fetch, Vercel. Python (numpy, scipy) only in evaluation/.
 No new dependencies without asking.
 
 ## Verify
@@ -50,7 +50,7 @@ Never commit .env*, secrets, or the problem-statement PDF. Never force push.
   A necessary bug fix gets logged as a deviation in evaluation/PREREGISTRATION.md.
 
 ## Security
-Validate and size-limit API input. Service key is server-only, in .env.local and Vercel env.
+Validate and size-limit API input. The Firebase service account is server-only, in .env.local and Vercel env.
 No personal data. Never commit secrets.
 
 ## Code rules

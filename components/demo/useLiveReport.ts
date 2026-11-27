@@ -8,8 +8,9 @@ import type { LiveSnapshot } from "@/lib/demo/live";
 import { newParticipantId } from "@/lib/study/records";
 import type { useDemo } from "./useDemo";
 
-const EVERY_MS = 1000;
-const HEARTBEAT_MS = 5000;
+// Sent at most this often, and only on change: database writes are limited on the free plan.
+const EVERY_MS = 2000;
+const HEARTBEAT_MS = 30_000;
 
 /** Sends what the X-Ray shows to the admin page. Failures never disturb the visitor. */
 export function useLiveReport(d: ReturnType<typeof useDemo>, page: string) {
@@ -24,10 +25,12 @@ export function useLiveReport(d: ReturnType<typeof useDemo>, page: string) {
     const timer = setInterval(async () => {
       const { d, page } = latest.current;
       const { session } = d;
-      const friction = summarizeFriction(d.events, d.modality);
+      const sensed = summarizeFriction(d.events, d.modality);
+      // Whole numbers, so pointer movement alone does not count as a change.
+      const friction = { ...sensed, tortuosity: Math.round(sensed.tortuosity) };
       const { decision } = session;
       const snapshot: LiveSnapshot = {
-        id, user: null, totals: session.totals, history: session.history, page, arm: d.ui.arm, mode: d.mode, block: session.blocks + 1, auto: d.auto, pinned: session.pinned,
+        id, user: null, email: null, emailHash: null, totals: session.totals, history: session.history, page, arm: d.ui.arm, mode: d.mode, block: session.blocks + 1, auto: d.auto, pinned: session.pinned,
         locale: d.ui.preferences.locale, viewportWidth: window.innerWidth, modality: d.modality, friction,
         context: buildContext({ friction, viewportWidth: window.innerWidth, priorSessions: session.blocks }),
         decision: decision && { action: decision.action, propensity: decision.propensity, probs: decision.probs },
