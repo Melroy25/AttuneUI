@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { Change } from "@/lib/demo/activity";
 import { promptFor, type Prompt } from "@/lib/demo/quick";
-import { CONTROLS } from "./useComfort";
+import { RULES } from "@/lib/demo/comfort";
+import { CONTROLS, measure } from "./useComfort";
 
 /** A click that does nothing on a marked area offers the shortcut that fits that area. */
 const DOUBLE_MS = 600; // a second click this soon is not a single dead click
@@ -24,6 +25,8 @@ export function useQuickPrompt(
       const target = e.target as Element;
       if (target.closest(CONTROLS)) return;
       const context = target.closest("[data-dead-context]")?.getAttribute("data-dead-context") ?? "";
+      // Just beside a control is a missed tap, which the bigger-target rule answers instead.
+      if (context && measure(root, e).distance <= RULES.halo) return;
       const t = performance.now();
       // A quick second click means the user is clicking text, not asking for the shortcut.
       if (waiting && waiting.context === context && t - waiting.t <= DOUBLE_MS) {

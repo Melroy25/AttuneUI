@@ -159,10 +159,10 @@
 /* Secondary card links are small on purpose, until problem taps make everything bigger. */
 .store [data-compact] { font-size: .625rem; line-height: 1; color: #1d4ed8; text-decoration: underline; }
 .store [data-compact]:disabled { color: #64748b; }
-/* Only the controls that were missed get a bigger hit area; nothing else changes size. */
-.store [data-roomy] { min-height: 2.75rem; min-width: 2.75rem; padding: .5rem .75rem; }
+/* Only the controls that were missed: highlighted, with a bigger hit area. Nothing else changes. */
+.store [data-roomy] { min-height: 2.75rem; min-width: 2.75rem; padding: .5rem .75rem; outline: 2px solid #f59e0b; outline-offset: 1px; }
 .store [data-compact][data-roomy] {
-  font-size: .8125rem; background: #eff6ff; border-radius: .5rem; text-decoration: none;
+  font-size: .8125rem; font-weight: 700; background: #fef3c7; border-radius: .5rem; text-decoration: none;
 }
 .store [data-compact-row]:has([data-roomy]) { gap: .75rem; margin-top: .5rem; }
 
@@ -183,5 +183,5 @@
 .store [data-cue="2"] { box-shadow: 0 0 0 2px #f59e0b, 0 0 10px rgb(245 158 11 / .45); }
 .store [data-cue="1"] { box-shadow: inset 0 -2px 0 #f59e0b; }
 
-/* Wishlist earned in an earlier visit: a copy at the front of the navigation. */
-.store [data-part="nav"] [data-part="wish-first"] { background: #fef3c7; border: 2px solid #f59e0b; color: #78350f; font-weight: 700; }
+/* Used often in an earlier visit: a copy at the front of the navigation. */
+.store [data-part="nav"] [data-part="front"] { background: #fef3c7; border: 2px solid #f59e0b; color: #78350f; font-weight: 700; }

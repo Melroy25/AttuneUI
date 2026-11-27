@@ -34,10 +34,12 @@ const comfortRow = ({ id, state: s }: CloudRecord) => [
   id, (s.language ?? s.preferences.locale) === "kn" ? "Kannada" : "English",
   s.comfort.on ? `Bigger: ${s.comfort.targets.length} control(s)` : s.comfort.reverted ? "Normal (undone)" : "Normal", rate(s.comfort.before), rate(s.comfort.after),
 ];
+const top = (c: Record<string, number>) => Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 4)
+  .map(([k, n]) => `${k} ${n}`).join(", ") || "—";
 const choiceRow = ({ id, state: s }: CloudRecord) => [
   id, LOCATIONS[s.city ?? 0].en, `${s.hesitation.yes} / ${s.hesitation.no}`,
   `${s.hesitation.threshold} points, ${Math.round(s.hesitation.cooldownMs / 60000)} min rest`,
-  `${s.wish.last} / ${s.wish.current} (${s.habits.wishUses} in all)${s.wish.promoted ? " · first in nav" : ""}`,
+  s.use.front.join(", ") || "—", top(s.use.last), top(s.use.current),
 ];
 
 const logRow = (r: LogRow, all: boolean) => [
@@ -96,9 +98,9 @@ export function SavedLogs() {
             info="Problem taps at each size, counted the same way. Descriptive only: not a controlled comparison.">
             <Table head={["User", "Language", "Size now", "At normal size", "At bigger size"]} rows={shown.map(comfortRow)} />
           </Box>
-          <Box title="Delivery city, hesitation and Wishlist"
-            info="Hesitation is a prediction: Yes asks sooner next time, No rests longer. Wishlist moves to the front only at the start of a visit after 3+ presses in the previous one.">
-            <Table head={["User", "City", "Yes / No", "Asks again after", "Wishlist presses: last / this visit"]} rows={shown.map(choiceRow)} />
+          <Box title="Delivery city, hesitation and front of navigation"
+            info="Hesitation is a prediction: Yes asks sooner next time, No rests longer. A part used 3+ times in one visit gets a copy at the front of the navigation from the next visit.">
+            <Table head={["User", "City", "Yes / No", "Asks again after", "In front now", "Used last visit", "Used this visit"]} rows={shown.map(choiceRow)} />
           </Box>
           <BehaviourBox users={shown} />
           <Box title="UI changes applied (cause → effect)"

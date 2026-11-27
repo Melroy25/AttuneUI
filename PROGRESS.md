@@ -8,15 +8,15 @@
 - /demo learns again: a score after 3 finished actions (or a failure after struggle only),
   saved per account in the browser, kept on Reset (exception to invariant 11 "in-memory").
 - /demo shortcuts (Search similar, Customer Support replacing header Support; invariant 9
-  exception): 2-arm Thompson bandit each, +1 use, -1 ✕/Undo. Wishlist: 3+ presses in one visit ->
-  a copy first in the nav from the next visit (never mid-visit); the bandit no longer moves it.
+  exception): 2-arm Thompson bandit each, +1 use, -1 ✕/Undo. Any page, category or Wishlist used
+  3+ times in a visit -> a copy at the nav front from the next visit (never mid-visit; max 3).
 - Saved per user in Firestore demo_users/{userId} + activity (server REST, /api/demo-user;
   browser cache first, newer saved copy applied on load). Reset changes the screen only: logs,
   totals, counts and weights stay. Admin "Saved logs" tab: user selector, cause -> effect.
 - QA 2026-11-28: nothing scales the page; one floating prompt at a time (Undo also in ⚙);
   single dead click waits 0.6 s so double clicks only grow text; sign-out -> English. 152 tests.
 - Rules, not the bandit: dead click on delivery location / product card -> floating shortcut;
-  2 problem taps on small targets in 30 s -> bigger hit area on those controls only (no prompt;
+  2 problem taps near one small control in 30 s -> only it highlighted + bigger (no prompt;
   exception to invariant 5; off while Pin or auto-off), before/after counts (descriptive).
   Picked language and city are per user, survive Reset. Popover under "Deliver to"; product dead click asks about the newest cart item first. X-Ray on: red click pulse. Predicted hesitation (repeats, back-and-forth, scroll
   shaking) -> Yes/No card; answers move threshold/cooldown and category order, never the layout

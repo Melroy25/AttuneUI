@@ -41,12 +41,15 @@ describe("bigger tap targets", () => {
 describe("bigger hit areas only where taps missed", () => {
   it("enlarges only the missed controls and adds new ones on new misses", () => {
     const at = (t: number, target: string) => miss(t, { target, x: t });
-    const first = run([at(0, "details:a"), at(2000, "add:a")]);
-    expect(first.state.targets).toEqual(["details:a", "add:a"]);
-    expect(first.reason).not.toBeNull();
+    const once = run([at(0, "details:a"), at(2000, "add:a")]);
+    expect(once.state.targets).toEqual([]); // one miss near each: not yet
+    const first = recordTap(once.state, once.recent, at(4000, "details:a"), true);
+    expect(first.state.targets).toEqual(["details:a"]); // only the link missed twice
+    expect(first.reason).toContain('Near "details:a": 2 missed');
+    expect(first.recent.problems.map((p) => p.target)).toEqual(["add:a"]); // still counting
     const more = [at(40_000, "approve:b"), at(42_000, "approve:b")].reduce(
       (s, tap) => recordTap(s.state, s.recent, tap, true), first);
-    expect(more.state.targets).toEqual(["details:a", "add:a", "approve:b"]);
+    expect(more.state.targets).toEqual(["details:a", "approve:b"]);
     expect(revert(more.state).targets).toEqual([]);
     expect(parseComfort({ targets: ["ok", 5, "x".repeat(81)] }).targets).toEqual(["ok"]);
     expect(parseComfort({ on: true }).on).toBe(false); // the old page-wide switch is gone

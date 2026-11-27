@@ -49,16 +49,21 @@ export function recordTap(state: Comfort, recent: Recent, tap: Tap, canAdapt: bo
   const target = tap.target ?? "unknown";
   const problems = [...recent.problems.filter((p) => tap.t - p.t <= RULES.windowMs),
     ...(kind && tap.small ? [{ t: tap.t, kind, target }] : [])];
-  const fresh = [...new Set(problems.map((p) => p.target))].filter((k) => !state.targets.includes(k));
-  const adapt = canAdapt && !state.reverted && problems.length >= RULES.needed && fresh.length > 0;
+  // Each control is judged on its own: two problem taps near it, and only it changes.
+  const near = (k: string) => problems.filter((p) => p.target === k);
+  const fresh = [...new Set(problems.map((p) => p.target))]
+    .filter((k) => !state.targets.includes(k) && near(k).length >= RULES.needed);
+  const adapt = canAdapt && !state.reverted && fresh.length > 0;
   const targets = adapt ? [...state.targets, ...fresh].slice(-MAX_TARGETS) : state.targets;
-  const count = (k: Kind) => problems.filter((p) => p.kind === k).length;
+  const count = (k: string, of: Kind) => near(k).filter((p) => p.kind === of).length;
   return {
     state: { ...state, [side]: tally, targets, on: targets.length > 0 },
-    // A counted rage cluster, or a change of size, starts afresh.
-    recent: adapt ? NO_RECENT : { taps: kind === "rage" ? [] : [...recent.taps, tap].slice(-5), problems },
+    // A counted rage cluster, or a change of size, starts afresh; other controls keep their count.
+    recent: adapt
+      ? { taps: [], problems: problems.filter((p) => !fresh.includes(p.target)) }
+      : { taps: kind === "rage" ? [] : [...recent.taps, tap].slice(-5), problems },
     reason: adapt
-      ? `Small targets: ${count("misses")} missed, ${count("rage")} rage, ${count("nearby")} accidental taps`
+      ? fresh.map((k) => `Near "${k}": ${count(k, "misses")} missed or dead, ${count(k, "rage")} rage, ${count(k, "nearby")} accidental taps`).join("; ")
       : null,
     added: adapt ? fresh : [],
   };

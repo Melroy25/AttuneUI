@@ -12,7 +12,7 @@ import { languageKey } from "@/lib/demo/language";
 import { memoryKey } from "@/lib/demo/memory";
 import { cityKey } from "@/lib/demo/quick";
 import { textKey } from "@/lib/demo/textSize";
-import { wishKey } from "@/lib/demo/wishSession";
+import { useKey } from "@/lib/demo/frontUse";
 import { decodeUi, encodeUi } from "@/lib/demo/uiState";
 import { shortcutsKey, uiKey } from "./storage";
 
@@ -51,7 +51,7 @@ export function readLocal(user: string | null): CloudState | null {
     hesitation: readJsonItem(hesitationKey(user)),
     behaviour: readJsonItem(behaviourKey(user)),
     textScales: localStorage.getItem(textKey(user)),
-    wish: readJsonItem(wishKey(user)),
+    use: readJsonItem(useKey(user)),
   });
 }
 
@@ -80,5 +80,5 @@ export function writeLocal(user: string | null, s: CloudState) {
   const behaviour = keepBehaviour(parseBehaviour(readJsonItem(behaviourKey(user))), s.behaviour);
   localStorage.setItem(behaviourKey(user), JSON.stringify(behaviour));
   localStorage.setItem(textKey(user), JSON.stringify(s.textScales));
-  localStorage.setItem(wishKey(user), JSON.stringify(s.wish));
+  localStorage.setItem(useKey(user), JSON.stringify(s.use));
 }

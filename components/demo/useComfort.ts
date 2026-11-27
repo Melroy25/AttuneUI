@@ -90,7 +90,7 @@ export function useComfort(
       commit(next.state);
       if (!next.reason) return;
       setChangedAt(Date.now());
-      latest.current.log({ trigger: next.reason, change: `Bigger hit area on these controls only: ${next.added.join(", ")}` });
+      latest.current.log({ trigger: next.reason, change: `Highlighted and slightly enlarged only: ${next.added.join(", ")}` });
     };
     root.addEventListener("click", onClick, true);
     return () => root.removeEventListener("click", onClick, true);

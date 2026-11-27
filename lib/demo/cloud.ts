@@ -12,7 +12,7 @@ import { parseLanguage } from "./language";
 import { encodeMemory, parseMemory } from "./memory";
 import { parseCity } from "./quick";
 import { parseScales, type Scales } from "./textSize";
-import { parseWish, type WishSession } from "./wishSession";
+import { parseUse, type VisitUse } from "./frontUse";
 
 export type Totals = Record<(typeof COUNTED)[number], number>;
 export interface CloudState {
@@ -28,7 +28,7 @@ export interface CloudState {
   hesitation: Hesitation; // answers to the Yes/No questions and what they changed
   behaviour: Behaviour; // muscle memory, reading counts and the pinned article
   textScales: Scales; // enlarged texts, by data-text-id
-  wish: WishSession; // Wishlist presses per visit, and whether it is in front now
+  use: VisitUse; // uses per visit of each part of the store, and what is in front now
 }
 export interface CloudRecord { id: string; updatedAt: string; state: CloudState }
 
@@ -73,7 +73,7 @@ export function parseState(v: unknown): CloudState | null {
     hesitation: parseHesitation(s.hesitation),
     behaviour: parseBehaviour(s.behaviour),
     textScales: parseScales(s.textScales),
-    wish: parseWish(s.wish),
+    use: parseUse(s.use),
   };
 }
 
