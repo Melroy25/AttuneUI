@@ -8,11 +8,11 @@ import type { Tally } from "@/lib/demo/comfort";
 import { SURFACE_NAMES } from "@/lib/demo/explain";
 import { STRUGGLE_LABELS } from "@/lib/demo/labels";
 import { LOCATIONS } from "@/lib/demo/quick";
-import { Box } from "./ui";
+import { BehaviourBox } from "./BehaviourBox";
+import { Box, Table } from "./ui";
 import { useSavedLogs, type LogRow } from "./useSavedLogs";
 
 const SHOWN = 200;
-const cell = "border-b border-slate-100 px-2 py-2 text-left align-top";
 const COUNT_LABELS = {
   supportHovers: "Support hovers", supportClicks: "Support clicks", orderOpens: "Order opens", wishlist: "Wishlist presses",
 };
@@ -24,18 +24,6 @@ const behaviours = (users: CloudRecord[]): [string, number][] => [
     .map((k): [string, number] => [COUNT_LABELS[k], users.reduce((s, u) => s + counts(u.state.habits)[k], 0)]),
 ];
 
-function Table({ head, rows }: { head: string[]; rows: (string | number)[][] }) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead><tr>{head.map((h) => <th key={h} scope="col" className={cell}>{h}</th>)}</tr></thead>
-        <tbody>
-          {rows.map((row, i) => <tr key={i}>{row.map((v, j) => <td key={j} className={cell}>{v}</td>)}</tr>)}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 const rate = (t: Tally) => {
   const problems = t.misses + t.rage + t.nearby;
@@ -111,6 +99,7 @@ export function SavedLogs() {
             info="Hesitation is a prediction. Yes asks a little sooner next time; No raises the bar and rests longer.">
             <Table head={["User", "City", "Yes / No", "Asks again after"]} rows={shown.map(choiceRow)} />
           </Box>
+          <BehaviourBox users={shown} />
           <Box title="UI changes applied (cause → effect)"
             info="Newest first. Confidence is the model's chance of picking that layout or shortcut; rule-based and manual changes have none.">
             {rows.length === 0 && <p className="text-sm text-slate-600">Nothing yet.</p>}

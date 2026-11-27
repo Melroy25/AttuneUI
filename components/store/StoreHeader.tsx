@@ -48,7 +48,7 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <form role="search" data-part="searchbar" className="flex min-w-0 flex-1 basis-full items-center gap-2 px-3 sm:basis-0"
+        <form role="search" data-part="searchbar" data-cue={ctx.cues?.search} className="flex min-w-0 flex-1 basis-full items-center gap-2 px-3 sm:basis-0"
           onSubmit={(e) => {
             e.preventDefault();
             showResults();
@@ -64,7 +64,7 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
         </form>
         <span data-attune-id="account" tabIndex={0}
           data-tip={user ? "Switch user in settings ⚙" : "Guest account"} className="px-2 text-sm">👤 {user ?? t.guest}</span>
-        <button type="button" data-part="cart" data-tip="View cart" aria-current={page === "cart" ? "page" : undefined}
+        <button type="button" data-part="cart" data-cue={ctx.cues?.cart} data-tip="View cart" aria-current={page === "cart" ? "page" : undefined}
           className="relative ml-auto min-h-11 px-3 text-sm font-semibold" onClick={() => onPage("cart")}>
           🛒 {t.cart}
           {count > 0 && <span data-part="count">{count}</span>}

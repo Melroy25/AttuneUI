@@ -4,6 +4,7 @@ import { parsePreferences, type Locale, type Preferences } from "../attune-ui/pr
 import { ARM_IDS, type ArmId, type FrictionSummary } from "../attune-ui/types";
 import type { Activity } from "./activity";
 import { COUNTED } from "./aggregate";
+import { keepBehaviour, parseBehaviour, type Behaviour } from "./behaviour";
 import { keepCounts, parseComfort, type Comfort } from "./comfort";
 import { NO_HABITS, parseHabits, type Habits } from "./habits";
 import { parseHesitation, type Hesitation } from "./hesitation";
@@ -23,6 +24,7 @@ export interface CloudState {
   language: Locale | null; // picked by hand; null when never picked
   city: number | null; // chosen delivery city, an index into LOCATIONS
   hesitation: Hesitation; // answers to the Yes/No questions and what they changed
+  behaviour: Behaviour; // muscle memory, reading counts and the pinned article
 }
 export interface CloudRecord { id: string; updatedAt: string; state: CloudState }
 
@@ -65,6 +67,7 @@ export function parseState(v: unknown): CloudState | null {
     language: parseLanguage(s.language),
     city: parseCity(s.city),
     hesitation: parseHesitation(s.hesitation),
+    behaviour: parseBehaviour(s.behaviour),
   };
 }
 
@@ -95,7 +98,8 @@ export function mergeUsers(remote: CloudRecord[], local: CloudRecord[]): CloudRe
     const habits = ahead ? mine.state.habits : saved.state.habits;
     const friction = maxTotals(saved.state.friction, mine.state.friction);
     const comfort = keepCounts(mine.state.comfort, saved.state.comfort);
-    byId.set(mine.id, { ...saved, state: { ...saved.state, habits, friction, comfort } });
+    const behaviour = keepBehaviour(mine.state.behaviour, saved.state.behaviour);
+    byId.set(mine.id, { ...saved, state: { ...saved.state, habits, friction, comfort, behaviour } });
   }
   return [...byId.values()].sort((a, b) => a.id.localeCompare(b.id));
 }

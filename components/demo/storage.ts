@@ -1,5 +1,6 @@
 import { parseShortcuts } from "@/lib/bandit/shortcutBandit";
 import { MAX_ACTIVITY, activityKey, parseActivity } from "@/lib/demo/activity";
+import { behaviourKey, parseBehaviour } from "@/lib/demo/behaviour";
 import { syncKey } from "@/lib/demo/cloud";
 import { archive, historyKey, parsePast, type PastSession } from "@/lib/demo/history";
 import { comfortKey, parseComfort } from "@/lib/demo/comfort";
@@ -45,6 +46,8 @@ export function resetDemo(user: string | null, ui: UiState): UiState {
     localStorage.setItem(uiKey(user), encodeUi(next));
     const comfort = parseComfort(read(comfortKey(user)));
     localStorage.setItem(comfortKey(user), JSON.stringify({ ...comfort, on: false, reverted: false }));
+    const behaviour = parseBehaviour(read(behaviourKey(user)));
+    localStorage.setItem(behaviourKey(user), JSON.stringify({ ...behaviour, pinned: null }));
     localStorage.setItem(syncKey(user), "local"); // the saved copy must not undo this
     sessionStorage.removeItem(readingKey);
   } catch {

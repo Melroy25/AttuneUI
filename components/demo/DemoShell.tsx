@@ -14,8 +14,10 @@ import { struggles } from "@/lib/bandit/shortcutBandit";
 import type { UiState } from "@/lib/demo/uiState";
 import { AdaptiveBar } from "./AdaptiveBar";
 import { FrictionPulse } from "./FrictionPulse";
+import { ReadingPill } from "./ReadingPill";
 import { SettingsMenu } from "./SettingsMenu";
 import { useActivity } from "./useActivity";
+import { useBehaviour } from "./useBehaviour";
 import { useComfort } from "./useComfort";
 import { useDemo } from "./useDemo";
 import { useFrictionLog } from "./useFrictionLog";
@@ -29,9 +31,9 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const { activity, add } = useActivity(user);
   const shortcuts = useShortcuts(user, add);
   // A later layout or preference change becomes what Undo reverts.
-  const d = useDemo(serverUi, user, (change) => { shortcuts.supersede(); add(change); });
-  const [hud, setHud] = useState(false);
   const [page, setPage] = useState<Page>("home");
+  const d = useDemo(serverUi, user, (change) => { shortcuts.supersede(); add(change); }, page === "articles");
+  const [hud, setHud] = useState(false);
   const shop = useShop(user);
   const habits = useHabits(user, (kind, next) => shortcuts.consider(
     kind, next, struggles(d.session.totals, summarizeFriction(d.events, d.modality))));
@@ -40,6 +42,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const comfort = useComfort(user, d.rootRef, d.auto && !d.session.pinned, add);
   const quick = useQuickPrompt(d.rootRef, shop.latest, add);
   const hesitation = useHesitation(user, page, shop, add);
+  const behaviour = useBehaviour(user, page, shop, add);
   const surface = SURFACES[d.ui.arm];
   const renderedBy = d.offline
     ? "client (offline fallback)"
@@ -65,14 +68,16 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
         <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
-          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt }} />
+          store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt, behaviour }} />
       </div>
       <StoreFooter locale={d.ui.preferences.locale} onSupport={habits.support} onSupportHover={habits.supportHover}
         onPage={setPage} />
       <p className="mx-auto mt-2 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.
       </p>
-      <AdaptiveBar locale={d.ui.preferences.locale} quick={quick} shop={shop} comfort={comfort} hesitation={hesitation}
+      <AdaptiveBar pill={<ReadingPill locale={d.ui.preferences.locale} behaviour={behaviour}
+          onResume={(article, paragraph) => { shop.openArticle(article, paragraph); setPage("articles"); }} />}
+        locale={d.ui.preferences.locale} quick={quick} shop={shop} comfort={comfort} hesitation={hesitation}
         log={add} onAdded={d.onGoal}
         onView={(id) => {
           shop.setCategory(CATALOG.find((p) => p.id === id)?.category ?? "");

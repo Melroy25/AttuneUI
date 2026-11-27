@@ -4,6 +4,7 @@ import { MAX_ACTIVITY, activityKey, parseActivity, type Activity } from "@/lib/d
 import {
   SENT_ACTIVITY, cursorKey, frictionKey, maxTotals, parseState, parseTotals, type CloudState,
 } from "@/lib/demo/cloud";
+import { behaviourKey, keepBehaviour, parseBehaviour } from "@/lib/demo/behaviour";
 import { comfortKey, keepCounts, parseComfort } from "@/lib/demo/comfort";
 import { habitsKey } from "@/lib/demo/habits";
 import { hesitationKey, keepAnswers, parseHesitation } from "@/lib/demo/hesitation";
@@ -46,6 +47,7 @@ export function readLocal(user: string | null): CloudState | null {
     language: localStorage.getItem(languageKey(user)),
     city: localStorage.getItem(cityKey(user)),
     hesitation: readJsonItem(hesitationKey(user)),
+    behaviour: readJsonItem(behaviourKey(user)),
   });
 }
 
@@ -71,4 +73,6 @@ export function writeLocal(user: string | null, s: CloudState) {
   if (s.city !== null) localStorage.setItem(cityKey(user), String(s.city));
   const asked = keepAnswers(parseHesitation(readJsonItem(hesitationKey(user))), s.hesitation);
   localStorage.setItem(hesitationKey(user), JSON.stringify(asked));
+  const behaviour = keepBehaviour(parseBehaviour(readJsonItem(behaviourKey(user))), s.behaviour);
+  localStorage.setItem(behaviourKey(user), JSON.stringify(behaviour));
 }

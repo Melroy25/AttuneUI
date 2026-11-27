@@ -28,7 +28,7 @@ import { useModelMemory } from "./useModelMemory";
 import { usePublish, writeUiCookie } from "./usePublish";
 import { useReading } from "./useReading";
 
-export function useDemo(serverUi: UiState, user: string | null, record: (change: Change) => void) {
+export function useDemo(serverUi: UiState, user: string | null, record: (change: Change) => void, quiet = false) {
   const [session, setSession] = useState(() => newSession(serverUi.arm));
   const { ui, offline, publish } = usePublish(serverUi, user, (saved) => setSession((s) => ({ ...s, rendered: saved.arm })));
   const [mode, setMode] = useState<DemoMode>("attune");
@@ -163,6 +163,8 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
 
   // Runs on each one-second refresh of the sensed events.
   useEffect(() => {
+    // Rereading an article is not struggling with the store: nothing here is acted on.
+    if (quiet) { capture.current?.drain(); return; }
     if (!auto || events.length === 0 && signals.current.longestReadMs === 0) return;
     const now = performance.now();
     if (shouldAdapt(summarizeFriction(events, modality), now - lastAuto.current)) {

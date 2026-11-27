@@ -45,6 +45,7 @@ export function useHesitation(user: string | null, page: Page, shop: Shop, log: 
 
   const sense = useCallback((signal: Signal) => {
     const now = latest.current;
+    if (now.page === "articles") return; // rereading is not hesitating over products
     const signals = [...seen.current.signals.filter((s) => signal.t - s.t <= H.windowMs), signal];
     seen.current.signals = signals;
     // Never interrupt the cart, or a question already on screen.

@@ -61,3 +61,18 @@ export function Bars({ rows, chosen, unit = "" }: { rows: [string, number][]; ch
     </>
   );
 }
+
+const cell = "border-b border-slate-100 px-2 py-2 text-left align-top";
+
+export function Table({ head, rows }: { head: string[]; rows: (string | number)[][] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead><tr>{head.map((h) => <th key={h} scope="col" className={cell}>{h}</th>)}</tr></thead>
+        <tbody>
+          {rows.map((row, i) => <tr key={i}>{row.map((v, j) => <td key={j} className={cell}>{v}</td>)}</tr>)}
+        </tbody>
+      </table>
+    </div>
+  );
+}

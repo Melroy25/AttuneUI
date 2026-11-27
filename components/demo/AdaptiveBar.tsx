@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { PAGE_TEXT } from "@/components/store/text";
 import type { Shop } from "@/components/store/useShop";
 import type { Locale } from "@/lib/attune-ui/preferences/rules";
@@ -14,7 +15,8 @@ const main = "min-h-11 rounded-lg bg-blue-700 px-4 font-semibold text-white disa
 const other = "min-h-11 rounded-lg border border-slate-300 px-3 font-semibold";
 
 /** Floats above the page, so nothing in the store moves when it appears. */
-export function AdaptiveBar({ locale, quick, shop, comfort, hesitation, onView, onCategory, onAdded, log }: {
+export function AdaptiveBar({ pill, locale, quick, shop, comfort, hesitation, onView, onCategory, onAdded, log }: {
+  pill: ReactNode;
   locale: Locale;
   quick: ReturnType<typeof useQuickPrompt>;
   shop: Shop;
@@ -41,6 +43,7 @@ export function AdaptiveBar({ locale, quick, shop, comfort, hesitation, onView, 
         <LocationPopover locale={locale} prompt={prompt} setPrompt={setPrompt} shop={shop} log={log} />
       )}
       <div lang={locale} className="pointer-events-none fixed inset-x-2 bottom-2 z-40 flex max-w-md flex-col gap-2 text-slate-900 sm:left-auto sm:w-96">
+        {pill}
         <HesitationCard locale={locale} hesitation={hesitation} onProduct={onView} onCategory={onCategory} />
         {cart?.latest && cart.clicked && (
           <section aria-live="polite" className={`${card} border-blue-600`}>

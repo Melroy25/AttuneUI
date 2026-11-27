@@ -14,8 +14,7 @@
 - Saved per user in Firestore demo_users/{userId} + activity (server REST, /api/demo-user;
   browser cache first, newer saved copy applied on load). Reset changes the screen only: logs,
   totals, counts and weights stay. Admin "Saved logs" tab: user selector, cause -> effect.
-- A long policy read asks with a bubble before enlarging text. Hover/focus tooltips (data-tip,
-  components/ui/Tooltip.tsx, mostly English). 135/135 tests.
+- Long policy read asks before enlarging text. Tooltips (data-tip). 143/143 tests.
 - Rules, not the bandit: dead click on delivery location / product card -> floating shortcut;
   2 problem taps on small targets in 30 s -> bigger targets with Undo (no prompt; exception to
   invariant 5; off while Pin or auto-off), before/after counts saved (descriptive only).
@@ -24,13 +23,14 @@
   first. X-Ray on: red click pulse. Predicted hesitation (repeats, back-and-forth, scroll
   shaking) -> Yes/No card; answers move threshold/cooldown and category order, never the layout
   bandit; navigation only. All /demo rules.
+- Articles page (5, English). Muscle memory: cue (never moves) on needed features, fades with
+  successful visits. Reader: pins "Currently Reading", inline help only after repeat returns +
+  back-and-forth scrolling; no pop-ups; no layout adapting or hesitation there. Admin box.
 ## Setup before phone test / pilot (user)
-1. Vercel and .env.local: FIREBASE_* values, EXPORT_TOKEN, STUDY_CODE, STUDY_PHASE (empty =
-   test, "pilot", "confirmatory"). Redeploy after changing env.
-2. Invite link: /study?code=<STUDY_CODE>. Phone test in phase test. Then pilot, 8-10 people.
-3. GET /api/export (Bearer EXPORT_TOKEN) -> file, then npm run policy:freeze -- file.json
-4. Fill every TBD in PREREGISTRATION.md, commit data/policy.frozen.json, tag, then set
-   STUDY_PHASE=confirmatory.
+1. Vercel/.env.local: FIREBASE_*, EXPORT_TOKEN, STUDY_CODE, STUDY_PHASE (empty = test, "pilot",
+   "confirmatory"). Redeploy. 2. Phone test at /study?code=<STUDY_CODE>, then pilot, 8-10 people.
+3. GET /api/export (Bearer EXPORT_TOKEN) -> file, npm run policy:freeze -- file.json. 4. Fill
+   TBDs in PREREGISTRATION.md, commit data/policy.frozen.json, tag, STUDY_PHASE=confirmatory.
 ## Open findings (next: phone test, pilot, freeze, replay slider, attribution, falsification)
 - Not tested: Firestore saved logs and all /demo adaptations (browser), phone, study writes, freeze, screen reader.
 - /demo counts any finished action as success. SIMULATED prior rarely picks large targets

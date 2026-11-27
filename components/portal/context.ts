@@ -1,6 +1,7 @@
 import type { Change } from "@/lib/demo/activity";
 import type { HabitsApi } from "@/components/demo/useHabits";
 import type { ShortcutsApi } from "@/components/demo/useShortcuts";
+import type { BehaviourApi } from "@/components/demo/useBehaviour";
 import type { PreferenceSignals, Preferences } from "@/lib/attune-ui/preferences/rules";
 import type { SurfaceConfig } from "@/lib/attune-ui/surface/catalog";
 import type { Strings } from "./strings";
@@ -22,6 +23,9 @@ export interface PortalContext {
   shortcuts?: ShortcutsApi;
   /** Store only: note a screen change for the admin. */
   logChange?: (change: Change) => void;
+  /** Store only: familiarity cues and reading signals. */
+  behaviour?: BehaviourApi;
+  cues?: BehaviourApi["state"]["cues"];
   /** Store only: set while the policy text should offer larger type. */
   readingPrompt?: { confirm: () => void; dismiss: () => void };
 }

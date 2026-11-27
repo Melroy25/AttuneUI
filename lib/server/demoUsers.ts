@@ -2,6 +2,7 @@
 import { hashString } from "../attune-ui/rng";
 import { SHORTCUTS } from "../bandit/shortcutBandit";
 import { parseActivity, type Activity } from "../demo/activity";
+import { keepBehaviour } from "../demo/behaviour";
 import { maxTotals, parseState, type CloudRecord, type CloudState } from "../demo/cloud";
 import { keepCounts } from "../demo/comfort";
 import { keepAnswers } from "../demo/hesitation";
@@ -28,6 +29,7 @@ const toDoc = (s: CloudState, updatedAt: string): Doc => ({
   languageChosen: s.language !== null,
   deliveryCity: s.city,
   hesitation: JSON.stringify(s.hesitation),
+  behaviour: JSON.stringify(s.behaviour),
   updatedAt,
 });
 
@@ -42,6 +44,7 @@ function fromDoc(id: string, doc: Doc): CloudRecord | null {
       language: doc.languageChosen ? doc.language : null,
       city: doc.deliveryCity,
       hesitation: doc.hesitation ? json("hesitation") : null,
+      behaviour: doc.behaviour ? json("behaviour") : null,
     });
     return state && { id, updatedAt: String(doc.updatedAt), state };
   } catch {
@@ -66,6 +69,7 @@ export async function saveUser(configured: Db | null, id: string, state: CloudSt
     comfort: before ? keepCounts(before.comfort, state.comfort) : state.comfort,
     city: state.city ?? before?.city ?? null,
     hesitation: before ? keepAnswers(before.hesitation, state.hesitation) : state.hesitation,
+    behaviour: before ? keepBehaviour(before.behaviour, state.behaviour) : state.behaviour,
     friction: before ? maxTotals(before.friction, state.friction) : state.friction,
   }, updatedAt));
   return { updatedAt, storage };
