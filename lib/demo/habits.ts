@@ -8,10 +8,11 @@ export interface Habits {
   wishUses: number;
   wished: string[]; // order ids
   opens: Record<string, number>; // per order id
-  supportUses: number;
+  supportUses: number; // clicks
+  supportHovers: number;
 }
 
-export const NO_HABITS: Habits = { wishUses: 0, wished: [], opens: {}, supportUses: 0 };
+export const NO_HABITS: Habits = { wishUses: 0, wished: [], opens: {}, supportUses: 0, supportHovers: 0 };
 export const habitsKey = (user: string | null) => `attune-habits:${user ?? "guest"}`;
 
 export const toggleWish = (h: Habits, id: string): Habits => ({
@@ -22,6 +23,7 @@ export const toggleWish = (h: Habits, id: string): Habits => ({
 export const openOrder = (h: Habits, id: string): Habits =>
   ({ ...h, opens: { ...h.opens, [id]: (h.opens[id] ?? 0) + 1 } });
 export const askSupport = (h: Habits): Habits => ({ ...h, supportUses: h.supportUses + 1 });
+export const hoverSupport = (h: Habits): Habits => ({ ...h, supportHovers: h.supportHovers + 1 });
 
 /** One catalog item for each product whose order was opened at least `min` times, most first. */
 export const similarTo = (h: Habits, min = REPEAT): Product[] => [...new Set(
@@ -38,7 +40,8 @@ export function parseHabits(raw: string | null): Habits {
     const v = JSON.parse(raw ?? "null") as Habits;
     const fits = count(v.wishUses) && count(v.supportUses) && Array.isArray(v.wished) &&
       v.wished.every((x) => typeof x === "string") && Object.values(v.opens).every(count);
-    return fits ? { wishUses: v.wishUses, wished: v.wished, opens: v.opens, supportUses: v.supportUses } : NO_HABITS;
+    return fits ? { wishUses: v.wishUses, wished: v.wished, opens: v.opens, supportUses: v.supportUses,
+      supportHovers: count(v.supportHovers) ? v.supportHovers : 0 } : NO_HABITS;
   } catch {
     return NO_HABITS;
   }

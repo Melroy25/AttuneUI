@@ -76,6 +76,21 @@ export function VisitorXRay({ u }: { u: UserView }) {
           </details>
         )}
       </Box>
+      {s.past && s.past.length > 0 && (
+        <div className="min-w-0 md:col-span-2">
+          <Box title="Earlier sessions" info="Sessions this user finished with Reset, newest first, as saved in their browser.">
+            {s.past.map((p) => (
+              <details key={p.endedAt} className="text-sm">
+                <summary className="min-h-8 cursor-pointer">
+                  Ended {new Date(p.endedAt).toLocaleString()} · {SURFACE_NAMES[p.layout]}
+                  {p.shortcuts.length > 0 && ` · shortcuts: ${p.shortcuts.join(", ")}`}
+                </summary>
+                <ActivityList entries={p.changes} />
+              </details>
+            ))}
+          </Box>
+        </div>
+      )}
     </div>
   );
 }

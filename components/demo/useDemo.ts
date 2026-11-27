@@ -22,14 +22,14 @@ import {
 } from "@/lib/demo/session";
 import type { UiState } from "@/lib/demo/uiState";
 import type { PortalAction } from "@/lib/study/tasks";
-import { forgetDemo } from "./storage";
+import { resetDemo } from "./storage";
 import { useModelMemory } from "./useModelMemory";
 import { usePublish, writeUiCookie } from "./usePublish";
 import { useReading } from "./useReading";
 
 export function useDemo(serverUi: UiState, user: string | null, record: (change: Change) => void) {
   const [session, setSession] = useState(() => newSession(serverUi.arm));
-  const { ui, offline, publish } = usePublish(serverUi);
+  const { ui, offline, publish } = usePublish(serverUi, user, (saved) => setSession((s) => ({ ...s, rendered: saved.arm })));
   const [mode, setMode] = useState<DemoMode>("attune");
   const [demoReading, setDemoReading] = useState(true);
   const [changes, setChanges] = useState<string[]>([]);
@@ -217,7 +217,7 @@ export function useDemo(serverUi: UiState, user: string | null, record: (change:
 
   const reset = () => {
     writeUiCookie("", 0);
-    forgetDemo(user);
+    resetDemo(user, ui.arm);
     window.location.reload();
   };
 

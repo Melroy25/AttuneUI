@@ -4,7 +4,9 @@ import { similarTo } from "@/lib/demo/habits";
 import { PAGE_TEXT } from "./text";
 import type { Shop } from "./useShop";
 
-export function WishlistButton({ ctx, id, compact }: { ctx: PortalContext; id: string; compact?: boolean }) {
+export function WishlistButton({ ctx, id, compact, iconOnly }: {
+  ctx: PortalContext; id: string; compact?: boolean; iconOnly?: boolean;
+}) {
   const t = PAGE_TEXT[ctx.preferences.locale];
   const saved = ctx.habits?.habits.wished.includes(id) ?? false;
   return (
@@ -14,7 +16,7 @@ export function WishlistButton({ ctx, id, compact }: { ctx: PortalContext; id: s
       }}
       className={`flex-none rounded-full border px-3 text-xs font-semibold ${ctx.control} ${compact ? "" : "mt-2"}`}>
       <span aria-hidden>{saved ? "♥" : "♡"}</span>
-      <span className={compact ? "hidden sm:inline" : ""}> {t.wishlist}</span>
+      <span className={iconOnly ? "hidden" : compact ? "hidden sm:inline" : ""}> {t.wishlist}</span>
     </button>
   );
 }

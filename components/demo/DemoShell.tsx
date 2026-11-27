@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { XRayHud } from "@/components/hud/XRayHud";
 import { Portal } from "@/components/portal/Portal";
-import { PAGE_TEXT, type Page } from "@/components/store/text";
+import { StoreFooter } from "@/components/store/StoreFooter";
+import type { Page } from "@/components/store/text";
 import { useShop } from "@/components/store/useShop";
 import { SURFACES } from "@/lib/attune-ui/surface/catalog";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
@@ -26,7 +27,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const shop = useShop();
   const habits = useHabits(user, (kind, next) => shortcuts.consider(
     kind, next, struggles(d.session.totals, summarizeFriction(d.events, d.modality))));
-  useLiveReport(d, page, activity);
+  useLiveReport(d, page, activity, user);
   const surface = SURFACES[d.ui.arm];
   const renderedBy = d.offline
     ? "client (offline fallback)"
@@ -54,12 +55,8 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
           store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt }} />
       </div>
-      <footer className="mx-auto mt-4 max-w-6xl">
-        <button type="button" className="min-h-11 text-sm font-semibold underline"
-          onClick={() => { habits.support(); setPage("help"); window.scrollTo(0, 0); }}>
-          🎧 {PAGE_TEXT[d.ui.preferences.locale].customerSupport}
-        </button>
-      </footer>
+      <StoreFooter locale={d.ui.preferences.locale} onSupport={habits.support} onSupportHover={habits.supportHover}
+        onPage={setPage} />
       <p className="mx-auto mt-2 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.
       </p>

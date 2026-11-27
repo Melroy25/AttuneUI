@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  consider, feedback, newShortcuts, parseShortcuts, shortcutContext, usesOf, type Shortcut, type ShortcutState,
+  consider, dropEarly, eligible, feedback, newShortcuts, parseShortcuts, shortcutContext, usesOf, type Shortcut, type ShortcutState,
 } from "@/lib/bandit/shortcutBandit";
 import type { Change } from "@/lib/demo/activity";
 import { similarTo, type Habits } from "@/lib/demo/habits";
@@ -10,7 +10,7 @@ import { shortcutsKey } from "./storage";
 
 const HIGHLIGHT_MS = 3000;
 const NAMES: Record<Shortcut, string> = { wishlist: "Wishlist", similar: "Search similar", support: "Customer Support" };
-const ACTIONS: Record<Shortcut, string> = { wishlist: "Wishlist presses", similar: "opens of one order", support: "support requests" };
+const ACTIONS: Record<Shortcut, string> = { wishlist: "Wishlist presses", similar: "opens of one order", support: "support clicks and hovers" };
 
 export function useShortcuts(user: string | null, record: (change: Change) => void) {
   const key = shortcutsKey(user);
@@ -32,7 +32,7 @@ export function useShortcuts(user: string | null, record: (change: Change) => vo
   useEffect(() => {
     let saved = newShortcuts();
     try {
-      saved = parseShortcuts(localStorage.getItem(key));
+      saved = dropEarly(parseShortcuts(localStorage.getItem(key)));
     } catch {
       // storage blocked
     }
@@ -53,6 +53,7 @@ export function useShortcuts(user: string | null, record: (change: Change) => vo
     on: (kind: Shortcut) => !!state.promoted[kind],
     supersede: () => setLatest(null),
     consider: (kind: Shortcut, habits: Habits, friction: number) => {
+      if (!eligible(kind, habits)) return;
       const x = shortcutContext(kind, habits, friction, current.current.visits);
       const decided = consider(current.current, kind, x);
       commit(decided.state);

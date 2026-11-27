@@ -29,13 +29,29 @@ export const newShortcuts = (): ShortcutState => {
   return { visits: 0, decisions: 0, arms: { wishlist: arm(), similar: arm(), support: arm() }, promoted: {} };
 };
 
+const share = (n: number, full: number) => Math.min(Math.max(n / full, 0), 1);
+
+/** Two resting hovers on a support link weigh as much as one click. */
 export const usesOf = (kind: Shortcut, h: Habits): number =>
-  kind === "wishlist" ? h.wishUses : kind === "support" ? h.supportUses : Math.max(0, ...Object.values(h.opens));
+  kind === "wishlist" ? h.wishUses
+  : kind === "support" ? h.supportUses + Math.floor((h.supportHovers ?? 0) / 2)
+  : Math.max(0, ...Object.values(h.opens));
+
+/** Below this the bandit is not asked, so a stray click or two never moves anything. */
+const MIN_USES: Record<Shortcut, number> = { wishlist: 3, similar: 1, support: 3 };
+export const eligible = (kind: Shortcut, h: Habits): boolean => usesOf(kind, h) >= MIN_USES[kind];
+
+/** Removes promotions saved before the threshold existed. */
+export const dropEarly = (state: ShortcutState): ShortcutState => ({
+  ...state,
+  promoted: Object.fromEntries(SHORTCUTS.flatMap((k) => {
+    const p = state.promoted[k];
+    return p && p.x[1] >= share(MIN_USES[k], 3) ? [[k, p]] : [];
+  })),
+});
 
 export const struggles = (...parts: FrictionSummary[]): number =>
   parts.reduce((s, f) => s + f.rage + f.dead + f.miss + f.thrash, 0);
-
-const share = (n: number, full: number) => Math.min(Math.max(n / full, 0), 1);
 
 export const shortcutContext = (kind: Shortcut, h: Habits, friction: number, visits: number): Vec => [
   1,

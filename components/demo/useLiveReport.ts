@@ -5,8 +5,10 @@ import { buildContext } from "@/lib/attune-ui/telemetry/context";
 import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import type { Activity } from "@/lib/demo/activity";
 import { explain } from "@/lib/demo/explain";
-import type { LiveSnapshot } from "@/lib/demo/live";
+import { withPast } from "@/lib/demo/history";
+import { MAX_SNAPSHOT_BYTES, type LiveSnapshot } from "@/lib/demo/live";
 import { newParticipantId } from "@/lib/study/records";
+import { readPast } from "./storage";
 import type { useDemo } from "./useDemo";
 
 // Sent at most this often, and only on change: database writes are limited on the free plan.
@@ -14,12 +16,13 @@ const EVERY_MS = 2000;
 const HEARTBEAT_MS = 30_000;
 
 /** Sends what the X-Ray shows to the admin page. Failures never disturb the visitor. */
-export function useLiveReport(d: ReturnType<typeof useDemo>, page: string, activity: Activity[]) {
+export function useLiveReport(d: ReturnType<typeof useDemo>, page: string, activity: Activity[], user: string | null) {
   const [id] = useState(() => (typeof window === "undefined" ? "" : newParticipantId()));
   const latest = useRef({ d, page, activity });
   useEffect(() => { latest.current = { d, page, activity }; });
 
   useEffect(() => {
+    const past = readPast(user); // changes only on Reset, which reloads the page
     let sent = "";
     let sentAt = 0;
     let busy = false;
@@ -37,7 +40,7 @@ export function useLiveReport(d: ReturnType<typeof useDemo>, page: string, activ
         decision: decision && { action: decision.action, propensity: decision.propensity, probs: decision.probs },
         why: explain(session), changes: d.changes.slice(0, 12), log: session.log.slice(0, 8), activity: activity.slice(0, 8),
       };
-      const body = JSON.stringify(snapshot);
+      const body = JSON.stringify(withPast(snapshot, past, MAX_SNAPSHOT_BYTES));
       if (busy || (body === sent && Date.now() - sentAt < HEARTBEAT_MS)) return;
       busy = true;
       try {
@@ -52,5 +55,5 @@ export function useLiveReport(d: ReturnType<typeof useDemo>, page: string, activ
       }
     }, EVERY_MS);
     return () => clearInterval(timer);
-  }, [id]);
+  }, [id, user]);
 }

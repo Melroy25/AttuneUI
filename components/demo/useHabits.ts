@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Shortcut } from "@/lib/bandit/shortcutBandit";
 import {
-  NO_HABITS, askSupport, habitsKey, openOrder, parseHabits, toggleWish, type Habits,
+  NO_HABITS, askSupport, habitsKey, hoverSupport, openOrder, parseHabits, toggleWish, type Habits,
 } from "@/lib/demo/habits";
 
 export function useHabits(user: string | null, onUse: (kind: Shortcut, habits: Habits) => void) {
@@ -34,6 +34,7 @@ export function useHabits(user: string | null, onUse: (kind: Shortcut, habits: H
     wish: (id: string) => save("wishlist", toggleWish(habits, id)),
     opened: (id: string) => save("similar", openOrder(habits, id)),
     support: () => save("support", askSupport(habits)),
+    supportHover: () => save("support", hoverSupport(habits)),
   };
 }
 
