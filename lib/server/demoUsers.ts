@@ -30,7 +30,7 @@ const toDoc = (s: CloudState, updatedAt: string): Doc => ({
   deliveryCity: s.city,
   hesitation: JSON.stringify(s.hesitation),
   behaviour: JSON.stringify(s.behaviour),
-  textStep: s.textStep,
+  textScales: JSON.stringify(s.textScales),
   updatedAt,
 });
 
@@ -46,7 +46,7 @@ function fromDoc(id: string, doc: Doc): CloudRecord | null {
       city: doc.deliveryCity,
       hesitation: doc.hesitation ? json("hesitation") : null,
       behaviour: doc.behaviour ? json("behaviour") : null,
-      textStep: doc.textStep,
+      textScales: doc.textScales,
     });
     return state && { id, updatedAt: String(doc.updatedAt), state };
   } catch {

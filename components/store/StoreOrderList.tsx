@@ -28,10 +28,10 @@ export function StoreOrderList({ ctx, orders, selected, onOpen, onBadge }: {
           </span>
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-              <p className="text-sm"><strong>{o.id}</strong> · {o.customer}</p>
-              <p data-part="price">₹{o.amount.toLocaleString("en-IN")}</p>
+              <p data-text-id={`order:${o.id}:line`} className="text-sm"><strong>{o.id}</strong> · {o.customer}</p>
+              <p data-text-id={`order:${o.id}:price`} data-part="price">₹{o.amount.toLocaleString("en-IN")}</p>
             </div>
-            <p data-part="meta">
+            <p data-text-id={`order:${o.id}:meta`} data-part="meta">
               {o.region} · {o.courier} · {o.payment} ·{" "}
               <span data-priority={o.priority}>{s.priority}: {s[o.priority]}</span>
             </p>

@@ -34,7 +34,7 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
   return (
     <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
       <div className="order-2 space-y-2 md:order-1">
-        <h2 data-attune-id="results-title" className="font-bold">
+        <h2 data-text-id="products:heading" data-attune-id="results-title" className="font-bold">
           {shop.category ? categoryLabel(t, shop.category) : t.products} ({found.length})
         </h2>
         <ul className="grid content-start gap-2 sm:grid-cols-2">
@@ -47,9 +47,9 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
               data-dead-context={`product:${p.id}`} {...hint.cardProps(p.id)}>
               <span aria-hidden data-part="thumb" data-attune-id={`thumb-${p.id}`}>{p.icon}</span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">{p.name}</p>
-                <p data-part="price">₹{p.price.toLocaleString("en-IN")}</p>
-                <span data-stock={stockOf(p)} data-attune-id={`stock-${p.id}`} className="text-xs font-semibold">
+                <p data-text-id={`product:${p.id}:name`} className="text-sm font-semibold">{p.name}</p>
+                <p data-text-id={`product:${p.id}:price`} data-part="price">₹{p.price.toLocaleString("en-IN")}</p>
+                <span data-text-id={`product:${p.id}:stock`} data-stock={stockOf(p)} data-attune-id={`stock-${p.id}`} className="text-xs font-semibold">
                   {t[stockOf(p)]}
                 </span>
                 {/* Small on purpose: misses here show the store making targets bigger. */}
@@ -76,9 +76,9 @@ export function ProductsPage({ ctx, shop, onView }: { ctx: PortalContext; shop: 
       {!product ? <p data-part="detail" className="order-1 hidden self-start p-3 text-sm md:order-2 md:block">{t.selectProduct}</p> : (
         <section data-part="detail" className="order-1 space-y-3 self-start p-3 text-sm md:order-2">
           <div aria-hidden data-part="art" data-attune-id="detail-art" className="grid h-40 place-items-center text-7xl">{product.icon}</div>
-          <h2 className="text-base font-bold">{product.name}</h2>
+          <h2 data-text-id={`detail:${product.id}:name`} className="text-base font-bold">{product.name}</h2>
           <p>
-            <span data-part="price" className="text-xl">₹{product.price.toLocaleString("en-IN")}</span>{" "}
+            <span data-text-id={`detail:${product.id}:price`} data-part="price" className="text-xl">₹{product.price.toLocaleString("en-IN")}</span>{" "}
             {product.off > 0 && <span data-stock="inStock" className="font-semibold">↓{product.off}%</span>}
           </p>
           <div className="flex items-center gap-2">

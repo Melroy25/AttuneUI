@@ -42,7 +42,7 @@ export function StoreHeader({ ctx, shop, page, onPage, nav, actions, user }: {
             🎧 {t.support}
           </button>
         )}
-        <span data-attune-id="location" data-dead-context="location" className="ml-auto text-sm">
+        <span data-text-id="header:location" data-attune-id="location" data-dead-context="location" className="ml-auto text-sm">
           📍 {t.deliverTo} {LOCATIONS[shop.location][ctx.preferences.locale]}
         </span>
       </div>

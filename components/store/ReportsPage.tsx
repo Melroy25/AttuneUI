@@ -26,15 +26,15 @@ export function ReportsPage({ ctx }: { ctx: PortalContext }) {
       <div className="grid grid-cols-3 gap-2">
         {tiles.map(([id, title, value]) => (
           <div key={id} data-part="order" data-attune-id={`tile-${id}`} className="min-w-0 p-3">
-            <p data-part="meta">{title}</p>
-            <p className="break-words text-xl font-bold">{value}</p>
+            <p data-text-id={`report:${id}:title`} data-part="meta">{title}</p>
+            <p data-text-id={`report:${id}:value`} className="break-words text-xl font-bold">{value}</p>
           </div>
         ))}
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         {charts.slice(0, ctx.surface.secondaryFilters === "collapsed" && !more ? 1 : charts.length).map(([id, title, rows]) => (
           <section key={id} data-part="detail" className="space-y-2 p-3 text-sm">
-            <h2 className="font-bold">{title}</h2>
+            <h2 data-text-id={`chart:${id}:title`} className="font-bold">{title}</h2>
             {rows.map(([key, n]) => (
               <div key={key} data-attune-id={`bar-${id}-${key}`} className="flex items-center gap-2">
                 <span className="w-28 shrink-0">{label(key)}</span>

@@ -71,8 +71,8 @@ export function AdaptiveBar({ pill, locale, quick, shop, comfort, text, hesitati
             <p className="w-full text-slate-600">{t.isThis}</p>
             <span aria-hidden className="text-3xl">{product.icon}</span>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold">{product.name}</p>
-              <p><strong>₹{product.price.toLocaleString("en-IN")}</strong> · {SPECS[product.id]}</p>
+              <p data-text-id={`quick:${product.id}:name`} className="font-semibold">{product.name}</p>
+              <p data-text-id={`quick:${product.id}:spec`}><strong>₹{product.price.toLocaleString("en-IN")}</strong> · {SPECS[product.id]}</p>
             </div>
             {close}
             {guide(product, `${main} flex-1`)}

@@ -18,10 +18,10 @@ export function HelpPage({ ctx }: { ctx: PortalContext }) {
         <PolicyCard ctx={ctx} />
         <section data-part="detail" className={`space-y-1 p-3 ${large}`}>
           <h2 className="font-bold">{t.faq}</h2>
-          {POLICY[ctx.preferences.locale].map((section) => (
+          {POLICY[ctx.preferences.locale].map((section, i) => (
             <details key={section.heading}>
               <summary className={`cursor-pointer ${ctx.control}`}>{section.heading}?</summary>
-              <p className="pb-2">{section.points.join(" ")}</p>
+              <p data-text-id={`help:faq:${i}`} className="pb-2">{section.points.join(" ")}</p>
             </details>
           ))}
         </section>

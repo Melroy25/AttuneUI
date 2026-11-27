@@ -49,7 +49,7 @@ export function readLocal(user: string | null): CloudState | null {
     city: localStorage.getItem(cityKey(user)),
     hesitation: readJsonItem(hesitationKey(user)),
     behaviour: readJsonItem(behaviourKey(user)),
-    textStep: localStorage.getItem(textKey(user)),
+    textScales: localStorage.getItem(textKey(user)),
   });
 }
 
@@ -77,5 +77,5 @@ export function writeLocal(user: string | null, s: CloudState) {
   localStorage.setItem(hesitationKey(user), JSON.stringify(asked));
   const behaviour = keepBehaviour(parseBehaviour(readJsonItem(behaviourKey(user))), s.behaviour);
   localStorage.setItem(behaviourKey(user), JSON.stringify(behaviour));
-  localStorage.setItem(textKey(user), String(s.textStep));
+  localStorage.setItem(textKey(user), JSON.stringify(s.textScales));
 }

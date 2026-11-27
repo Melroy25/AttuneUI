@@ -13,7 +13,7 @@
 - Saved per user in Firestore demo_users/{userId} + activity (server REST, /api/demo-user;
   browser cache first, newer saved copy applied on load). Reset changes the screen only: logs,
   totals, counts and weights stay. Admin "Saved logs" tab: user selector, cause -> effect.
-- Long policy read asks first. Tooltips (data-tip). 146/146 tests.
+- Long policy read asks first. Tooltips (data-tip). 148/148 tests.
 - Rules, not the bandit: dead click on delivery location / product card -> floating shortcut;
   2 problem taps on small targets in 30 s -> bigger targets with Undo (no prompt; exception to
   invariant 5; off while Pin or auto-off), before/after counts saved (descriptive only).
@@ -24,8 +24,8 @@
 - Articles page (5, English). Muscle memory: cue (never moves) on needed features, fades with
   successful visits. Reader: pins "Currently Reading", inline help only after repeat returns +
   back-and-forth scrolling; no pop-ups; no layout adapting or hesitation there. Admin box.
-- Double click on text -> root font +12.5% (max 137.5%), no prompt, Undo one step, held by Pin
-  (exception to invariant 5). Cards and dead-click summary link to a guide (hub if none fits).
+- Double click on a text (data-text-id) -> only its font +12.5% (max 137.5%), saved per user,
+  no prompt, Undo one step, Reset clears, held by Pin (exception to invariant 5). Cards and dead-click summary link to a guide (hub if none fits).
 ## Setup before phone test / pilot (user)
 1. Vercel/.env.local: FIREBASE_*, EXPORT_TOKEN, STUDY_CODE, STUDY_PHASE (empty = test, "pilot",
    "confirmatory"). Redeploy. 2. Phone test at /study?code=<STUDY_CODE>, then pilot, 8-10 people.

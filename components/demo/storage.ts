@@ -49,7 +49,7 @@ export function resetDemo(user: string | null, ui: UiState): UiState {
     localStorage.setItem(comfortKey(user), JSON.stringify({ ...comfort, on: false, reverted: false }));
     const behaviour = parseBehaviour(read(behaviourKey(user)));
     localStorage.setItem(behaviourKey(user), JSON.stringify({ ...behaviour, pinned: null }));
-    localStorage.setItem(textKey(user), "0");
+    localStorage.removeItem(textKey(user)); // every text back to normal
     localStorage.setItem(syncKey(user), "local"); // the saved copy must not undo this
     sessionStorage.removeItem(readingKey);
   } catch {

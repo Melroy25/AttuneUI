@@ -19,8 +19,8 @@ export function CartPage({ ctx, shop, onView }: { ctx: PortalContext; shop: Shop
           <li key={p.id} data-part="order" data-attune-tap={`cart-${p.id}`} className="flex flex-wrap items-center gap-3 p-3">
             <span aria-hidden data-part="thumb">{p.icon}</span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">{p.name}</p>
-              <p data-part="price">₹{(p.price * quantity).toLocaleString("en-IN")}</p>
+              <p data-text-id={`cart:${p.id}:name`} className="text-sm font-semibold">{p.name}</p>
+              <p data-text-id={`cart:${p.id}:price`} data-part="price">₹{(p.price * quantity).toLocaleString("en-IN")}</p>
             </div>
             <span className="flex items-center gap-1">
               <button type="button" aria-label={`${t.quantity} − ${p.name}`} data-tip="Decrease quantity" className={step}
@@ -36,7 +36,7 @@ export function CartPage({ ctx, shop, onView }: { ctx: PortalContext; shop: Shop
         ))}
       </ul>
       <section data-part="detail" className="space-y-3 p-4">
-        <p className="flex justify-between text-lg font-bold">
+        <p data-text-id="cart:total" className="flex justify-between text-lg font-bold">
           <span>{t.total}</span><span>₹{total.toLocaleString("en-IN")}</span>
         </p>
         <button type="button" data-part="primary" className={`w-full px-3 ${ctx.control}`}

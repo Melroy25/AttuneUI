@@ -31,9 +31,9 @@ export function ReturnsPage({ ctx, onView }: { ctx: PortalContext; onView: (view
             data-attune-tap={`return-${o.id}`}>
             <span aria-hidden data-part="thumb" data-product={o.product}>{PRODUCTS[o.product]}</span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm"><strong>{o.id}</strong> · {o.customer}</p>
-              <p data-part="price">₹{o.amount.toLocaleString("en-IN")}</p>
-              <p data-part="meta" data-attune-id={`meta-${o.id}`}>{o.region} · {o.payment}</p>
+              <p data-text-id={`return:${o.id}:line`} className="text-sm"><strong>{o.id}</strong> · {o.customer}</p>
+              <p data-text-id={`return:${o.id}:price`} data-part="price">₹{o.amount.toLocaleString("en-IN")}</p>
+              <p data-text-id={`return:${o.id}:meta`} data-part="meta" data-attune-id={`meta-${o.id}`}>{o.region} · {o.payment}</p>
             </div>
             {done[o.id] ? (
               <span className="flex items-center gap-2 text-sm font-semibold">

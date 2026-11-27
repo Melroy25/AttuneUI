@@ -58,9 +58,9 @@ function Reader({ ctx, shop, article, onBack }: { ctx: PortalContext; shop: Shop
     <aside lang="en" className="mt-2 rounded-xl border-l-4 border-sky-500 bg-sky-50 p-3 text-sm text-slate-900">
       <button type="button" aria-label={t.close} data-tip={t.close} className="float-right min-h-8 min-w-8"
         onClick={() => setHidden([...hidden, p.id])}>✕</button>
-      <p><strong>{t.simpler}:</strong> {p.simpleExplanation}</p>
-      <p className="mt-1"><strong>{t.summaryLabel}:</strong> {p.summary}</p>
-      <p className="mt-1"><strong>{t.exampleLabel}:</strong> {p.example}</p>
+      <p data-text-id={`explain:${p.id}:simple`}><strong>{t.simpler}:</strong> {p.simpleExplanation}</p>
+      <p data-text-id={`explain:${p.id}:summary`} className="mt-1"><strong>{t.summaryLabel}:</strong> {p.summary}</p>
+      <p data-text-id={`explain:${p.id}:example`} className="mt-1"><strong>{t.exampleLabel}:</strong> {p.example}</p>
     </aside>
   );
 
@@ -69,12 +69,12 @@ function Reader({ ctx, shop, article, onBack }: { ctx: PortalContext; shop: Shop
       <button type="button" className={`rounded-lg border px-3 text-sm ${ctx.control}`} onClick={onBack}>← {t.allArticles}</button>
       <div aria-hidden data-part="art" className="grid h-36 place-items-center text-7xl">{article.image}</div>
       <div lang="en">
-        <h2 className="text-2xl font-bold">{article.title}</h2>
-        <p data-part="meta">{meta(article, t)}</p>
+        <h2 data-text-id={`article:${article.id}:title`} className="text-2xl font-bold">{article.title}</h2>
+        <p data-text-id={`article:${article.id}:meta`} data-part="meta">{meta(article, t)}</p>
       </div>
       {article.content.map((p) => (
         <div key={p.id}>
-          <p lang="en" data-paragraph={p.id} className="text-base leading-8">{p.text}</p>
+          <p data-text-id={`article:${p.id}`} lang="en" data-paragraph={p.id} className="text-base leading-8">{p.text}</p>
           {helped.includes(p.id) && !hidden.includes(p.id) && helper(p)}
         </div>
       ))}

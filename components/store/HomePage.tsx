@@ -27,7 +27,7 @@ function Rail({ title, items, dark, ctx, onOpen, onAdd }: {
   return (
     <section data-part="rail" data-dark={dark} className="relative space-y-2 p-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 data-attune-id="rail-title" className="text-lg font-bold">{title}</h2>
+        <h2 data-text-id={`rail:${items[0]?.id}`} data-attune-id="rail-title" className="text-lg font-bold">{title}</h2>
         <span className="flex gap-1">
           {([[-1, "‹", t.previous], [1, "›", t.nextItems]] as const).map(([d, glyph, label]) => (
             <button key={label} type="button" data-part="slide" aria-label={label} onClick={() => slide(d)}
@@ -95,8 +95,8 @@ export function HomePage({ ctx, shop, onPage }: { ctx: PortalContext; shop: Shop
                 className={`min-h-44 items-center justify-between gap-2 p-5 text-white ${slot ? "hidden md:flex" : "flex"}`}>
                 <div className="space-y-1">
                   <p className="text-xs font-bold uppercase tracking-wide">{t.sale}</p>
-                  <h2 className="text-2xl font-extrabold">{t[b.title]}</h2>
-                  <p>{t[b.note]}</p>
+                  <h2 data-text-id={`banner:${b.title}:title`} className="text-2xl font-extrabold">{t[b.title]}</h2>
+                  <p data-text-id={`banner:${b.title}:note`}>{t[b.note]}</p>
                   <button type="button" data-part="shop" className={`px-4 text-sm ${ctx.control}`} onClick={() => browse(b.category)}>
                     {t.shopNow}
                   </button>

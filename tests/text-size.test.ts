@@ -4,22 +4,43 @@ import { ARTICLES } from "../lib/demo/articles";
 import { CATALOG } from "../lib/demo/catalog";
 import { parseState } from "../lib/demo/cloud";
 import { guideFor } from "../lib/demo/guides";
-import { SIZES, nextBurst, parseStep, type Burst } from "../lib/demo/textSize";
+import { enlarge, nextBurst, parseScales, undoLast, type Burst, type Scales } from "../lib/demo/textSize";
 
-const clicks = (times: number[], x = 0) =>
-  times.reduce<Burst[]>((all, t, i) => [...all, nextBurst(all.at(-1) ?? null, t, x * i, 0)], []).map((b) => b.count);
+const clicks = (times: number[], x = 0, ids = ["a"]) => times.reduce<Burst[]>(
+  (all, t, i) => [...all, nextBurst(all.at(-1) ?? null, ids[i % ids.length], t, x * i, 0)], []).map((b) => b.count);
 
 describe("text size", () => {
-  it("counts a burst only when clicks are close in time and place", () => {
+  it("counts a burst only on one text, close in time and place", () => {
     expect(clicks([0, 200, 400, 600])).toEqual([1, 2, 3, 4]); // grows once, on the 2
     expect(clicks([0, 900])).toEqual([1, 1]);
     expect(clicks([0, 100], 80)).toEqual([1, 1]);
+    expect(clicks([0, 100], 0, ["a", "b"])).toEqual([1, 1]);
   });
 
-  it("stays within the safe steps, also after upload", () => {
-    expect([parseStep("2"), parseStep(9), parseStep(-1), parseStep(""), parseStep(1.5)]).toEqual([2, 0, 0, 0, 0]);
-    expect(Math.max(...SIZES)).toBe(137.5);
-    expect(parseState({ arm: "baseline", preferences: DEFAULT_PREFERENCES, textStep: 3 })!.textStep).toBe(3);
+  it("grows one text in steps and leaves the others alone", () => {
+    let s = enlarge({}, "a")!;
+    s = enlarge(enlarge(enlarge(s, "b")!, "a")!, "a")!;
+    expect(s).toEqual({ b: 112.5, a: 137.5 });
+    expect(enlarge(s, "a")).toBeNull();
+  });
+
+  it("undoes the most recent text one step at a time, then the one before", () => {
+    let s: Scales = { a: 112.5, b: 125 };
+    const steps = [];
+    for (let back = undoLast(s); back; back = undoLast(s)) {
+      s = back.scales;
+      steps.push(`${back.id} ${back.size}`);
+    }
+    expect(steps).toEqual(["b 112.5", "b 100", "a 100"]);
+    expect(s).toEqual({});
+  });
+
+  it("keeps only known sizes and safe ids, also after upload", () => {
+    const bad = { "x y": 125, ok: 200, plain: 100, "article:laptop-p1": 125 };
+    expect(parseScales(JSON.stringify(bad))).toEqual({ "article:laptop-p1": 125 });
+    expect([parseScales("{"), parseScales([125]), parseScales(null)]).toEqual([{}, {}, {}]);
+    const state = { arm: "baseline", preferences: DEFAULT_PREFERENCES, textScales: { "cart:total": 112.5 } };
+    expect(parseState(state)!.textScales).toEqual({ "cart:total": 112.5 });
   });
 });
 
