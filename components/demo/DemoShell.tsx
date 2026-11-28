@@ -18,7 +18,7 @@ import { AdaptiveBar } from "./AdaptiveBar";
 import { ExtraPrompt, QuickShelf } from "./ExtraViews";
 import { ExtrasContext, useExtras } from "./useExtras";
 import { ZonesContext, useZones } from "./Zones";
-import { isFirstRaise } from "@/lib/demo/zones";
+import { ConsentPrompt, useConsent } from "./Consent";
 import { FrictionPulse } from "./FrictionPulse";
 import { ReadingPill } from "./ReadingPill";
 import { SettingsMenu } from "./SettingsMenu";
@@ -54,9 +54,10 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const quick = useQuickPrompt(d.rootRef, shop.latest, add);
   const hesitation = useHesitation(user, page, shop, quick.prompt !== null, add);
   const behaviour = useBehaviour(user, page, shop, add);
-  const text = useTextSize(user, d.session.pinned, add);
   const extras = useExtras(user, activity, add, page, shop, setPage);
-  const zones = useZones(extras.log, add, text);
+  const consent = useConsent(extras.log, add);
+  const text = useTextSize(user, d.session.pinned, add, consent.request);
+  const zones = useZones(extras.log, add, text, consent);
   const openGuide = (product: Product) => {
     const article = guideFor(product)?.article ?? null; // null: the list of all guides
     shop.openArticle(article);
@@ -112,10 +113,10 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <p className="mx-auto mt-2 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.
       </p>
-      <AdaptiveBar user={user} pill={<ExtraPrompt locale={d.ui.preferences.locale} x={extras} fallback={<ReadingPill locale={d.ui.preferences.locale} behaviour={behaviour}
-          onResume={(article, paragraph) => { shop.openArticle(article, paragraph); setPage("articles"); }} />} />}
+      <AdaptiveBar user={user} pill={<ConsentPrompt locale={d.ui.preferences.locale} consent={consent} fallback={<ExtraPrompt locale={d.ui.preferences.locale} x={extras} fallback={<ReadingPill locale={d.ui.preferences.locale} behaviour={behaviour}
+          onResume={(article, paragraph) => { shop.openArticle(article, paragraph); setPage("articles"); }} />} />} />}
         locale={d.ui.preferences.locale} quick={quick} shop={shop} comfort={comfort} hesitation={hesitation}
-        log={add} onGuide={openGuide} text={isFirstRaise(extras.log) ? text : { ...text, changedAt: 0 }}
+        log={add} onGuide={openGuide} text={{ ...text, changedAt: 0 }}
         onView={(id) => {
           shop.setCategory(CATALOG.find((p) => p.id === id)?.category ?? "");
           shop.setQuery(""); shop.setPreset(""); shop.setSelected(id); setPage("products"); d.onGoal();

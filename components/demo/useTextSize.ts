@@ -18,13 +18,16 @@ function apply(page: Element, scales: Scales) {
 }
 
 /** For every user. Only Pin, an explicit "keep my screen as it is", holds the sizes. */
-export function useTextSize(user: string | null, locked: boolean, log: (change: Change) => void) {
+export function useTextSize(
+  user: string | null, locked: boolean, log: (change: Change) => void,
+  gate: (target: string, apply: () => void) => void,
+) {
   const key = textKey(user);
   const [scales, setScales] = useState<Scales>({});
   const [changedAt, setChangedAt] = useState(0);
   const current = useRef<Scales>({});
-  const latest = useRef({ locked, log });
-  useEffect(() => { latest.current = { locked, log }; });
+  const latest = useRef({ locked, log, gate });
+  useEffect(() => { latest.current = { locked, log, gate }; });
 
   const commit = (next: Scales) => {
     current.current = next;
@@ -54,11 +57,14 @@ export function useTextSize(user: string | null, locked: boolean, log: (change: 
       burst = nextBurst(burst, id, performance.now());
       if (!deliberate(burst) || latest.current.locked) return;
       burst = null; // each further step needs four new clicks
-      const next = enlarge(current.current, id);
-      if (!next) return;
-      commit(next);
-      setChangedAt(Date.now());
-      latest.current.log({ trigger: `Clicked the text "${id}" 4 times in 2.5 s`, change: `Font size of "${id}" raised to ${next[id]}%` });
+      if (!enlarge(current.current, id)) return; // already the largest: nothing to ask about
+      latest.current.gate(`the text "${id}"`, () => {
+        const next = enlarge(current.current, id);
+        if (!next) return;
+        commit(next);
+        setChangedAt(Date.now());
+        latest.current.log({ trigger: `Clicked the text "${id}" 4 times in 2.5 s`, change: `Font size of "${id}" raised to ${next[id]}%` });
+      });
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);

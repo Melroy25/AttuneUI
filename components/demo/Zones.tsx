@@ -5,30 +5,29 @@ import { PAGE_TEXT } from "@/components/store/text";
 import type { Locale } from "@/lib/attune-ui/preferences/rules";
 import type { Activity, Change } from "@/lib/demo/activity";
 import { deliberate, nextBurst, type Burst, type Scales } from "@/lib/demo/textSize";
-import { ORDERS_TEXT, isBig, zoneTaps, zoneTag, type Zone } from "@/lib/demo/zones";
+import { ORDERS_TEXT, zoneTaps, zoneTag, type Zone } from "@/lib/demo/zones";
 
 const SUMMARY: Record<Locale, string> = {
   en: "Refunds within 7 days of delivery; delayed orders qualify earlier. UPI takes 1–2 working days, cards 5–7.",
   kn: "ತಲುಪಿದ 7 ದಿನಗಳೊಳಗೆ ಮರುಪಾವತಿ; ವಿಳಂಬವಾದ ಆರ್ಡರ್‌ಗಳು ಮೊದಲೇ ಅರ್ಹ. UPI 1–2, ಕಾರ್ಡ್ 5–7 ಕೆಲಸದ ದಿನಗಳು.",
 };
-const LOADED_AT = () => (typeof performance === "undefined" ? 0 : performance.timeOrigin);
 
 export function useZones(
   activity: Activity[], log: (change: Change) => void,
   text: { scales: Scales; drop: (prefix: string) => void },
+  consent: { approved: boolean; request: (target: string, apply: () => void) => void },
 ) {
   const taps = zoneTaps(activity);
-  const big = (zone: Zone) => isBig(taps[zone], LOADED_AT());
+  const big = (zone: Zone) => consent.approved && taps[zone].length > 0;
   const ordersText = Object.keys(text.scales).some((id) => id.startsWith(ORDERS_TEXT));
   return {
     big,
     tapped: (zone: Zone) => {
       if (big(zone)) return;
-      const again = taps[zone].length > 0;
-      log({
+      consent.request(`the ${zone} section`, () => log({
         trigger: `Clicked the ${zone} section 4 times in 2.5 s`,
-        change: zoneTag(again ? "Enlarged the section and showed a summary" : "Noted: it will grow after a refresh or a repeat", "tap", zone),
-      });
+        change: zoneTag("Enlarged the section and showed a summary", "tap", zone),
+      }));
     },
     canUndoOrders: taps["orders:policy"].length > 0 || ordersText,
     /** The Orders page only: its policy card and its order texts. */
