@@ -1,0 +1,90 @@
+/* AttuneUI Anywhere: every change is one of these attributes. Loaded by the browser, not the page. */
+
+[data-attune-size] {
+  font-size: var(--attune-fs) !important;
+  line-height: 1.5 !important;
+}
+
+[data-attune-roomy] {
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 2px !important;
+  padding: 0.3em 0.45em !important;
+  border-radius: 6px !important;
+  background-color: #fffbeb !important;
+  color: #0f172a !important;
+}
+
+[data-attune-ask] {
+  outline: 3px dashed #2563eb !important;
+  outline-offset: 3px !important;
+}
+
+[data-attune-pulse] {
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 3px !important;
+  animation: attune-pulse 0.8s ease-in-out 3 !important;
+}
+@keyframes attune-pulse {
+  50% { outline-color: transparent; }
+}
+
+html[data-attune-focus] :is(article, main, [role="main"], #content, #bodyContent) :is(p, li, dd) {
+  line-height: 1.85 !important;
+  max-width: 72ch !important;
+}
+
+/* The one prompt box. */
+#attune-ext-box {
+  all: initial !important;
+  position: fixed !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  z-index: 2147483647 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: min(340px, calc(100vw - 32px)) !important;
+  padding: 12px !important;
+  border: 2px solid #f59e0b !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+  font: 600 15px/1.4 system-ui, sans-serif !important;
+}
+#attune-ext-box[hidden] { display: none !important; }
+#attune-ext-box .attune-q,
+#attune-ext-box .attune-d {
+  all: unset !important;
+  flex: 1 1 100% !important;
+}
+#attune-ext-box .attune-d {
+  font-weight: 400 !important;
+  font-size: 13px !important;
+  color: #475569 !important;
+}
+#attune-ext-box button {
+  all: unset !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 40px !important;
+  padding: 0 16px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font: 600 14px system-ui, sans-serif !important;
+  cursor: pointer !important;
+}
+#attune-ext-box button.attune-main {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+#attune-ext-box button:focus-visible {
+  outline: 3px solid #2563eb !important;
+  outline-offset: 2px !important;
+}

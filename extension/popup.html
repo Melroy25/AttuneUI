@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AttuneUI Anywhere</title>
+  <style>
+    body { width: 320px; margin: 0; padding: 14px; font: 14px/1.4 system-ui, sans-serif; color: #0f172a; background: #fff; }
+    h1 { margin: 0 0 4px; font-size: 16px; }
+    .muted { color: #475569; font-size: 12px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0; }
+    .stats div { padding: 8px; border: 1px solid #e2e8f0; border-radius: 10px; text-align: center; }
+    .stats b { display: block; font-size: 18px; }
+    button { width: 100%; min-height: 36px; margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; font: 600 14px system-ui, sans-serif; cursor: pointer; }
+    button.main { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+    button:disabled { opacity: 0.4; cursor: default; }
+    ol { margin: 10px 0 0; padding: 0; list-style: none; max-height: 180px; overflow: auto; }
+    li { padding: 6px 0; border-top: 1px solid #f1f5f9; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>AttuneUI Anywhere</h1>
+  <p id="site" class="muted"></p>
+  <p id="consent" class="muted"></p>
+  <div class="stats">
+    <div><b id="texts">0</b>bigger texts</div>
+    <div><b id="targets">0</b>bigger links</div>
+    <div><b id="focus">Off</b>reading focus</div>
+  </div>
+  <button id="undo" class="main" type="button">↩︎ Undo last change</button>
+  <button id="reset" type="button">Reset this site</button>
+  <button id="all" type="button">Reset all sites and ask again</button>
+  <ol id="log"></ol>
+  <script src="rules.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

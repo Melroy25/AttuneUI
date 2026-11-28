@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "AttuneUI Anywhere",
+  "version": "0.1.0",
+  "description": "Makes hard-to-read text bigger and missed links easier to tap, on any website. Changes only how pages look.",
+  "permissions": ["storage", "activeTab"],
+  "action": { "default_title": "AttuneUI Anywhere", "default_popup": "popup.html" },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["rules.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
