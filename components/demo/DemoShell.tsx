@@ -105,7 +105,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
       <p className="mx-auto mt-2 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.
       </p>
-      <AdaptiveBar pill={<ReadingPill locale={d.ui.preferences.locale} behaviour={behaviour}
+      <AdaptiveBar user={user} pill={<ReadingPill locale={d.ui.preferences.locale} behaviour={behaviour}
           onResume={(article, paragraph) => { shop.openArticle(article, paragraph); setPage("articles"); }} />}
         locale={d.ui.preferences.locale} quick={quick} shop={shop} comfort={comfort} hesitation={hesitation}
         log={add} onGuide={openGuide} text={text}

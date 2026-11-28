@@ -14,7 +14,7 @@
   browser cache first, newer saved copy applied on load). Reset changes the screen only: logs,
   totals, counts and weights stay. Admin "Saved logs" tab: user selector, cause -> effect.
 - QA 2026-11-28: nothing scales the page; one floating prompt at a time (Undo also in ⚙);
-  single dead click waits 0.6 s so double clicks only grow text; sign-out -> English. 155 tests.
+  single dead click waits 0.6 s so double clicks only grow text; sign-out -> English. 157 tests.
 - Rules, not the bandit: dead click on delivery -> popover; card help only on 4 taps/3 s or taps+scrolling;
   2 problem taps near one small control in 30 s -> only it highlighted + bigger (no prompt;
   exception to invariant 5; off while Pin or auto-off), before/after counts (descriptive).
@@ -25,7 +25,7 @@
   successful visits. Reader: pins "Currently Reading", inline help only after repeat returns +
   back-and-forth scrolling; no pop-ups; no layout adapting or hesitation there. Admin box.
 - 4 clicks in 2.5 s on one text (data-text-id) -> only its font +12.5% (max 137.5%), per user,
-  no prompt, Undo one step, Reset clears, held by Pin (exception to invariant 5). Cards and dead-click summary link to a guide (hub if none fits).
+  then "Is that okay?" (Keep/Undo) under it, in the one floating slot; Reset clears, held by Pin (exception to invariant 5). Cards and dead-click summary link to a guide (hub if none fits).
 ## Setup before phone test / pilot (user)
 1. Vercel/.env.local: FIREBASE_*, EXPORT_TOKEN, STUDY_CODE, STUDY_PHASE (empty = test, "pilot",
    "confirmatory"). Redeploy. 2. Phone test at /study?code=<STUDY_CODE>, then pilot, 8-10 people.

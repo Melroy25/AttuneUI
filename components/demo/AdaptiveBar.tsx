@@ -10,6 +10,7 @@ import { CATALOG, type Product } from "@/lib/demo/catalog";
 import { SPECS } from "@/lib/demo/quick";
 import { HesitationCard } from "./HesitationCard";
 import { LocationPopover } from "./LocationPopover";
+import { TextSizePrompt, useTextAsk } from "./TextSizePrompt";
 import type { useHesitation } from "./useHesitation";
 import type { useQuickPrompt } from "./useQuickPrompt";
 
@@ -35,8 +36,9 @@ function useRecent(at: number) {
  * One floating slot, so prompts never pile up. First match wins: what the user just clicked,
  * then the hesitation question, then a fresh Undo notice, then the reading pin.
  */
-export function AdaptiveBar({ pill, locale, quick, shop, comfort, text, hesitation, onView, onCategory, onGuide, log }: {
+export function AdaptiveBar({ pill, user, locale, quick, shop, comfort, text, hesitation, onView, onCategory, onGuide, log }: {
   pill: ReactNode;
+  user: string | null;
   locale: Locale;
   quick: ReturnType<typeof useQuickPrompt>;
   shop: Shop;
@@ -50,7 +52,7 @@ export function AdaptiveBar({ pill, locale, quick, shop, comfort, text, hesitati
 }) {
   const t = PAGE_TEXT[locale];
   const comfortNew = useRecent(comfort.changedAt);
-  const textNew = useRecent(text.changedAt);
+  const textAsk = useTextAsk(user, text.changedAt);
   const { prompt, setPrompt, aboutClicked } = quick;
 
   // The location question sits under "Deliver to" and is the only prompt while it is open.
@@ -111,8 +113,8 @@ export function AdaptiveBar({ pill, locale, quick, shop, comfort, text, hesitati
     slot = <HesitationCard locale={locale} hesitation={hesitation} onProduct={onView} onCategory={onCategory} />;
   } else if (comfortNew && comfort.on) {
     slot = notice(t.biggerOn, comfort.undo);
-  } else if (textNew && text.percent > 100) {
-    slot = notice(`${t.textBigger} · ${text.percent}%`, text.undo);
+  } else if (textAsk.asked) {
+    slot = <TextSizePrompt locale={locale} ask={textAsk.asked} onUndo={text.undo} onClose={textAsk.close} log={log} />;
   }
 
   return (
