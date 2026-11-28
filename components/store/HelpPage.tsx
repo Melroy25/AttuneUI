@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PolicyBoost } from "@/components/demo/ExtraViews";
 import type { PortalContext } from "@/components/portal/context";
 import { PolicyCard } from "@/components/portal/PolicyCard";
 import { POLICY } from "@/components/portal/strings";
@@ -15,7 +16,7 @@ export function HelpPage({ ctx }: { ctx: PortalContext }) {
   return (
     <div className="grid items-start gap-3 md:grid-cols-2">
       <div className="space-y-3">
-        <PolicyCard ctx={ctx} />
+        <PolicyBoost locale={ctx.preferences.locale}><PolicyCard ctx={ctx} /></PolicyBoost>
         <section data-part="detail" className={`space-y-1 p-3 ${large}`}>
           <h2 className="font-bold">{t.faq}</h2>
           {POLICY[ctx.preferences.locale].map((section, i) => (

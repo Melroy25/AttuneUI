@@ -15,6 +15,8 @@ import { summarizeFriction } from "@/lib/attune-ui/telemetry/friction";
 import { struggles } from "@/lib/bandit/shortcutBandit";
 import type { UiState } from "@/lib/demo/uiState";
 import { AdaptiveBar } from "./AdaptiveBar";
+import { ExtraPrompt, QuickShelf } from "./ExtraViews";
+import { ExtrasContext, useExtras } from "./useExtras";
 import { FrictionPulse } from "./FrictionPulse";
 import { ReadingPill } from "./ReadingPill";
 import { SettingsMenu } from "./SettingsMenu";
@@ -51,6 +53,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   const hesitation = useHesitation(user, page, shop, quick.prompt !== null, add);
   const behaviour = useBehaviour(user, page, shop, add);
   const text = useTextSize(user, d.session.pinned, add);
+  const extras = useExtras(user, activity, add, page, shop, setPage);
   const openGuide = (product: Product) => {
     const article = guideFor(product)?.article ?? null; // null: the list of all guides
     shop.openArticle(article);
@@ -85,7 +88,7 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
   return (
     <main className={`store-page min-h-dvh p-2 sm:p-4 ${hud ? "hud-open" : ""}`}>
       <div ref={d.rootRef} className="mx-auto max-w-6xl">
-        <Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
+        <ExtrasContext.Provider value={extras}><Portal key={d.portalKey} surface={surface} preferences={d.ui.preferences} task={null}
           onAction={d.onAction} onSignal={d.onSignal} onView={d.onView}
           store={{ actions, page, onPage: setPage, shop, user, onGoal: d.onGoal, habits, shortcuts, log: add, reading: d.readingPrompt, behaviour, onGuide: openGuide, front: usage.front, wishCards: usage.wishCards,
             suggest: <SuggestionStrip locale={d.ui.preferences.locale} use={usage.state}
@@ -98,15 +101,16 @@ export function DemoShell({ serverUi, renderedAt, user }: { serverUi: UiState; r
               if (!part.startsWith("category:")) return setPage(part as Page);
               shop.setCategory(part.slice(9) as Category); shop.setQuery(""); shop.setPreset(""); shop.setSelected(null);
               setPage("products");
-            } }} />
+            } }} /></ExtrasContext.Provider>
       </div>
+      <QuickShelf locale={d.ui.preferences.locale} x={extras} />
       <StoreFooter locale={d.ui.preferences.locale} onSupport={habits.support} onSupportHover={habits.supportHover}
         onPage={setPage} />
       <p className="mx-auto mt-2 max-w-6xl text-xs text-slate-600">
         {user ? `Signed in as ${user}. ` : ""}Live demo: your clicks and layout changes are visible on the admin page. What you type is not sent.
       </p>
-      <AdaptiveBar user={user} pill={<ReadingPill locale={d.ui.preferences.locale} behaviour={behaviour}
-          onResume={(article, paragraph) => { shop.openArticle(article, paragraph); setPage("articles"); }} />}
+      <AdaptiveBar user={user} pill={<ExtraPrompt locale={d.ui.preferences.locale} x={extras} fallback={<ReadingPill locale={d.ui.preferences.locale} behaviour={behaviour}
+          onResume={(article, paragraph) => { shop.openArticle(article, paragraph); setPage("articles"); }} />} />}
         locale={d.ui.preferences.locale} quick={quick} shop={shop} comfort={comfort} hesitation={hesitation}
         log={add} onGuide={openGuide} text={text}
         onView={(id) => {
