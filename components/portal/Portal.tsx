@@ -19,6 +19,7 @@ import type { PortalContext } from "./context";
 import { Filters } from "./Filters";
 import { OrderDetail } from "./OrderDetail";
 import { OrderTable } from "./OrderTable";
+import { AutoZone } from "@/components/demo/Zones";
 import { PolicyCard } from "./PolicyCard";
 import { QuickActions } from "./QuickActions";
 import { RefundDialog } from "./RefundDialog";
@@ -152,7 +153,7 @@ export function Portal({ surface, preferences, task, onAction, onSignal, onView,
             order={ORDERS.find((o) => o.id === selected) ?? null}
             onRefund={() => selected && startRefund(selected)}
           />
-          <PolicyCard ctx={ctx} />
+          <AutoZone zone="orders:policy" locale={preferences.locale}><PolicyCard ctx={ctx} /></AutoZone>
         </div>
       </div>
       </>)}

@@ -5,6 +5,7 @@ import { hasKannada } from "@/lib/attune-ui/preferences/rules";
 import { PRODUCTS, type Product } from "@/lib/study/data";
 import { NO_FILTERS, type Filters as FilterState } from "@/lib/study/tasks";
 import type { PortalContext } from "./context";
+import { OrdersUndo } from "@/components/demo/Zones";
 
 const OPTIONS = {
   status: ["delayed", "refund_requested", "shipped", "delivered"],
@@ -126,6 +127,7 @@ export function Filters({ ctx, filters, onChange }: {
         <button type="button" className={`rounded border px-2 text-sm ${control}`} onClick={() => onChange(NO_FILTERS)}>
           {s.clear}
         </button>
+        <OrdersUndo locale={preferences.locale} className={`rounded border px-2 text-sm ${control}`} />
       </div>
     </section>
   );

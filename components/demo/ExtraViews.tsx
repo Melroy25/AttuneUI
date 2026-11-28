@@ -1,44 +1,26 @@
 "use client";
 
-import { useContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { PAGE_TEXT } from "@/components/store/text";
 import type { Locale } from "@/lib/attune-ui/preferences/rules";
 import { ARTICLES } from "@/lib/demo/articles";
 import { CATALOG } from "@/lib/demo/catalog";
 import { shoeIdeas } from "@/lib/demo/extras";
-import { ExtrasContext, type useExtras } from "./useExtras";
+import type { useExtras } from "./useExtras";
 
 const WORDS = {
   en: {
-    boost: "Increase Font & Summary", quick: "Quick items", search: "Are you searching for shoes or another product?",
+    quick: "Quick items", search: "Are you searching for shoes or another product?",
     scroll: "Want suggestions for other articles?", add: "Add {x} to quick items?", no: "No",
-    summary: "Refunds within 7 days of delivery; delayed orders qualify earlier. UPI takes 1–2 working days, cards 5–7.",
   },
   kn: {
-    boost: "ಅಕ್ಷರ ದೊಡ್ಡದು + ಸಾರಾಂಶ", quick: "ತ್ವರಿತ ವಸ್ತುಗಳು", search: "ನೀವು ಶೂ ಅಥವಾ ಬೇರೆ ಉತ್ಪನ್ನ ಹುಡುಕುತ್ತಿದ್ದೀರಾ?",
+    quick: "ತ್ವರಿತ ವಸ್ತುಗಳು", search: "ನೀವು ಶೂ ಅಥವಾ ಬೇರೆ ಉತ್ಪನ್ನ ಹುಡುಕುತ್ತಿದ್ದೀರಾ?",
     scroll: "ಬೇರೆ ಲೇಖನಗಳನ್ನು ಸೂಚಿಸಲೇ?", add: "{x} ಅನ್ನು ತ್ವರಿತ ವಸ್ತುಗಳಿಗೆ ಸೇರಿಸಲೇ?", no: "ಬೇಡ",
-    summary: "ತಲುಪಿದ 7 ದಿನಗಳೊಳಗೆ ಮರುಪಾವತಿ; ವಿಳಂಬವಾದ ಆರ್ಡರ್‌ಗಳು ಮೊದಲೇ ಅರ್ಹ. UPI 1–2, ಕಾರ್ಡ್ 5–7 ಕೆಲಸದ ದಿನಗಳು.",
   },
 };
 
 const main = "min-h-11 rounded-lg bg-blue-700 px-4 font-semibold text-white";
 const other = "min-h-11 rounded-lg border border-slate-300 bg-white px-3 font-semibold";
-
-/** One button turns the bigger text and summary on; an Undo in the same place turns them off. */
-export function PolicyBoost({ locale, children }: { locale: Locale; children: ReactNode }) {
-  const x = useContext(ExtrasContext);
-  if (!x) return children;
-  const t = WORDS[locale];
-  return (
-    <div className="space-y-2">
-      <button type="button" className={x.policy ? other : main} onClick={() => x.setPolicy(!x.policy)}>
-        {x.policy ? `↩︎ ${PAGE_TEXT[locale].undoAction}` : `🔍 ${t.boost}`}
-      </button>
-      {x.policy && <p className="rounded-lg border-l-4 border-sky-500 bg-sky-50 p-3 text-lg font-semibold text-slate-900">{t.summary}</p>}
-      <div className={x.policy ? "[&_*]:text-lg! [&_*]:leading-8!" : ""}>{children}</div>
-    </div>
-  );
-}
 
 /** Copies only: the cards stay where they are. */
 export function QuickShelf({ locale, x }: { locale: Locale; x: ReturnType<typeof useExtras> }) {

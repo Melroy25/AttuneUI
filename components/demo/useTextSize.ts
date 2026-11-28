@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Change } from "@/lib/demo/activity";
+import { withoutPrefix } from "@/lib/demo/zones";
 import { deliberate, enlarge, nextBurst, parseScales, textKey, undoLast, type Burst, type Scales } from "@/lib/demo/textSize";
 import { CONTROLS } from "./useComfort";
 
@@ -85,6 +86,8 @@ export function useTextSize(user: string | null, locked: boolean, log: (change: 
   return {
     percent: last ? scales[last] : 100,
     changedAt,
+    scales,
+    drop: (prefix: string) => commit(withoutPrefix(current.current, prefix)),
     undo: () => {
       const back = undoLast(current.current);
       if (!back) return;

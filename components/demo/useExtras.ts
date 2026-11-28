@@ -24,7 +24,8 @@ export function useExtras(
 ) {
   const [remote, setRemote] = useState<Activity[]>([]);
   // shortcut: replayed from the newest 500 local + 200 saved entries; add a state document if older ones must count.
-  const state = replay(mergeActivity(activity, remote));
+  const merged = mergeActivity(activity, remote);
+  const state = replay(merged);
   const [ask, setAsk] = useState<Ask | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const asked = useRef(new Set<string>()); // each question once per visit
@@ -115,10 +116,7 @@ export function useExtras(
   const nameOf = (id: string) => CATALOG.find((p) => p.id === id)?.name ?? id;
 
   return {
-    ...state, ask, flash, close,
-    setPolicy: (on: boolean) => record(on ? "policy:on" : "policy:off",
-      on ? "Pressed Increase Font & Summary" : "Pressed Undo on the refund policy",
-      on ? "Enlarged the refund policy and showed its summary" : "Refund policy back to normal"),
+    ...state, log: merged, ask, flash, close,
     answer: (yes: boolean) => {
       if (!ask) return;
       const question = ask.kind === "quick" ? `the quick area offer for ${nameOf(ask.id)}`
